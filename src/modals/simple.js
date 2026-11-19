@@ -1,21 +1,7 @@
 import { Modal } from "obsidian";
-import { DAY_NAMES, tr, unitLabel } from "../i18n";
-import { toDate } from "../dates";
+import { tr, unitLabel } from "../i18n";
 import { splitHM } from "../format";
 import { UNIT_HOURS } from "../constants";
-
-// 숫자 하나 입력받는 창
-export class DayItemsModal extends Modal {
-  constructor(app, name, ds, items) { super(app); Object.assign(this, { name, ds, items }); }
-  onOpen() {
-    const d = toDate(this.ds);
-    this.titleEl.setText(tr("{0}월 {1}일 ({2}) {3}", d.getMonth() + 1, d.getDate(), DAY_NAMES[d.getDay()], this.name));
-    if (!this.items.length) { this.contentEl.createDiv({ cls: "hg-empty", text: tr("이 날 적힌 내용이 없어요") }); return; }
-    const box = this.contentEl.createDiv({ cls: "hg-itemlog-chips" });
-    for (const it of this.items) box.createSpan({ cls: "hg-itemlog-chip", text: it });
-  }
-  onClose() { this.contentEl.empty(); }
-}
 
 // 되돌릴 수 없는 변경 앞에서 한 번 더 확인
 export class ConfirmModal extends Modal {
@@ -35,6 +21,7 @@ export class ConfirmModal extends Modal {
   onClose() { this.contentEl.empty(); }
 }
 
+// 숫자 하나 입력받는 창
 export class NumberModal extends Modal {
   constructor(app, { title, desc, value, unit, onSubmit, allowClear }) {
     super(app);

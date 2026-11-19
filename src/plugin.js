@@ -4,9 +4,9 @@ import { resolveLang, setLang, tr, unitLabel } from "./i18n";
 import { fmDel, fmGet, fmKey, fmSet, fmSetUnit, normalizeUnit, resolveKeyStyle, unitForKey } from "./frontmatter";
 import { fmt, monthKey } from "./dates";
 import { writeQty } from "./format";
-import { dedupeText, parseDates, parseEntries, parseLog, parseSkips, parseTitle } from "./parse";
+import { parseDates, parseEntries, parseLog, parseSkips, parseTitle } from "./parse";
 import { HabitView } from "./view";
-import { ConfirmModal, DayItemsModal, NumberModal } from "./modals/simple";
+import { ConfirmModal, NumberModal } from "./modals/simple";
 import { GoalsModal } from "./modals/goals";
 import { RecordModal } from "./modals/record";
 import { NewHabitModal } from "./modals/newHabit";
@@ -68,17 +68,6 @@ export class HabitGridPlugin extends Plugin {
     let file = this.app.vault.getAbstractFileByPath(this.dashboardPath);
     if (!(file instanceof TFile)) { await this.setup(false); file = this.app.vault.getAbstractFileByPath(this.dashboardPath); }
     if (file instanceof TFile) await this.app.workspace.getLeaf(false).openFile(file);
-  }
-
-  async toggle(file, ds, on) {
-    await this.app.vault.process(file, (text) => {
-      const lines = text.split("\n").filter((l) => { const m = l.match(DONE_RE); return !(m && m[1] === ds); });
-      while (lines.length && lines[lines.length - 1].trim() === "") lines.pop();
-      if (on) lines.push(`- [x] ${ds}`);
-      return lines.join("\n") + "\n";
-    });
-    const [, m, d] = ds.split("-").map(Number);
-    new Notice(tr("{0} · {1}월 {2}일 {3}", file.basename, m, d, on ? tr("기록했어요") : tr("기록을 지웠어요")));
   }
 
   isLog(file) {
@@ -250,14 +239,7 @@ export class HabitGridPlugin extends Plugin {
     menu.addItem((i) => i.setTitle(tr("색 바꾸기")).setIcon("palette").onClick(() => this.openColorMenu(evt, h.target, h.unit, h.color)));
     if (h.kind === "check") {
       menu.addSeparator();
-      if (h.period) {
-        menu.addItem((i) => i.setTitle(tr("기간 +30일")).setIcon("calendar-plus").onClick(() => this.extendPeriod(h, 30)));
-        menu.addItem((i) => i.setTitle(tr("기간 +66일")).setIcon("calendar-plus").onClick(() => this.extendPeriod(h, 66)));
-        menu.addItem((i) => i.setTitle(tr("기간 직접 입력")).setIcon("pencil").onClick(() => this.askPeriod(h)));
-        menu.addItem((i) => i.setTitle(tr("기간 없음으로 바꾸기")).setIcon("infinity").onClick(() => this.extendPeriod(h, 0)));
-      } else {
-        menu.addItem((i) => i.setTitle(tr("기간 정하기 (오늘부터)")).setIcon("calendar-range").onClick(() => this.askPeriod(h)));
-      }
+      this.addPeriodItems(menu, h);
       menu.addSeparator();
     }
     menu.addItem((i) => i.setTitle(tr("위로 옮기기")).setIcon("arrow-up").onClick(() => this.moveHabit(h, -1)));
@@ -269,9 +251,8 @@ export class HabitGridPlugin extends Plugin {
     menu.showAtMouseEvent(evt);
   }
 
-  // 기간 칩을 눌렀을 때 뜨는 메뉴
-  openPeriodMenu(evt, h) {
-    const menu = new Menu();
+  // 기간 관련 메뉴 항목 (카드 ⋯ 메뉴와 기간 칩 메뉴가 같이 쓴다)
+  addPeriodItems(menu, h) {
     if (h.period) {
       menu.addItem((i) => i.setTitle(tr("기간 +30일")).setIcon("calendar-plus").onClick(() => this.extendPeriod(h, 30)));
       menu.addItem((i) => i.setTitle(tr("기간 +66일")).setIcon("calendar-plus").onClick(() => this.extendPeriod(h, 66)));
@@ -280,6 +261,12 @@ export class HabitGridPlugin extends Plugin {
     } else {
       menu.addItem((i) => i.setTitle(tr("기간 정하기 (오늘부터)")).setIcon("calendar-range").onClick(() => this.askPeriod(h)));
     }
+  }
+
+  // 기간 칩을 눌렀을 때 뜨는 메뉴
+  openPeriodMenu(evt, h) {
+    const menu = new Menu();
+    this.addPeriodItems(menu, h);
     menu.showAtMouseEvent(evt);
   }
 
@@ -304,9 +291,6 @@ export class HabitGridPlugin extends Plugin {
       else { fmSet(fm, "duration", n, style); fmSet(fm, "start", fmt(new Date()), style); }
     });
     new Notice(n === 0 ? tr("'{0}'은 기간 없이 계속해요", h.name) : tr("'{0}' 기간을 늘렸어요", h.name));
-  }
-  openDayItems(h, ds) {
-    new DayItemsModal(this.app, h.name, ds, (h.items && h.items.get(ds)) || []).open();
   }
   async moveHabit(h, delta) {
     const nfc = (x) => x.normalize("NFC");
@@ -402,15 +386,6 @@ export class HabitGridPlugin extends Plugin {
       value: cur || fallback || 0, unit: u, allowClear: cur > 0,
       onSubmit: async (v) => this.recordValue(this.habitOf(target, u), ds, v),
     }).open();
-  }
-
-  async setValue(file, ds, v, unit) {
-    await this.app.vault.process(file, (text) => {
-      const lines = text.split("\n").filter((l) => { const m = l.match(DONE_RE); return !(m && m[1] === ds); });
-      while (lines.length && lines[lines.length - 1].trim() === "") lines.pop();
-      if (v > 0) lines.push(`- [x] ${ds} ${writeQty(v, unit)}`);
-      return lines.join("\n") + "\n";
-    });
   }
 
   // 색 고르기: 맥의 기본(네이티브) 메뉴에는 동그라미를 못 넣어서 직접 그린 작은 창을 쓴다
@@ -526,26 +501,6 @@ export class HabitGridPlugin extends Plugin {
       new Notice(kind === "measure" ? tr("'{0}' 습관을 만들었어요. 대시보드에서 칸을 눌러 기록하세요", name) : tr("'{0}' 습관을 만들었어요", name));
       this.app.workspace.trigger("habit-grid:refresh");
     }).open();
-  }
-
-  async dedupe(file) {
-    try {
-      await this.app.vault.process(file, (text) => dedupeText(text) ?? text);
-    } catch (e) { console.error("habit-grid dedupe", e); }
-  }
-
-  openGoalMenu(evt, h, current) {
-    const menu = new Menu();
-    const set = async (goal) => this.app.fileManager.processFrontMatter(await this.mainFileOf(h.target, h.kind === "measure" ? h.unit : null), (fm) => {
-      fmDel(fm, "goal");
-      if (goal) fmSet(fm, "goal", goal, this.keyStyle());
-    });
-    menu.addItem((i) => i.setTitle(tr("매일")).setChecked(!current).onClick(() => set(0)));
-    menu.addSeparator();
-    for (let n = 1; n <= 6; n++) {
-      menu.addItem((i) => i.setTitle(tr("주 {0}회", n)).setChecked(current === n).onClick(() => set(n)));
-    }
-    menu.showAtMouseEvent(evt);
   }
 
   async saveSettings() { await this.saveData(this.settings); }

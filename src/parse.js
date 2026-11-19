@@ -58,21 +58,6 @@ export function parseDates(text) {
   return set;
 }
 
-// 완전히 똑같은 기록 줄이 여러 개면 첫 줄만 남긴다. 바뀐 게 없으면 null
-export function dedupeText(text) {
-  const seen = new Set();
-  let changed = false;
-  const out = text.split("\n").filter((line) => {
-    const m = line.match(DONE_RE);
-    if (!m) return true;
-    const key = line.trim();
-    if (seen.has(key)) { changed = true; return false; }
-    seen.add(key);
-    return true;
-  });
-  return changed ? out.join("\n") : null;
-}
-
 export function parseBlock(source) {
   const opts = {};
   for (const raw of source.split("\n")) {

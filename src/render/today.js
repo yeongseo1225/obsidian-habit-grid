@@ -1,47 +1,9 @@
 import { DAY_NAMES, tr, unitLabel } from "../i18n";
 import { addDays, fmt, weekMonthKey, weekStartOf } from "../dates";
-import { fmtDurShort, fmtNum, fmtQtyShort } from "../format";
+import { fmtDurShort, fmtNum } from "../format";
 import { goalForMonth, scheduleAt } from "../stats";
 import { stopEditorGrab } from "../ui";
-import { UNIT_HOURS, UNIT_MINUTES } from "../constants";
-
-// 최근 7일 (오늘 포함) 상태
-export function recentDaysOf(h, today) {
-  const days = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = addDays(today, -i);
-    const ds = fmt(d);
-    let state = "off", text = "", ratio = 0;
-    if (h.kind === "check") {
-      if (h.set.has(ds)) { state = "on"; text = "✓"; }
-    } else {
-      const v = h.entries.get(ds) || 0;
-      const g = goalForMonth(h.monthGoals, ds.slice(0, 7));
-      if (v > 0) { state = !g || v >= g ? "on" : "partial"; text = fmtQtyShort(v, h.unit); ratio = g ? Math.round(12 + 88 * Math.min(1, v / g)) : 100; }
-    }
-    days.push({ ds, dow: DAY_NAMES[d.getDay()], date: d.getDate(), today: i === 0, state, text, ratio });
-  }
-  return days;
-}
-
-export function renderRecent(card, days, onTap) {
-  const row = card.createDiv({ cls: "hg-recent" });
-  for (const d of days) {
-    const b = row.createDiv({ cls: `hg-day is-${d.state}` + (d.today ? " is-today" : "") });
-    if (d.ratio) b.style.setProperty("--hg-ratio", `${d.ratio}%`);
-    b.createDiv({ cls: "hg-day-dow", text: d.today ? tr("오늘") : d.dow });
-    b.createDiv({ cls: "hg-day-mark", text: d.text || String(d.date) });
-    b.setAttr("aria-label", d.ds);
-    if (onTap) b.addEventListener("click", () => onTap(d.ds));
-    stopEditorGrab(b);
-  }
-}
-
-export function stepsFor(unit) {
-  if (unit === UNIT_HOURS) return [[0.5, tr("+30분")], [1, tr("+1시간")]];
-  if (unit === UNIT_MINUTES) return [[10, tr("+10분")], [30, tr("+30분")]];
-  return [[1, `+1${unit}`]];
-}
+import { UNIT_HOURS } from "../constants";
 
 // 대시보드 맨 위 '오늘' 줄
 // 그 날 해야 하는 습관인지: 요일을 정했다면 그 요일이거나 이미 기록이 있을 때만

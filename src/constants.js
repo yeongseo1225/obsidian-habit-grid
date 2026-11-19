@@ -4,11 +4,9 @@ export const UNIT_HOURS = "시간";
 export const UNIT_MINUTES = "분";
 export const UNIT_PAGES = "쪽";
 
-// Defaults and older names that existing users may still have
+// Defaults
 export const DEFAULT_GROUP_PREFIX = "운동";
 export const DEFAULT_LOG_NAME = "Reminders log";
-export const LEGACY_HABITS_DIR = "습관";
-export const LEGACY_SYNC_DIR = "동기화";
 
 export const DEFAULT_SETTINGS = {
   folder: "Habits",

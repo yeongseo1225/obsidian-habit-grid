@@ -60,7 +60,7 @@ Habits/
 └── archive/                 archived habit files
 ```
 
-Subfolder names (`list`, `sync`, `archive`) are defaults; files placed directly in `Habits/` are also read.
+Only these three subfolders are read; files placed directly in `Habits/` (other than the dashboard) are ignored.
 
 ### Habit files
 

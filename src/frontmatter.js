@@ -12,7 +12,6 @@ export const FM = {
   start: ["시작", "start"],
   archived: ["보관", "archived"],
   color: ["색", "color"],
-  goal: ["목표", "goal", "주간목표"],
 };
 
 const UNIT_EN = { [UNIT_HOURS]: "hours", [UNIT_MINUTES]: "minutes", [UNIT_PAGES]: "pages" };

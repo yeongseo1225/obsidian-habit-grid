@@ -7,7 +7,7 @@ test("fmGet reads Korean and English names", () => {
   assert.deepEqual(fmGet({ 월별횟수: { "2026-11": 3 } }, "weeklyTimes"), { "2026-11": 3 });
   assert.equal(fmGet({ duration: 30 }, "duration"), 30);
   assert.equal(fmGet({ archived: false }, "archived"), undefined);
-  assert.equal(fmGet({ 주간목표: 2 }, "goal"), 2);
+  assert.equal(fmGet({ 색: "#fff" }, "color"), "#fff");
 });
 
 test("normalizeUnit maps English words and leaves other units alone", () => {
@@ -32,8 +32,8 @@ test("fmSet keeps the file's existing name and removes duplicates", () => {
 });
 
 test("fmDel removes every name, fmSetUnit follows the key style", () => {
-  const d = { 주간목표: 2, goal: 1 };
-  fmDel(d, "goal");
+  const d = { 색: "#fff", color: "#000" };
+  fmDel(d, "color");
   assert.deepEqual(d, {});
   const e = {};
   fmSetUnit(e, "시간", "en");

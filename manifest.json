@@ -1,0 +1,9 @@
+{
+  "id": "habit-grid",
+  "name": "Habit Grid",
+  "version": "0.2.4",
+  "minAppVersion": "1.4.0",
+  "description": "Habit 폴더의 - [x] 날짜 기록을 잔디 격자로 보여줘요.",
+  "author": "me",
+  "isDesktopOnly": false
+}

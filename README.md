@@ -159,7 +159,6 @@ Changes apply when a note is reopened.
 - Only the Reminders → Markdown direction is supported; editing a reminder does not change old records.
 - Days are counted in the device's local time zone.
 - The plugin moves a habit file between `list` and `archive` when you archive or restore it, and tidies already-archived habits at startup.
-- Mobile is supported, but there is no screenshot-based testing on every device size.
 
 ## License
 

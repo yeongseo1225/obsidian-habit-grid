@@ -7,8 +7,6 @@ export const UNIT_PAGES = "쪽";
 // Defaults and older names that existing users may still have
 export const DEFAULT_GROUP_PREFIX = "운동";
 export const DEFAULT_LOG_NAME = "Reminders log";
-// 예전 기본 이름. 이 이름의 기록 파일도 계속 읽는다
-export const LEGACY_LOG_NAME = "미리 알림 기록";
 export const LEGACY_HABITS_DIR = "습관";
 export const LEGACY_SYNC_DIR = "동기화";
 

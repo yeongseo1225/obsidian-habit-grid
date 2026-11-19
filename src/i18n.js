@@ -283,7 +283,7 @@ export const EN = {
   "습관 파일의 속성(frontmatter)을 새로 적을 때 쓰는 이름이에요. 이미 파일에 있는 속성은 지금 이름을 그대로 써요.": "Names used when the plugin writes properties (frontmatter) in habit files. Properties already in a file keep their current names.",
   "자동 (표시 언어 따라감)": "Auto (follow display language)",
   "미리 알림 기록 파일 이름": "Reminders log file name",
-  "단축어가 덧붙이는 기록 파일의 이름(확장자 없이)이에요. 예전 이름 '미리 알림 기록'도 계속 인식해요.": "Name of the log file your shortcut appends to, without the extension. The older name '미리 알림 기록' is still recognized.",
+  "단축어가 덧붙이는 기록 파일의 이름(확장자 없이)이에요.": "Name of the log file your shortcut appends to, without the extension.",
 };
 
 export function tr(k, ...a) {

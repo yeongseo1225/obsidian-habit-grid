@@ -1,5 +1,5 @@
 import { Plugin, TFile, TFolder, normalizePath, Notice, Menu } from "obsidian";
-import { DASHBOARD_TEMPLATE, DEFAULT_GROUP_PREFIX, DEFAULT_SETTINGS, DONE_RE, LEGACY_HABITS_DIR, LEGACY_LOG_NAME, LEGACY_SYNC_DIR, PRESET_COLORS, SKIP_RE, UNIT_HOURS, WD_ORDER } from "./constants";
+import { DASHBOARD_TEMPLATE, DEFAULT_GROUP_PREFIX, DEFAULT_SETTINGS, DONE_RE, LEGACY_HABITS_DIR, LEGACY_SYNC_DIR, PRESET_COLORS, SKIP_RE, UNIT_HOURS, WD_ORDER } from "./constants";
 import { resolveLang, setLang, tr, unitLabel } from "./i18n";
 import { fmDel, fmGet, fmKey, fmSet, fmSetUnit, normalizeUnit, resolveKeyStyle, unitForKey } from "./frontmatter";
 import { fmt, monthKey } from "./dates";
@@ -81,7 +81,7 @@ export class HabitGridPlugin extends Plugin {
 
   isLog(file) {
     const name = file.basename.normalize("NFC");
-    return name === this.settings.logName.normalize("NFC") || name === LEGACY_LOG_NAME.normalize("NFC");
+    return name === this.settings.logName.normalize("NFC");
   }
 
   // Property names to write in habit files: "ko" or "en"

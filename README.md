@@ -127,7 +127,7 @@ Build the shortcut with these actions, in order:
 
 Run it by hand or with a personal automation. Because the shortcut looks back seven days, the same line can be appended more than once; duplicates are counted once. Titles like `Study 2h` or `Workout squats` become amounts and items as described above.
 
-The plugin recognizes the log file by name. The default is `Reminders log`; you can set another name in settings. The older name `미리 알림 기록` is still read. On first setup the plugin creates `Habits/sync/` and an empty `Reminders log.md` for the shortcut to append to.
+The plugin recognizes the log file by name. The default is `Reminders log`; you can set another name in settings. On first setup the plugin creates `Habits/sync/` and an empty `Reminders log.md` for the shortcut to append to.
 
 ## Dashboard code block
 
@@ -209,4 +209,4 @@ Habit Grid는 마크다운 파일에 적은 습관 기록을 GitHub 잔디 같�
 
 7일치를 다시 읽기 때문에 같은 줄이 여러 번 붙을 수 있지만, 중복은 한 번만 세요.
 
-예전 이름 `미리 알림 기록.md`도 계속 읽어요. 처음 설정할 때 `sync/` 폴더와 빈 `Reminders log.md`를 자동으로 만들어요.
+처음 설정할 때 `sync/` 폴더와 빈 `Reminders log.md`를 자동으로 만들어요.

@@ -298,6 +298,11 @@ export const EN = {
   "명령 이름과 왼쪽 아이콘 이름은 옵시디언을 다시 시작하거나 플러그인을 껐다 켜면 바뀌어요.": "Command and ribbon names change after you restart Obsidian or reload the plugin.",
   "이날 한 시간을 적어 주세요.": "Enter the time for this day.",
   "이날 한 양을 적어 주세요.": "Enter the amount for this day.",
+  "속성 이름": "Property names",
+  "습관 파일의 속성(frontmatter)을 새로 적을 때 쓰는 이름이에요. 이미 파일에 있는 속성은 지금 이름을 그대로 써요.": "Names used when the plugin writes properties (frontmatter) in habit files. Properties already in a file keep their current names.",
+  "자동 (표시 언어 따라감)": "Auto (follow display language)",
+  "미리 알림 기록 파일 이름": "Reminders log file name",
+  "단축어가 덧붙이는 기록 파일의 이름(확장자 없이)이에요. 'Reminders log'라는 이름도 항상 인식해요.": "Name of the log file your shortcut appends to, without the extension. A file named 'Reminders log' is always recognized too.",
 };
 
 export function tr(k, ...a) {
@@ -313,7 +318,7 @@ export function setLang(l) {
 
 export function resolveLang(pref) {
   if (pref === "ko" || pref === "en") return pref;
-  try { return String(moment.locale() || navigator.language || "").toLowerCase().startsWith("ko") ? "ko" : "en"; } catch (_) { return "ko"; }
+  try { return String(moment.locale() || navigator.language || "").toLowerCase().startsWith("ko") ? "ko" : "en"; } catch (_) { return "en"; }
 }
 
 // 시간·분·쪽은 저장된 단위 값은 그대로 두고, 화면에 보일 때만 번역해요

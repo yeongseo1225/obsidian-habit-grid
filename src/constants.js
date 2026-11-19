@@ -1,6 +1,7 @@
 export const DEFAULT_SETTINGS = {
   folder: "Habits",
-  lang: "ko",         // 화면 언어: "ko" | "en" | "auto"(옵시디언 언어 따라감)
+  lang: "auto",       // 화면 언어: "auto"(옵시디언 언어 따라감) | "ko" | "en"
+  keyStyle: "auto",   // 습관 파일에 적는 속성 이름: "auto"(화면 언어 따라감) | "ko" | "en"
   range: "year", // "year" = 연도별, "all" = 첫 기록부터 전부, "recent" = 최근 weeks주
   weeks: 20,
   color: "",
@@ -15,6 +16,9 @@ export const DEFAULT_SETTINGS = {
   syncDir: "sync",   // 단축어가 쓰는 미리 알림 기록이 들어가는 하위 폴더
   initialized: false,
 };
+
+// 영어 사용자를 위해 항상 같이 인식하는 미리 알림 기록 파일 이름
+export const ALT_LOG_NAME = "Reminders log";
 
 export const DASHBOARD_TEMPLATE = `---
 habit-dashboard: true

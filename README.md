@@ -56,7 +56,7 @@ Everything lives under one folder (default `Habits`):
 Habits/
 ├── Habits Dashboard.md      dashboard note
 ├── list/                    one file per habit, e.g. Study.md
-├── sync/                    imported Reminders log: <log name>.md
+├── sync/                    imported Reminders log: Reminders log.md
 └── archive/                 archived habit files
 ```
 
@@ -66,33 +66,36 @@ Subfolder names (`list`, `sync`, `archive`) are defaults; files placed directly 
 
 A habit file is a Markdown note in `Habits/list/`. The file name is the habit name. Settings live in the frontmatter, and manual records are lines in the body.
 
-| Key | Meaning |
-| --- | --- |
-| `단위` (alias `unit`) | Unit for an amount habit, e.g. `시간` (hours), `분`, `쪽`, `km`, or any text |
-| `월별목표` (alias `monthGoals`) | Daily goal per month: `"2026-11": 2` |
-| `월별횟수` | Times per week per month: `"2026-11": 3` |
-| `월별요일` | Specific weekdays per month, `0` = Sunday … `6` = Saturday: `"2026-11": [1, 3, 5]` |
-| `기간` | Challenge length in days |
-| `시작` | Challenge start date, `YYYY-MM-DD` |
-| `보관` (alias `archived`) | `true` when archived |
-| `색` (alias `color`) | Card color, e.g. `"#3b82f6"` |
+Every property has a Korean name and an English name. Both are always read; the plugin writes whichever style the file already uses, or the style you pick in settings (see *Property names*).
+
+| English name | Korean name | Meaning |
+| --- | --- | --- |
+| `unit` | `단위` | Unit for an amount habit: `hours`, `minutes`, `pages`, `km`, or any text (Korean `시간`, `분`, `쪽` also work) |
+| `monthGoals` | `월별목표` | Daily goal per month: `"2026-11": 2` |
+| `weeklyTimes` | `월별횟수` | Times per week, per month: `"2026-11": 3` |
+| `weekdays` | `월별요일` | Specific weekdays per month, `0` = Sunday … `6` = Saturday: `"2026-11": [1, 3, 5]` |
+| `duration` | `기간` | Challenge length in days |
+| `start` | `시작` | Challenge start date, `YYYY-MM-DD` |
+| `archived` | `보관` | `true` when archived |
+| `color` | `색` | Card color, e.g. `"#3b82f6"` |
+| `goal` | `목표` | Older single goal value (still read) |
 
 Example:
 
 ```markdown
 ---
-단위: 시간
-월별목표:
+unit: hours
+monthGoals:
   "2026-11": 2
-월별횟수:
+weeklyTimes:
   "2026-11": 5
-색: "#3b82f6"
+color: "#3b82f6"
 ---
 - [x] 2026-11-18 1h30m
 - [x] 2026-11-19 2h
 ```
 
-The plugin writes these keys itself when you use its menus. The key names are currently Korean; English aliases are read for some keys (see above).
+The plugin writes these properties itself when you use its menus.
 
 ### Record lines
 
@@ -111,7 +114,7 @@ That is a checked task, a date (`YYYY-MM-DD`), and the Reminders title. Rules:
 
 ## iPhone Shortcuts integration (Reminders)
 
-Habit logs can be collected from the Reminders app by an iOS Shortcut. It appends completed reminders from a list named **Habit** to `sync/미리 알림 기록.md`.
+Habit logs can be collected from the Reminders app by an iOS Shortcut. It appends completed reminders from a list named **Habit** to `sync/Reminders log.md`.
 
 Build the shortcut with these actions, in order:
 
@@ -120,11 +123,11 @@ Build the shortcut with these actions, in order:
 3. Inside the loop: **Format Date** – the item's Completion Date, custom format `yyyy-MM-dd`.
 4. Inside the loop: **Text** – `- [x] ` + the formatted date + a space + the reminder's Title.
 5. After the loop: **Combine Text** – the repeat results, separated by **New Lines**.
-6. **Append to File** – the combined text, to `Habits/sync/미리 알림 기록.md` in your vault (create the file first if needed).
+6. **Append to File** – the combined text, to `Habits/sync/Reminders log.md` in your vault (create the file first if needed).
 
 Run it by hand or with a personal automation. Because the shortcut looks back seven days, the same line can be appended more than once; duplicates are counted once. Titles like `Study 2h` or `Workout squats` become amounts and items as described above.
 
-The log file name is currently fixed to `미리 알림 기록` ("Reminders log").
+The plugin recognizes the log file by name: `Reminders log` always works, and you can set another name in settings (the default `미리 알림 기록` is kept for existing users).
 
 ## Dashboard code block
 
@@ -139,7 +142,9 @@ Optional lines inside the block: `habit: Study, Workout` (only these habits), `w
 
 | Setting | Description |
 | --- | --- |
-| Language | Auto, Korean, or English |
+| Language | Auto (follows the app language), Korean, or English |
+| Property names | Names written in habit files: auto, Korean, or English. Existing properties keep their names |
+| Reminders log file name | Name of the log file the shortcut appends to |
 | Habits folder | Folder that holds your habit files |
 | Dashboard note name | Name of the dashboard note, with a "Create now" button |
 | Time range | By year, all records, or recent weeks only |
@@ -153,8 +158,7 @@ Changes apply when a note is reopened.
 
 ## Limitations
 
-- Korean frontmatter keys and the Korean log file name are currently required in some places (see tables above); English aliases are partial.
-- Parsing of reminder titles recognises units `시간`, `분`, `회`, `쪽`, `페이지`, `km` and `h`.
+- Reminder titles with an amount are parsed for the units `시간`, `분`, `회`, `쪽`, `페이지`, `km` and `h` (for example `Study 2h`). Other English unit words such as "min" in a reminder title are not parsed yet.
 - Amount habits cannot have a challenge duration yet.
 - Only the Reminders → Markdown direction is supported; editing a reminder does not change old records.
 - Days are counted in the device's local time zone.

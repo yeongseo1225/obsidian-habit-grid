@@ -17,6 +17,13 @@ export class HabitGridSettingTab extends PluginSettingTab {
     new Setting(containerEl).setName(tr("습관 폴더")).setDesc(tr("습관 기록 파일이 들어 있는 폴더 경로"))
       .addText((t) => t.setPlaceholder("Habits").setValue(s.folder).onChange(async (v) => { s.folder = v.trim() || "Habits"; await save(); }));
 
+    new Setting(containerEl).setName(tr("속성 이름")).setDesc(tr("습관 파일의 속성(frontmatter)을 새로 적을 때 쓰는 이름이에요. 이미 파일에 있는 속성은 지금 이름을 그대로 써요."))
+      .addDropdown((d) => d.addOption("auto", tr("자동 (표시 언어 따라감)")).addOption("ko", "한국어").addOption("en", "English")
+        .setValue(["ko", "en"].includes(s.keyStyle) ? s.keyStyle : "auto").onChange(async (v) => { s.keyStyle = v; await save(); }));
+
+    new Setting(containerEl).setName(tr("미리 알림 기록 파일 이름")).setDesc(tr("단축어가 덧붙이는 기록 파일의 이름(확장자 없이)이에요. 'Reminders log'라는 이름도 항상 인식해요."))
+      .addText((t) => t.setPlaceholder(DEFAULT_SETTINGS.logName).setValue(s.logName).onChange(async (v) => { s.logName = v.trim() || DEFAULT_SETTINGS.logName; await save(); this.plugin.app.workspace.trigger("habit-grid:refresh"); }));
+
     new Setting(containerEl).setName(tr("대시보드 노트 이름")).setDesc(tr("습관 폴더 안에 만들어지고, 습관 목록에서는 빠져요"))
       .addText((t) => t.setPlaceholder(DEFAULT_SETTINGS.dashboardName).setValue(s.dashboardName).onChange(async (v) => { s.dashboardName = v.trim() || DEFAULT_SETTINGS.dashboardName; await save(); }))
       .addButton((b) => b.setButtonText(tr("지금 만들기")).onClick(() => this.plugin.setup(true)));

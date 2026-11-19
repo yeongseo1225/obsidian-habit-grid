@@ -1,6 +1,7 @@
 import { Plugin, TFile, TFolder, normalizePath, Notice, Menu } from "obsidian";
-import { DASHBOARD_TEMPLATE, DEFAULT_SETTINGS, DONE_RE, PRESET_COLORS, SKIP_RE, WD_ORDER } from "./constants";
+import { ALT_LOG_NAME, DASHBOARD_TEMPLATE, DEFAULT_SETTINGS, DONE_RE, PRESET_COLORS, SKIP_RE, WD_ORDER } from "./constants";
 import { resolveLang, setLang, tr, unitLabel } from "./i18n";
+import { fmDel, fmGet, fmKey, fmSet, fmSetUnit, normalizeUnit, resolveKeyStyle, unitForKey } from "./frontmatter";
 import { fmt, monthKey } from "./dates";
 import { writeQty } from "./format";
 import { dedupeText, parseDates, parseEntries, parseLog, parseSkips, parseTitle } from "./parse";
@@ -81,8 +82,12 @@ export class HabitGridPlugin extends Plugin {
   }
 
   isLog(file) {
-    return file.basename.normalize("NFC") === this.settings.logName.normalize("NFC");
+    const name = file.basename.normalize("NFC");
+    return name === this.settings.logName.normalize("NFC") || name === ALT_LOG_NAME;
   }
+
+  // Property names to write in habit files: "ko" or "en"
+  keyStyle() { return resolveKeyStyle(this.settings.keyStyle); }
 
   // Habit 폴더의 습관들을 읽어 온다.
   //  - 습관 파일(공부.md 등): 플러그인만 고친다 (색·목표·직접 기록·제외한 날)
@@ -157,30 +162,30 @@ export class HabitGridPlugin extends Plugin {
     for (const g of list) {
       const mainText = g.main ? await app.vault.cachedRead(g.main) : "";
       const fm = (g.main && app.metadataCache.getFileCache(g.main)?.frontmatter) || {};
-      const unitRaw = fm["단위"] || fm["unit"];
+      const unitRaw = normalizeUnit(fmGet(fm, "unit"));
       const skips = parseSkips(mainText);
       const logDates = new Set(g.log.keys());
       const logUnit = [...g.log.values()].map((v) => v.unit).find(Boolean);
-      const legacy = parseInt(fm["목표"] ?? fm["goal"] ?? fm["주간목표"] ?? 0, 10) || 0;
-      const freqsRaw = Object.assign({}, fm["월별횟수"] || (legacy ? { [monthKey(new Date())]: legacy } : {}));
+      const legacy = parseInt(fmGet(fm, "goal") ?? 0, 10) || 0;
+      const freqsRaw = Object.assign({}, fmGet(fm, "weeklyTimes") || (legacy ? { [monthKey(new Date())]: legacy } : {}));
       const daysRaw = {};
-      for (const [k, v] of Object.entries(fm["월별요일"] || {})) { const a = (Array.isArray(v) ? v : []).map(Number).filter((n) => n >= 0 && n <= 6); if (a.length) daysRaw[String(k)] = [...new Set(a)]; }
+      for (const [k, v] of Object.entries(fmGet(fm, "weekdays") || {})) { const a = (Array.isArray(v) ? v : []).map(Number).filter((n) => n >= 0 && n <= 6); if (a.length) daysRaw[String(k)] = [...new Set(a)]; }
       const freqs = Object.assign({}, freqsRaw);
       for (const [k, v] of Object.entries(daysRaw)) freqs[k] = v.length;
       const base = {
-        name: g.name, key: `${folderPath}/${g.name}`, fm, color: fm["색"] || fm["color"] || "", freqs, freqsRaw, days: daysRaw,
+        name: g.name, key: `${folderPath}/${g.name}`, fm, color: fmGet(fm, "color") || "", freqs, freqsRaw, days: daysRaw,
         target: g, file: g.main, logDates, items: g.items || null,
-        archived: !!(fm["보관"] || fm["archived"]),
+        archived: !!fmGet(fm, "archived"),
       };
 
       if (!unitRaw && !logUnit && !g.sources.length) {
         const set = new Set([...parseDates(mainText), ...logDates]);
         for (const ds of skips) set.delete(ds);
-        const pd = parseInt(fm["기간"] ?? 0, 10) || 0;
-        const ps = fm["시작"] ? String(fm["시작"]).slice(0, 10) : "";
+        const pd = parseInt(fmGet(fm, "duration") ?? 0, 10) || 0;
+        const ps = fmGet(fm, "start") ? String(fmGet(fm, "start")).slice(0, 10) : "";
         out.push({ ...base, kind: "check", set,
           period: pd > 0 && /^\d{4}-\d{2}-\d{2}$/.test(ps) ? { days: pd, start: ps } : null,
-          goal: parseInt(fm["goal"] ?? fm["목표"] ?? fm["주간목표"] ?? 0, 10) || 0 });
+          goal: parseInt(fmGet(fm, "goal") ?? 0, 10) || 0 });
         continue;
       }
 
@@ -198,9 +203,9 @@ export class HabitGridPlugin extends Plugin {
       for (const [ds, v] of parseEntries(mainText)) if (v > 0) entries.set(ds, v); // 직접 적은 값이 우선
       for (const ds of skips) entries.delete(ds);
       for (const [ds, v] of [...entries]) if (!v) entries.delete(ds);
-      const explicit = fm["월별목표"] || fm["monthGoals"] || {};
+      const explicit = fmGet(fm, "monthGoals") || {};
       out.push({ ...base, kind: "measure", unit, entries, set: new Set(entries.keys()),
-        goal: parseInt(fm["목표"] ?? fm["goal"] ?? 0, 10) || 0,
+        goal: parseInt(fmGet(fm, "goal") ?? 0, 10) || 0,
         explicit, inferred, monthGoals: Object.assign({}, inferred, explicit) });
     }
     return out;
@@ -291,11 +296,12 @@ export class HabitGridPlugin extends Plugin {
     }
     const file = await this.mainFileOf(h.target, null);
     await this.app.fileManager.processFrontMatter(file, (fm) => {
-      if (n === 0) { delete fm["기간"]; delete fm["시작"]; return; }
-      if (n < 0) { fm["기간"] = -n; if (!fm["시작"]) fm["시작"] = fmt(new Date()); return; }
-      const cur = parseInt(fm["기간"] ?? 0, 10) || 0;
-      if (cur > 0 && fm["시작"]) fm["기간"] = cur + n;
-      else { fm["기간"] = n; fm["시작"] = fmt(new Date()); }
+      const style = this.keyStyle();
+      if (n === 0) { fmDel(fm, "duration"); fmDel(fm, "start"); return; }
+      if (n < 0) { fmSet(fm, "duration", -n, style); if (!fmGet(fm, "start")) fmSet(fm, "start", fmt(new Date()), style); return; }
+      const cur = parseInt(fmGet(fm, "duration") ?? 0, 10) || 0;
+      if (cur > 0 && fmGet(fm, "start")) fmSet(fm, "duration", cur + n, style);
+      else { fmSet(fm, "duration", n, style); fmSet(fm, "start", fmt(new Date()), style); }
     });
     new Notice(n === 0 ? tr("'{0}'은 기간 없이 계속해요", h.name) : tr("'{0}' 기간을 늘렸어요", h.name));
   }
@@ -325,8 +331,7 @@ export class HabitGridPlugin extends Plugin {
   async setArchived(h, on) {
     const file = await this.mainFileOf(h.target, h.kind === "measure" ? h.unit : null);
     await this.app.fileManager.processFrontMatter(file, (fm) => {
-      delete fm.archived;
-      if (on) fm["보관"] = true; else delete fm["보관"];
+      if (on) fmSet(fm, "archived", true, this.keyStyle()); else fmDel(fm, "archived");
     });
     await this.moveHabitFile(file, on);
     new Notice(on ? tr("'{0}'을 보관함으로 옮겼어요. 기록은 그대로 남아 있어요", h.name) : tr("'{0}'을 다시 꺼냈어요", h.name));
@@ -355,7 +360,7 @@ export class HabitGridPlugin extends Plugin {
     for (const f of [...list.children]) {
       if (!(f instanceof TFile) || f.extension !== "md" || this.isLog(f) || this.isDashboard(f)) continue;
       const fm = this.app.metadataCache.getFileCache(f)?.frontmatter;
-      if (fm && (fm["보관"] || fm.archived) && list.name !== archName) await this.moveHabitFile(f, true);
+      if (fm && fmGet(fm, "archived") && list.name !== archName) await this.moveHabitFile(f, true);
     }
   }
 
@@ -383,7 +388,8 @@ export class HabitGridPlugin extends Plugin {
     const existing = this.app.vault.getAbstractFileByPath(path);
     if (existing instanceof TFile) return existing;
     await this.ensureHabitDir();
-    target.main = await this.app.vault.create(path, unit ? `---\n\ub2e8\uc704: ${unit}\n---\n` : "");
+    const unitKey = fmKey("unit", this.keyStyle());
+    target.main = await this.app.vault.create(path, unit ? `---\n${unitKey}: ${unitForKey(unit, unitKey)}\n---\n` : "");
     return target.main;
   }
 
@@ -412,8 +418,7 @@ export class HabitGridPlugin extends Plugin {
     const apply = async (color) => {
       const file = await this.mainFileOf(target, unit || null);
       await this.app.fileManager.processFrontMatter(file, (fm) => {
-        delete fm.color;
-        if (color) fm["색"] = color; else delete fm["색"];
+        if (color) fmSet(fm, "color", color, this.keyStyle()); else fmDel(fm, "color");
       });
     };
     const cur = (current || "").toLowerCase();
@@ -463,15 +468,16 @@ export class HabitGridPlugin extends Plugin {
       onSave: async (work, fwork, dwork) => {
         const file = await this.mainFileOf(h.target, h.kind === "measure" ? h.unit : null);
         await this.app.fileManager.processFrontMatter(file, (fm) => {
+          const style = this.keyStyle();
           const sortObj = (o) => { const r = {}; for (const k of Object.keys(o).sort()) r[k] = o[k]; return r; };
           if (h.kind === "measure") {
-            if (Object.keys(work).length) fm["월별목표"] = sortObj(work); else delete fm["월별목표"];
-            if (!fm["단위"]) fm["단위"] = h.unit;
+            if (Object.keys(work).length) fmSet(fm, "monthGoals", sortObj(work), style); else fmDel(fm, "monthGoals");
+            if (!fmGet(fm, "unit")) fmSetUnit(fm, h.unit, style);
           }
           for (const k of Object.keys(dwork)) if (!dwork[k].length) delete dwork[k];
-          if (Object.keys(dwork).length) fm["월별요일"] = sortObj(dwork); else delete fm["월별요일"];
-          if (Object.keys(fwork).length) fm["월별횟수"] = sortObj(fwork); else delete fm["월별횟수"];
-          delete fm["목표"]; delete fm.goal; delete fm["주간목표"];
+          if (Object.keys(dwork).length) fmSet(fm, "weekdays", sortObj(dwork), style); else fmDel(fm, "weekdays");
+          if (Object.keys(fwork).length) fmSet(fm, "weeklyTimes", sortObj(fwork), style); else fmDel(fm, "weeklyTimes");
+          fmDel(fm, "goal");
         });
         new Notice(tr("{0} 목표를 저장했어요", h.name));
       },
@@ -486,11 +492,11 @@ export class HabitGridPlugin extends Plugin {
       title: tr("{0} · {1}년 {2}월 목표", name, y, m), desc: tr("하루에 몇 {0} 하면 달성으로 볼까요? 비워 두면 앞 달 목표를 이어서 써요.", unitLabel(u)),
       value: cur, unit: u, allowClear: true,
       onSubmit: async (v) => this.app.fileManager.processFrontMatter(await this.mainFileOf(target, u), (fm) => {
-        const goals = Object.assign({}, fm["월별목표"] || {});
+        const goals = Object.assign({}, fmGet(fm, "monthGoals") || {});
         if (v > 0) goals[key] = Math.round(v * 10000) / 10000; else delete goals[key];
         const sorted = {};
         for (const k of Object.keys(goals).sort()) sorted[k] = goals[k];
-        fm["월별목표"] = sorted;
+        fmSet(fm, "monthGoals", sorted, this.keyStyle());
       }),
     }).open();
   }
@@ -501,14 +507,15 @@ export class HabitGridPlugin extends Plugin {
       if (this.app.vault.getAbstractFileByPath(path) || this.app.vault.getAbstractFileByPath(normalizePath(`${this.settings.folder}/${name}.md`))) { new Notice(tr("같은 이름의 습관이 이미 있어요")); return; }
       await this.ensureHabitDir();
       const key = monthKey(new Date());
+      const style = this.keyStyle();
       const fm = [];
       if (kind === "measure") {
-        fm.push(`\ub2e8\uc704: ${unit}`);
-        if (goal > 0) fm.push("\uc6d4\ubcc4\ubaa9\ud45c:", `  "${key}": ${Math.round(goal * 10000) / 10000}`);
+        fm.push(`${fmKey("unit", style)}: ${unitForKey(unit, fmKey("unit", style))}`);
+        if (goal > 0) fm.push(`${fmKey("monthGoals", style)}:`, `  "${key}": ${Math.round(goal * 10000) / 10000}`);
       }
-      if (days && days.length) fm.push("\uc6d4\ubcc4\uc694\uc77c:", `  "${key}": [${WD_ORDER.filter((d) => days.includes(d)).join(", ")}]`);
-      else if (freq > 0) fm.push("\uc6d4\ubcc4\ud69f\uc218:", `  "${key}": ${freq}`);
-      if (period > 0) fm.push(`\uae30\uac04: ${period}`, `\uc2dc\uc791: ${fmt(new Date())}`);
+      if (days && days.length) fm.push(`${fmKey("weekdays", style)}:`, `  "${key}": [${WD_ORDER.filter((d) => days.includes(d)).join(", ")}]`);
+      else if (freq > 0) fm.push(`${fmKey("weeklyTimes", style)}:`, `  "${key}": ${freq}`);
+      if (period > 0) fm.push(`${fmKey("duration", style)}: ${period}`, `${fmKey("start", style)}: ${fmt(new Date())}`);
       await this.app.vault.create(path, fm.length ? `---\n${fm.join("\n")}\n---\n` : "");
       if (kind === "items") {
         // 미리 알림 제목이 '이름 + 내용'이면 내용이 항목으로 모이도록, 이름을 묶음 이름으로 등록
@@ -530,8 +537,8 @@ export class HabitGridPlugin extends Plugin {
   openGoalMenu(evt, h, current) {
     const menu = new Menu();
     const set = async (goal) => this.app.fileManager.processFrontMatter(await this.mainFileOf(h.target, h.kind === "measure" ? h.unit : null), (fm) => {
-      delete fm.goal; delete fm["주간목표"];
-      if (goal) fm["목표"] = goal; else delete fm["목표"];
+      fmDel(fm, "goal");
+      if (goal) fmSet(fm, "goal", goal, this.keyStyle());
     });
     menu.addItem((i) => i.setTitle(tr("매일")).setChecked(!current).onClick(() => set(0)));
     menu.addSeparator();

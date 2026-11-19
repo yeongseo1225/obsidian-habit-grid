@@ -4,3 +4,4 @@ _backup*
 .DS_Store
 node_modules
 main.js
+.test-build

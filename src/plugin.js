@@ -4,7 +4,7 @@ import { resolveLang, setLang, tr, unitLabel } from "./i18n";
 import { fmDel, fmGet, fmKey, fmSet, fmSetUnit, normalizeUnit, resolveKeyStyle, unitForKey } from "./frontmatter";
 import { fmt, monthKey } from "./dates";
 import { writeQty } from "./format";
-import { parseDates, parseEntries, parseLog, parseSkips, parseTitle } from "./parse";
+import { convertAmount, parseDates, parseEntries, parseLog, parseSkips, parseTitle } from "./parse";
 import { HabitView } from "./view";
 import { ConfirmModal, NumberModal } from "./modals/simple";
 import { GoalsModal } from "./modals/goals";
@@ -184,7 +184,7 @@ export class HabitGridPlugin extends Plugin {
         entries.set(ds, Math.max(entries.get(ds) || 0, amount));
         if (amount) { const mk = ds.slice(0, 7); inferred[mk] = Math.max(inferred[mk] || 0, amount); }
       };
-      for (const [ds, v] of g.log) addAuto(ds, v.amount);
+      for (const [ds, v] of g.log) addAuto(ds, convertAmount(v.amount, v.unit, unit));
       for (const [ds, v] of parseEntries(mainText)) if (v > 0) entries.set(ds, v); // 직접 적은 값이 우선
       for (const ds of skips) entries.delete(ds);
       for (const [ds, v] of [...entries]) if (!v) entries.delete(ds);

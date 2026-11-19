@@ -78,3 +78,13 @@ test("loadHabits returns null when the habits folder is missing", async () => {
   const p = plugin({});
   assert.equal(await p.loadHabits("Nope"), null);
 });
+
+test("loadHabits merges English hour and minute titles into one habit", async () => {
+  const p = plugin({
+    sync: { "Reminders log.md": ["- [x] 2026-11-17 Study 2h\n- [x] 2026-11-18 Study 1h 30m\n- [x] 2026-11-19 Study 45m\n"] },
+  });
+  const out = await p.loadHabits("Habits");
+  assert.deepEqual(out.map((h) => h.name), ["Study"]);
+  assert.equal(out[0].unit, "시간");
+  assert.deepEqual([...out[0].entries], [["2026-11-17", 2], ["2026-11-18", 1.5], ["2026-11-19", 0.75]]);
+});

@@ -36,7 +36,9 @@ habit-dashboard: true
 export const DONE_RE = /^\s*[-*]\s*\[[xX]\]\s*(\d{4}-\d{2}-\d{2})(.*)$/;
 
 // "공부 3시간 이상" 같은 미리 알림 이름에서 습관 이름·목표량·단위를 읽는다
-export const TITLE_RE = /^(.+?)\s+(\d+(?:\.\d+)?)\s*(시간|분|회|쪽|페이지|km|h)\s*(?:이상)?$/;
+export const TITLE_RE = /^(.+?)\s+(\d+(?:\.\d+)?)\s*(시간|분|회|쪽|페이지|km|hours?|hrs?|h|minutes?|mins?|m|pages?)\s*(?:이상)?$/i;
+// "공부 1h 30m" 처럼 시간과 분을 같이 적은 영어 제목
+export const TITLE_HM_EN_RE = /^(.+?)\s+(\d+)\s*(?:hours?|hrs?|h)\s*(\d+)\s*(?:minutes?|mins?|m)\s*$/i;
 
 export const WD_ORDER = [1, 2, 3, 4, 5, 6, 0];
 

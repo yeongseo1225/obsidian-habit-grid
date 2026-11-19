@@ -164,6 +164,18 @@ Changes apply when a note is reopened.
 - Days are counted in the device's local time zone.
 - The plugin moves a habit file between `list` and `archive` when you archive or restore it, and tidies already-archived habits at startup.
 
+## Development
+
+The source lives in `src/` and is bundled into `main.js` with esbuild. Edit `src/`, not `main.js`.
+
+```bash
+npm install
+npm run dev     # rebuild main.js on every save (works with the Hot Reload plugin)
+npm run build   # one-off production build
+npm run lint    # eslint
+npm test        # node tests for the pure logic
+```
+
 ## License
 
 [MIT](LICENSE)

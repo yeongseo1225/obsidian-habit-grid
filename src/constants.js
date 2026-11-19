@@ -9,7 +9,7 @@ export const DEFAULT_GROUP_PREFIX = "운동";
 export const DEFAULT_LOG_NAME = "Reminders log";
 
 export const DEFAULT_SETTINGS = {
-  folder: "Habits",
+  folder: "habit-grid",
   lang: "auto",       // 화면 언어: "auto"(옵시디언 언어 따라감) | "ko" | "en"
   keyStyle: "auto",   // 습관 파일에 적는 속성 이름: "auto"(화면 언어 따라감) | "ko" | "en"
   color: "",

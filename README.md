@@ -37,7 +37,7 @@ Track habits in plain Markdown files and see them as a GitHub-style contribution
 2. Copy them into `<your vault>/.obsidian/plugins/habit-grid/`.
 3. Reload the app and enable **Habit Grid** under **Settings → Community plugins**.
 
-On first start the plugin creates the `Habits` folder and a `Habits Dashboard` note. You can also run **Create habits folder and dashboard** from the command palette.
+On first start the plugin creates the `habit-grid` folder and a `Habits Dashboard` note. You can also run **Create habits folder and dashboard** from the command palette.
 
 ## Commands
 
@@ -50,21 +50,21 @@ On first start the plugin creates the `Habits` folder and a `Habits Dashboard` n
 
 ## Folder structure
 
-Everything lives under one folder (default `Habits`):
+Everything lives under one folder (default `habit-grid`):
 
 ```
-Habits/
+habit-grid/
 ├── Habits Dashboard.md      dashboard note
 ├── list/                    one file per habit, e.g. Study.md
 ├── sync/                    imported Reminders log: Reminders log.md
 └── archive/                 archived habit files
 ```
 
-Only these three subfolders are read; files placed directly in `Habits/` (other than the dashboard) are ignored.
+Only these three subfolders are read; files placed directly in `habit-grid/` (other than the dashboard) are ignored.
 
 ### Habit files
 
-A habit file is a Markdown note in `Habits/list/`. The file name is the habit name. Settings live in the frontmatter, and manual records are lines in the body.
+A habit file is a Markdown note in `habit-grid/list/`. The file name is the habit name. Settings live in the frontmatter, and manual records are lines in the body.
 
 Every property has a Korean name and an English name. Both are always read; the plugin writes whichever style the file already uses, or the style you pick in settings (see *Property names*).
 
@@ -123,11 +123,11 @@ Build the shortcut with these actions, in order:
 3. Inside the loop: **Format Date** – the item's Completion Date, custom format `yyyy-MM-dd`.
 4. Inside the loop: **Text** – `- [x] ` + the formatted date + a space + the reminder's Title.
 5. After the loop: **Combine Text** – the repeat results, separated by **New Lines**.
-6. **Append to File** – the combined text, to `Habits/sync/Reminders log.md` in your vault (create the file first if needed).
+6. **Append to File** – the combined text, to `habit-grid/sync/Reminders log.md` in your vault (create the file first if needed).
 
 Run it by hand or with a personal automation. Because the shortcut looks back seven days, the same line can be appended more than once; duplicates are counted once. Titles like `Study 2h` or `Workout squats` become amounts and items as described above.
 
-The plugin recognizes the log file by name. The default is `Reminders log`; you can set another name in settings. On first setup the plugin creates `Habits/sync/` and an empty `Reminders log.md` for the shortcut to append to.
+The plugin recognizes the log file by name. The default is `Reminders log`; you can set another name in settings. On first setup the plugin creates `habit-grid/sync/` and an empty `Reminders log.md` for the shortcut to append to.
 
 ## Dashboard code block
 
@@ -136,7 +136,7 @@ The plugin recognizes the log file by name. The default is `Reminders log`; you 
 ```
 ````
 
-Optional lines inside the block: `habit: Study, Workout` (only these habits), `weeks: 20`, `color: #3b82f6`, `folder: Habits`.
+Optional lines inside the block: `habit: Study, Workout` (only these habits), `weeks: 20`, `color: #3b82f6`, `folder: habit-grid`.
 
 ## Settings
 
@@ -194,7 +194,7 @@ Habit Grid는 마크다운 파일에 적은 습관 기록을 GitHub 잔디 같�
 
 ## 폴더와 파일
 
-`Habits/` 아래에 `Habits Dashboard.md`, `list/`(습관 파일), `sync/`(`Reminders log.md` 미리 알림 기록), `archive/`(보관한 습관)가 있어요. 습관 파일의 frontmatter 키는 `단위`, `월별목표`, `월별횟수`, `월별요일`(0=일 … 6=토), `기간`, `시작`, `보관`, `색`이에요(일부는 `unit`, `goal`, `color`, `archived` 별칭도 읽어요). 기록은 `- [x] 2026-11-19 목 스트레칭` 한 줄 형식이고, 같은 날짜·같은 제목의 중복 줄은 한 번만 세요.
+`habit-grid/` 아래에 `Habits Dashboard.md`, `list/`(습관 파일), `sync/`(`Reminders log.md` 미리 알림 기록), `archive/`(보관한 습관)가 있어요. 습관 파일의 frontmatter 키는 `단위`, `월별목표`, `월별횟수`, `월별요일`(0=일 … 6=토), `기간`, `시작`, `보관`, `색`이에요(일부는 `unit`, `goal`, `color`, `archived` 별칭도 읽어요). 기록은 `- [x] 2026-11-19 목 스트레칭` 한 줄 형식이고, 같은 날짜·같은 제목의 중복 줄은 한 번만 세요.
 
 ## 단축어 연동
 
@@ -205,7 +205,7 @@ Habit Grid는 마크다운 파일에 적은 습관 기록을 GitHub 잔디 같�
 3. 반복 안에서 **날짜 서식** – 완료일, 사용자 지정 `yyyy-MM-dd`
 4. 반복 안에서 **텍스트** – `- [x] 날짜 제목`
 5. 반복이 끝난 뒤 **텍스트 결합** – 구분자는 새 줄
-6. **파일에 추가** – `Habits/sync/Reminders log.md`
+6. **파일에 추가** – `habit-grid/sync/Reminders log.md`
 
 7일치를 다시 읽기 때문에 같은 줄이 여러 번 붙을 수 있지만, 중복은 한 번만 세요.
 

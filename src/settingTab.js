@@ -15,7 +15,7 @@ export class HabitGridSettingTab extends PluginSettingTab {
         .setValue(["ko", "en"].includes(s.lang) ? s.lang : "auto").onChange(async (v) => { s.lang = v; setLang(resolveLang(v)); await save(); this.plugin.app.workspace.trigger("habit-grid:refresh"); this.display(); }));
 
     new Setting(containerEl).setName(tr("습관 폴더")).setDesc(tr("습관 기록 파일이 들어 있는 폴더 경로"))
-      .addText((t) => t.setPlaceholder("Habits").setValue(s.folder).onChange(async (v) => { s.folder = v.trim() || "Habits"; await save(); }));
+      .addText((t) => t.setPlaceholder(DEFAULT_SETTINGS.folder).setValue(s.folder).onChange(async (v) => { s.folder = v.trim() || DEFAULT_SETTINGS.folder; await save(); }));
 
     new Setting(containerEl).setName(tr("속성 이름")).setDesc(tr("습관 파일의 속성(frontmatter)을 새로 적을 때 쓰는 이름이에요. 이미 파일에 있는 속성은 지금 이름을 그대로 써요."))
       .addDropdown((d) => d.addOption("auto", tr("자동 (표시 언어 따라감)")).addOption("ko", "한국어").addOption("en", "English")

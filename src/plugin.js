@@ -1,5 +1,5 @@
 import { Plugin, TFile, TFolder, normalizePath, Notice, Menu } from "obsidian";
-import { ALT_LOG_NAME, DASHBOARD_TEMPLATE, DEFAULT_GROUP_PREFIX, DEFAULT_SETTINGS, DONE_RE, LEGACY_HABITS_DIR, LEGACY_SYNC_DIR, PRESET_COLORS, SKIP_RE, UNIT_HOURS, WD_ORDER } from "./constants";
+import { DASHBOARD_TEMPLATE, DEFAULT_GROUP_PREFIX, DEFAULT_SETTINGS, DONE_RE, LEGACY_HABITS_DIR, LEGACY_LOG_NAME, LEGACY_SYNC_DIR, PRESET_COLORS, SKIP_RE, UNIT_HOURS, WD_ORDER } from "./constants";
 import { resolveLang, setLang, tr, unitLabel } from "./i18n";
 import { fmDel, fmGet, fmKey, fmSet, fmSetUnit, normalizeUnit, resolveKeyStyle, unitForKey } from "./frontmatter";
 import { fmt, monthKey } from "./dates";
@@ -56,6 +56,14 @@ export class HabitGridPlugin extends Plugin {
     try {
       if (!vault.getAbstractFileByPath(folder)) await vault.createFolder(folder);
       if (!vault.getAbstractFileByPath(this.dashboardPath)) await vault.create(this.dashboardPath, DASHBOARD_TEMPLATE);
+      // 단축어가 기록을 덧붙일 폴더와 빈 기록 파일 (이미 있으면 그대로 둔다)
+      const syncPath = normalizePath(`${folder}/${this.settings.syncDir || "sync"}`);
+      if (!vault.getAbstractFileByPath(syncPath)) await vault.createFolder(syncPath);
+      const hasLog = [folder, syncPath].some((p) => {
+        const dir = vault.getAbstractFileByPath(p);
+        return dir instanceof TFolder && dir.children.some((c) => c instanceof TFile && c.extension === "md" && this.isLog(c));
+      });
+      if (!hasLog) await vault.create(normalizePath(`${syncPath}/${this.settings.logName}.md`), "");
       this.settings.initialized = true;
       await this.saveSettings();
       if (notify) new Notice(tr("'{0}' 폴더와 대시보드를 준비했어요", folder));
@@ -73,7 +81,7 @@ export class HabitGridPlugin extends Plugin {
 
   isLog(file) {
     const name = file.basename.normalize("NFC");
-    return name === this.settings.logName.normalize("NFC") || name === ALT_LOG_NAME;
+    return name === this.settings.logName.normalize("NFC") || name === LEGACY_LOG_NAME.normalize("NFC");
   }
 
   // Property names to write in habit files: "ko" or "en"

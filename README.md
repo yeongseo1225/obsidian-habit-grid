@@ -127,7 +127,7 @@ Build the shortcut with these actions, in order:
 
 Run it by hand or with a personal automation. Because the shortcut looks back seven days, the same line can be appended more than once; duplicates are counted once. Titles like `Study 2h` or `Workout squats` become amounts and items as described above.
 
-The plugin recognizes the log file by name: `Reminders log` always works, and you can set another name in settings (the default `미리 알림 기록` is kept for existing users).
+The plugin recognizes the log file by name. The default is `Reminders log`; you can set another name in settings. The older name `미리 알림 기록` is still read. On first setup the plugin creates `Habits/sync/` and an empty `Reminders log.md` for the shortcut to append to.
 
 ## Dashboard code block
 
@@ -144,7 +144,7 @@ Optional lines inside the block: `habit: Study, Workout` (only these habits), `w
 | --- | --- |
 | Language | Auto (follows the app language), Korean, or English |
 | Property names | Names written in habit files: auto, Korean, or English. Existing properties keep their names |
-| Reminders log file name | Name of the log file the shortcut appends to |
+| Reminders log file name | Name of the log file the shortcut appends to (default `Reminders log`) |
 | Habits folder | Folder that holds your habit files |
 | Dashboard note name | Name of the dashboard note, with a "Create now" button |
 | Main screen grid | 1 year or 6 months per page |
@@ -194,17 +194,19 @@ Habit Grid는 마크다운 파일에 적은 습관 기록을 GitHub 잔디 같�
 
 ## 폴더와 파일
 
-`Habits/` 아래에 `Habits Dashboard.md`, `list/`(습관 파일), `sync/`(미리 알림 기록), `archive/`(보관한 습관)가 있어요. 습관 파일의 frontmatter 키는 `단위`, `월별목표`, `월별횟수`, `월별요일`(0=일 … 6=토), `기간`, `시작`, `보관`, `색`이에요(일부는 `unit`, `goal`, `color`, `archived` 별칭도 읽어요). 기록은 `- [x] 2026-11-19 목 스트레칭` 한 줄 형식이고, 같은 날짜·같은 제목의 중복 줄은 한 번만 세요.
+`Habits/` 아래에 `Habits Dashboard.md`, `list/`(습관 파일), `sync/`(`Reminders log.md` 미리 알림 기록), `archive/`(보관한 습관)가 있어요. 습관 파일의 frontmatter 키는 `단위`, `월별목표`, `월별횟수`, `월별요일`(0=일 … 6=토), `기간`, `시작`, `보관`, `색`이에요(일부는 `unit`, `goal`, `color`, `archived` 별칭도 읽어요). 기록은 `- [x] 2026-11-19 목 스트레칭` 한 줄 형식이고, 같은 날짜·같은 제목의 중복 줄은 한 번만 세요.
 
 ## 단축어 연동
 
-미리 알림의 `Habit` 목록에서 완료한 항목을 `sync/미리 알림 기록.md` 끝에 덧붙이는 iOS 단축어를 만들어요.
+미리 알림의 `Habit` 목록에서 완료한 항목을 `sync/Reminders log.md` 끝에 덧붙이는 iOS 단축어를 만들어요.
 
 1. **미리 알림 찾기** – 목록 = Habit, 완료됨 = 예, 완료일이 최근 7일 이내
 2. **각 항목 반복**
 3. 반복 안에서 **날짜 서식** – 완료일, 사용자 지정 `yyyy-MM-dd`
 4. 반복 안에서 **텍스트** – `- [x] 날짜 제목`
 5. 반복이 끝난 뒤 **텍스트 결합** – 구분자는 새 줄
-6. **파일에 추가** – `Habits/sync/미리 알림 기록.md`
+6. **파일에 추가** – `Habits/sync/Reminders log.md`
 
 7일치를 다시 읽기 때문에 같은 줄이 여러 번 붙을 수 있지만, 중복은 한 번만 세요.
+
+예전 이름 `미리 알림 기록.md`도 계속 읽어요. 처음 설정할 때 `sync/` 폴더와 빈 `Reminders log.md`를 자동으로 만들어요.

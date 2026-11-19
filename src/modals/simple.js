@@ -1,0 +1,76 @@
+import { Modal } from "obsidian";
+import { DAY_NAMES, tr, unitLabel } from "../i18n";
+import { toDate } from "../dates";
+import { splitHM } from "../format";
+
+// 숫자 하나 입력받는 창
+export class DayItemsModal extends Modal {
+  constructor(app, name, ds, items) { super(app); Object.assign(this, { name, ds, items }); }
+  onOpen() {
+    const d = toDate(this.ds);
+    this.titleEl.setText(tr("{0}월 {1}일 ({2}) {3}", d.getMonth() + 1, d.getDate(), DAY_NAMES[d.getDay()], this.name));
+    if (!this.items.length) { this.contentEl.createDiv({ cls: "hg-empty", text: tr("이 날 적힌 내용이 없어요") }); return; }
+    const box = this.contentEl.createDiv({ cls: "hg-itemlog-chips" });
+    for (const it of this.items) box.createSpan({ cls: "hg-itemlog-chip", text: it });
+  }
+  onClose() { this.contentEl.empty(); }
+}
+
+// 되돌릴 수 없는 변경 앞에서 한 번 더 확인
+export class ConfirmModal extends Modal {
+  constructor(app, { title, desc, okText, onOk }) {
+    super(app);
+    Object.assign(this, { title, desc, okText, onOk });
+  }
+  onOpen() {
+    const { contentEl } = this;
+    this.titleEl.setText(this.title);
+    for (const line of [].concat(this.desc)) contentEl.createEl("p", { cls: "hg-modal-desc", text: line });
+    const btns = contentEl.createDiv({ cls: "hg-modal-btns" });
+    btns.createEl("button", { text: tr("취소") }).addEventListener("click", () => this.close());
+    const ok = btns.createEl("button", { cls: "mod-warning", text: this.okText || tr("확인") });
+    ok.addEventListener("click", () => { this.close(); this.onOk(); });
+  }
+  onClose() { this.contentEl.empty(); }
+}
+
+export class NumberModal extends Modal {
+  constructor(app, { title, desc, value, unit, onSubmit, allowClear }) {
+    super(app);
+    Object.assign(this, { title, desc, value, unit, onSubmit, allowClear });
+  }
+  onOpen() {
+    const { contentEl } = this;
+    this.titleEl.setText(this.title);
+    if (this.desc) contentEl.createEl("p", { cls: "hg-modal-desc", text: this.desc });
+    const row = contentEl.createDiv({ cls: "hg-modal-row" });
+    let read, input;
+    if (this.unit === "시간") {
+      const [H, M] = splitHM(this.value || 0);
+      const hIn = row.createEl("input", { type: "number", attr: { min: "0", step: "1", inputmode: "numeric" } });
+      hIn.addClass("hg-modal-input");
+      row.createSpan({ cls: "hg-modal-unit", text: tr("시간") });
+      const mIn = row.createEl("input", { type: "number", attr: { min: "0", max: "59", step: "5", inputmode: "numeric" } });
+      mIn.addClass("hg-modal-input");
+      row.createSpan({ cls: "hg-modal-unit", text: tr("분") });
+      if (this.value) { hIn.value = String(H); mIn.value = String(M); }
+      read = () => (parseInt(hIn.value, 10) || 0) + (parseInt(mIn.value, 10) || 0) / 60;
+      input = hIn;
+      mIn.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
+    } else {
+      input = row.createEl("input", { type: "number", attr: { step: "0.5", min: "0", inputmode: "decimal" } });
+      input.addClass("hg-modal-input");
+      if (this.value) input.value = String(this.value);
+      row.createSpan({ cls: "hg-modal-unit", text: unitLabel(this.unit) });
+      read = () => parseFloat(input.value);
+    }
+    const btns = contentEl.createDiv({ cls: "hg-modal-btns" });
+    const submit = () => { const v = read(); this.close(); this.onSubmit(isNaN(v) ? 0 : v); };
+    if (this.allowClear) btns.createEl("button", { text: tr("지우기") }).addEventListener("click", () => { this.close(); this.onSubmit(0); });
+    const ok = btns.createEl("button", { cls: "mod-cta", text: tr("저장") });
+    ok.addEventListener("click", submit);
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
+    setTimeout(() => input.focus(), 50);
+  }
+  onClose() { this.contentEl.empty(); }
+}

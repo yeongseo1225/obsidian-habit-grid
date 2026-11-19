@@ -3,7 +3,8 @@
   "name": "Habit Grid",
   "version": "0.2.4",
   "minAppVersion": "1.4.0",
-  "description": "Habit 폴더의 - [x] 날짜 기록을 잔디 격자로 보여줘요.",
-  "author": "me",
+  "description": "Track habits in plain Markdown files and see them as a GitHub-style grid, with streaks, weekly goals, amount logs, and challenges.",
+  "author": "YOUR NAME",
+  "authorUrl": "https://github.com/YOUR-GITHUB-USERNAME",
   "isDesktopOnly": false
 }

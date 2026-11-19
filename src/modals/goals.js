@@ -1,5 +1,5 @@
 import { Modal } from "obsidian";
-import { WD_ORDER } from "../constants";
+import { UNIT_HOURS, WD_ORDER } from "../constants";
 import { DAY_NAMES, tr, unitLabel } from "../i18n";
 import { monthKey, pad } from "../dates";
 import { daysLabel, fmtNum, splitHM } from "../format";
@@ -55,7 +55,7 @@ export class GoalsModal extends Modal {
         if (isNaN(v) || v <= 0) delete this.work[key]; else this.work[key] = Math.round(v * 10000) / 10000;
         this.draw();
       };
-      if (this.unit === "시간") {
+      if (this.unit === UNIT_HOURS) {
         const [eh, em] = splitHM(own ? this.work[key] : effective);
         const hIn = row.createEl("input", { type: "number", attr: { min: "0", step: "1", inputmode: "numeric" } });
         row.createSpan({ cls: "hg-modal-unit", text: tr("시간") });

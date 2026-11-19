@@ -3,6 +3,7 @@ import { addDays, fmt, weekMonthKey, weekStartOf } from "../dates";
 import { fmtDurShort, fmtNum, fmtQtyShort } from "../format";
 import { goalForMonth, scheduleAt } from "../stats";
 import { stopEditorGrab } from "../ui";
+import { UNIT_HOURS, UNIT_MINUTES } from "../constants";
 
 // 최근 7일 (오늘 포함) 상태
 export function recentDaysOf(h, today) {
@@ -37,8 +38,8 @@ export function renderRecent(card, days, onTap) {
 }
 
 export function stepsFor(unit) {
-  if (unit === "시간") return [[0.5, tr("+30분")], [1, tr("+1시간")]];
-  if (unit === "분") return [[10, tr("+10분")], [30, tr("+30분")]];
+  if (unit === UNIT_HOURS) return [[0.5, tr("+30분")], [1, tr("+1시간")]];
+  if (unit === UNIT_MINUTES) return [[10, tr("+10분")], [30, tr("+30분")]];
   return [[1, `+1${unit}`]];
 }
 
@@ -109,7 +110,7 @@ export function renderTodayBar(parent, habits, today, opts) {
         const on = v > 0 && (!g || v >= g);
         const b = item.createDiv({ cls: "hg-tbtn is-measure" + (on ? " is-on" : v > 0 ? " is-partial" : "") });
         b.createSpan({ text: h.name });
-        b.createSpan({ cls: "hg-tval", text: h.unit === "시간" ? `${fmtDurShort(v)}${g ? " / " + fmtDurShort(g) : ""}` : `${fmtNum(v)}${g ? "/" + fmtNum(g) : ""}${unitLabel(h.unit)}` });
+        b.createSpan({ cls: "hg-tval", text: h.unit === UNIT_HOURS ? `${fmtDurShort(v)}${g ? " / " + fmtDurShort(g) : ""}` : `${fmtNum(v)}${g ? "/" + fmtNum(g) : ""}${unitLabel(h.unit)}` });
         b.addEventListener("click", () => opts.onValue(h, ds));
         stopEditorGrab(b);
       }

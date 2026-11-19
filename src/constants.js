@@ -1,3 +1,15 @@
+// Units stored in habit files. Hours, minutes and pages are kept as these Korean words
+// internally and translated when shown.
+export const UNIT_HOURS = "시간";
+export const UNIT_MINUTES = "분";
+export const UNIT_PAGES = "쪽";
+
+// Defaults and older names that existing users may still have
+export const DEFAULT_GROUP_PREFIX = "운동";
+export const DEFAULT_LOG_NAME = "미리 알림 기록";
+export const LEGACY_HABITS_DIR = "습관";
+export const LEGACY_SYNC_DIR = "동기화";
+
 export const DEFAULT_SETTINGS = {
   folder: "Habits",
   lang: "auto",       // 화면 언어: "auto"(옵시디언 언어 따라감) | "ko" | "en"
@@ -7,10 +19,10 @@ export const DEFAULT_SETTINGS = {
   color: "",
   weekStart: 1, // 0 = 일요일, 1 = 월요일
   gridMode: "year", // 메인 화면 격자: "year" = 1년씩, "half" = 6개월씩
-  groupPrefixes: ["\uc6b4\ub3d9"],
+  groupPrefixes: [DEFAULT_GROUP_PREFIX],
   clickToToggle: true,
   dashboardName: "Habits Dashboard",
-  logName: "\ubbf8\ub9ac \uc54c\ub9bc \uae30\ub85d",
+  logName: DEFAULT_LOG_NAME,
   habitsDir: "list",   // 습관 파일(공부.md 등)이 들어가는 하위 폴더
   archiveDir: "archive", // 보관한 습관 파일이 옮겨지는 하위 폴더
   syncDir: "sync",   // 단축어가 쓰는 미리 알림 기록이 들어가는 하위 폴더

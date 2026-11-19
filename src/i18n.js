@@ -1,6 +1,7 @@
+import { UNIT_HOURS, UNIT_MINUTES, UNIT_PAGES } from "./constants";
 import { moment } from "obsidian";
 
-export const DAY_NAMES = ["\uc77c", "\uc6d4", "\ud654", "\uc218", "\ubaa9", "\uae08", "\ud1a0"];
+export const DAY_NAMES = ["일", "월", "화", "수", "목", "금", "토"];
 
 // ───────── 언어 (한국어 / English) ─────────
 // 화면 문구는 한국어 문장을 그대로 키로 쓰고, 영어일 때만 아래 표에서 찾아 바꿔요. 표에 없으면 한국어 그대로 나와요.
@@ -322,4 +323,4 @@ export function resolveLang(pref) {
 }
 
 // 시간·분·쪽은 저장된 단위 값은 그대로 두고, 화면에 보일 때만 번역해요
-export function unitLabel(u) { return u === "시간" || u === "분" || u === "쪽" ? tr(u) : (u || ""); }
+export function unitLabel(u) { return u === UNIT_HOURS || u === UNIT_MINUTES || u === UNIT_PAGES ? tr(u) : (u || ""); }

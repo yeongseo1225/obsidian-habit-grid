@@ -3,6 +3,7 @@ import { DAY_NAMES, tr, unitLabel } from "../i18n";
 import { addDays, fmt, toDate } from "../dates";
 import { fmtDur, fmtNum, splitHM } from "../format";
 import { goalForMonth } from "../stats";
+import { UNIT_HOURS } from "../constants";
 
 // 날짜를 골라 여러 습관을 한 번에 기록하는 창
 export class RecordModal extends Modal {
@@ -54,7 +55,7 @@ export class RecordModal extends Modal {
       } else {
         const g = goalForMonth(h.monthGoals, ds.slice(0, 7));
         const v = h.entries.get(ds) || 0;
-        if (h.unit === "시간") {
+        if (h.unit === UNIT_HOURS) {
           const [H, M] = splitHM(v);
           const hIn = row.createEl("input", { type: "number", attr: { min: "0", step: "1", inputmode: "numeric" } });
           hIn.addClass("hg-rnum");

@@ -1,3 +1,4 @@
+import { UNIT_HOURS, UNIT_MINUTES, UNIT_PAGES } from "./constants";
 import { LANG } from "./i18n";
 
 // Habit file properties. The first name is the Korean name, the second the English one.
@@ -14,11 +15,11 @@ export const FM = {
   goal: ["목표", "goal", "주간목표"],
 };
 
-const UNIT_EN = { 시간: "hours", 분: "minutes", 쪽: "pages" };
+const UNIT_EN = { [UNIT_HOURS]: "hours", [UNIT_MINUTES]: "minutes", [UNIT_PAGES]: "pages" };
 const UNIT_ALIASES = {
-  hours: "시간", hour: "시간", hrs: "시간", hr: "시간", h: "시간",
-  minutes: "분", minute: "분", mins: "분", min: "분",
-  pages: "쪽", page: "쪽", pg: "쪽",
+  hours: UNIT_HOURS, hour: UNIT_HOURS, hrs: UNIT_HOURS, hr: UNIT_HOURS, h: UNIT_HOURS,
+  minutes: UNIT_MINUTES, minute: UNIT_MINUTES, mins: UNIT_MINUTES, min: UNIT_MINUTES,
+  pages: UNIT_PAGES, page: UNIT_PAGES, pg: UNIT_PAGES,
 };
 
 // Which property names to write: "ko" or "en". "auto" follows the display language.

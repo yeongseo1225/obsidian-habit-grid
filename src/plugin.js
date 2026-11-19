@@ -1,5 +1,5 @@
 import { Plugin, TFile, TFolder, normalizePath, Notice, Menu } from "obsidian";
-import { ALT_LOG_NAME, DASHBOARD_TEMPLATE, DEFAULT_SETTINGS, DONE_RE, PRESET_COLORS, SKIP_RE, WD_ORDER } from "./constants";
+import { ALT_LOG_NAME, DASHBOARD_TEMPLATE, DEFAULT_GROUP_PREFIX, DEFAULT_SETTINGS, DONE_RE, LEGACY_HABITS_DIR, LEGACY_SYNC_DIR, PRESET_COLORS, SKIP_RE, UNIT_HOURS, WD_ORDER } from "./constants";
 import { resolveLang, setLang, tr, unitLabel } from "./i18n";
 import { fmDel, fmGet, fmKey, fmSet, fmSetUnit, normalizeUnit, resolveKeyStyle, unitForKey } from "./frontmatter";
 import { fmt, monthKey } from "./dates";
@@ -102,7 +102,7 @@ export class HabitGridPlugin extends Plugin {
     const mdIn = (fd) => (Array.isArray(fd) ? fd : fd ? [fd] : []).flatMap((d) => d.children.filter((f) => f instanceof TFile && f.extension === "md"));
     // 예전 한글 하위 폴더(습관/, 동기화/)도 같이 읽는다
     const subs = (...names) => names.map(sub).filter(Boolean);
-    const hDirs = subs(this.settings.habitsDir || "list", "\uc2b5\uad00", this.settings.archiveDir || "archive"), sDirs = subs(this.settings.syncDir || "sync", "\ub3d9\uae30\ud654");
+    const hDirs = subs(this.settings.habitsDir || "list", LEGACY_HABITS_DIR, this.settings.archiveDir || "archive"), sDirs = subs(this.settings.syncDir || "sync", LEGACY_SYNC_DIR);
     const rootMd = mdIn(folder).filter((f) => !this.isDashboard(f));
     // 단축어가 아직 예전 경로(Habit/)에 쓰는 동안에도 기록이 이어지도록 두 곳의 로그를 합쳐 읽는다
     const logFiles = [...mdIn(sDirs), ...rootMd].filter((f) => this.isLog(f));
@@ -121,7 +121,7 @@ export class HabitGridPlugin extends Plugin {
       else group(n).main = f;
     }
     if (logFile) {
-      const prefixes = (this.settings.groupPrefixes || ["\uc6b4\ub3d9"]).map(nfc);
+      const prefixes = (this.settings.groupPrefixes || [DEFAULT_GROUP_PREFIX]).map(nfc);
       const splitPrefix = (title) => {
         for (const p of prefixes) {
           if (title === p) return { prefix: p, rest: "" };
@@ -189,7 +189,7 @@ export class HabitGridPlugin extends Plugin {
         continue;
       }
 
-      const unit = (unitRaw === true ? null : unitRaw) || logUnit || (g.sources[0] && g.sources[0].unit) || "\uc2dc\uac04";
+      const unit = (unitRaw === true ? null : unitRaw) || logUnit || (g.sources[0] && g.sources[0].unit) || UNIT_HOURS;
       const entries = new Map();
       const inferred = {};
       const addAuto = (ds, amount) => {
@@ -394,11 +394,11 @@ export class HabitGridPlugin extends Plugin {
   }
 
   askValue(target, ds, cur, unit, fallback) {
-    const u = unit === true ? "\uc2dc\uac04" : unit;
+    const u = unit === true ? UNIT_HOURS : unit;
     const name = target instanceof TFile ? target.basename : target.name;
     const [, m, d] = ds.split("-").map(Number);
     new NumberModal(this.app, {
-      title: tr("{0} · {1}월 {2}일", name, m, d), desc: u === "시간" ? tr("이날 한 시간을 적어 주세요.") : tr("이날 한 양을 적어 주세요."),
+      title: tr("{0} · {1}월 {2}일", name, m, d), desc: u === UNIT_HOURS ? tr("이날 한 시간을 적어 주세요.") : tr("이날 한 양을 적어 주세요."),
       value: cur || fallback || 0, unit: u, allowClear: cur > 0,
       onSubmit: async (v) => this.recordValue(this.habitOf(target, u), ds, v),
     }).open();
@@ -485,7 +485,7 @@ export class HabitGridPlugin extends Plugin {
   }
 
   askMonthGoal(target, key, cur, unit) {
-    const u = unit === true ? "\uc2dc\uac04" : unit;
+    const u = unit === true ? UNIT_HOURS : unit;
     const name = target instanceof TFile ? target.basename : target.name;
     const [y, m] = key.split("-").map(Number);
     new NumberModal(this.app, {

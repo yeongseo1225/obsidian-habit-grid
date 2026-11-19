@@ -1,4 +1,4 @@
-import { WD_ORDER } from "./constants";
+import { UNIT_HOURS, WD_ORDER } from "./constants";
 import { DAY_NAMES, LANG, tr, unitLabel } from "./i18n";
 
 export function daysLabel(days) { return WD_ORDER.filter((d) => (days || []).includes(d)).map((d) => DAY_NAMES[d]).join("·"); }
@@ -22,11 +22,11 @@ export function fmtDurShort(h) {
   return M ? `${H}h${M}m` : `${H}h`;
 }
 
-export function fmtQty(v, unit) { return unit === "시간" ? fmtDur(v) : `${fmtNum(Math.round(v * 10) / 10)}${LANG === "en" && unitLabel(unit) ? " " : ""}${unitLabel(unit)}`; }
+export function fmtQty(v, unit) { return unit === UNIT_HOURS ? fmtDur(v) : `${fmtNum(Math.round(v * 10) / 10)}${LANG === "en" && unitLabel(unit) ? " " : ""}${unitLabel(unit)}`; }
 
-export function fmtQtyShort(v, unit) { return unit === "시간" ? fmtDurShort(v) : fmtNum(Math.round(v * 10) / 10); }
+export function fmtQtyShort(v, unit) { return unit === UNIT_HOURS ? fmtDurShort(v) : fmtNum(Math.round(v * 10) / 10); }
 
 // 파일에 적는 값: 시간이면 "3h23m"
-export function writeQty(v, unit) { return unit === "시간" ? fmtDurShort(v) : fmtNum(Math.round(v * 100) / 100); }
+export function writeQty(v, unit) { return unit === UNIT_HOURS ? fmtDurShort(v) : fmtNum(Math.round(v * 100) / 100); }
 
 export function fmtNum(n) { return Number.isInteger(n) ? String(n) : n.toFixed(1).replace(/\.0$/, ""); }

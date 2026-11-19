@@ -1,4 +1,4 @@
-import { DONE_RE, LOG_RE, SKIP_RE, TITLE_RE } from "./constants";
+import { DONE_RE, LOG_RE, SKIP_RE, TITLE_RE, UNIT_HOURS } from "./constants";
 
 // 날짜 -> 값(시간). 값이 없는 기록은 0
 export function parseEntries(text) {
@@ -13,10 +13,10 @@ export function parseEntries(text) {
 
 export function parseTitle(name) {
   const hm = name.match(/^(.+?)\s+(\d+)\s*시간\s*(\d+)\s*분\s*(?:이상)?$/);
-  if (hm) return { base: hm[1].trim(), amount: parseInt(hm[2], 10) + parseInt(hm[3], 10) / 60, unit: "\uc2dc\uac04" };
+  if (hm) return { base: hm[1].trim(), amount: parseInt(hm[2], 10) + parseInt(hm[3], 10) / 60, unit: UNIT_HOURS };
   const m = name.match(TITLE_RE);
   if (!m) return null;
-  return { base: m[1].trim(), amount: parseFloat(m[2]), unit: m[3] === "h" ? "\uc2dc\uac04" : m[3] };
+  return { base: m[1].trim(), amount: parseFloat(m[2]), unit: m[3] === "h" ? UNIT_HOURS : m[3] };
 }
 
 // "3h23m", "3시간 23분", "45m", "1.5h", "2" -> 시간(소수)

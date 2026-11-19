@@ -5,12 +5,13 @@ import { freqOfWeek, goalForMonth, isSchedDay, scheduleAt } from "../stats";
 import { addMoreButton, enableHorizontalScroll, makeColorDot, stopEditorGrab } from "../ui";
 import { renderWeekTop } from "./weekTop";
 import { modeTabs, renderPeriodView } from "./periodView";
+import { UNIT_HOURS } from "../constants";
 
 // ── 시간 기록 습관 (달마다 목표 시간이 다른 습관) ──
 export function renderMeasured(parent, name, entries, opts) {
   const today = opts.today || new Date();
   const weekStart = opts.weekStart ?? 1;
-  const unit = opts.unit || "\uc2dc\uac04";
+  const unit = opts.unit || UNIT_HOURS;
   const goals = opts.monthGoals || {};
   const year = opts.year || today.getFullYear();
   const todayStr = fmt(today);
@@ -63,7 +64,7 @@ export function renderMeasured(parent, name, entries, opts) {
     v.createSpan({ cls: "hg-stat-unit", text: u });
     box.createDiv({ cls: "hg-stat-label", text: label });
   };
-  const sv = (v) => unit === "시간" ? [fmtDur(v), ""] : [fmtNum(Math.round(v * 10) / 10), unitLabel(unit)];
+  const sv = (v) => unit === UNIT_HOURS ? [fmtDur(v), ""] : [fmtNum(Math.round(v * 10) / 10), unitLabel(unit)];
   stat(...sv(tv), tr("오늘"), hit(todayStr, tv));
   const monthLen = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
   if (freq) stat(thisWeekCount, tr("/{0}회", freq), tr("이번 주 달성"), thisWeekCount >= freq);

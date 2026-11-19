@@ -1,5 +1,5 @@
 import { Notice, Modal } from "obsidian";
-import { WD_ORDER } from "../constants";
+import { UNIT_HOURS, UNIT_MINUTES, UNIT_PAGES, WD_ORDER } from "../constants";
 import { DAY_NAMES, tr, unitLabel } from "../i18n";
 import { addDays } from "../dates";
 import { daysLabel, fmtNum } from "../format";
@@ -11,20 +11,20 @@ export class NewHabitModal extends Modal {
     const { contentEl } = this;
     contentEl.addClass("hg-nh");
     this.titleEl.setText(tr("새 습관"));
-    const S = { name: "", kind: "check", unit: "\uc2dc\uac04", customUnit: "", goalH: "", goalM: "", goalN: "", freq: 0, mode: "count", days: [], period: 0, customPeriod: false };
+    const S = { name: "", kind: "check", unit: UNIT_HOURS, customUnit: "", goalH: "", goalM: "", goalN: "", freq: 0, mode: "count", days: [], period: 0, customPeriod: false };
     const today = new Date();
     const md = (d) => `${d.getMonth() + 1}/${d.getDate()}`;
     const unitName = () => (S.unit === "직접" ? S.customUnit.trim() : S.unit);
     const goalValue = () => {
       const u = unitName();
-      if (u === "시간") return (parseInt(S.goalH, 10) || 0) + (parseInt(S.goalM, 10) || 0) / 60;
-      if (u === "분") return (parseInt(S.goalH, 10) || 0) * 60 + (parseInt(S.goalM, 10) || 0);
+      if (u === UNIT_HOURS) return (parseInt(S.goalH, 10) || 0) + (parseInt(S.goalM, 10) || 0) / 60;
+      if (u === UNIT_MINUTES) return (parseInt(S.goalH, 10) || 0) * 60 + (parseInt(S.goalM, 10) || 0);
       return parseFloat(S.goalN) || 0;
     };
     const goalText = () => {
       const u = unitName(), v = goalValue();
       if (!v) return "";
-      if (u === "시간" || u === "분") { const mins = u === "시간" ? Math.round(v * 60) : Math.round(v); const H = Math.floor(mins / 60), M = mins % 60; return [H ? tr("{0}시간", H) : "", M ? tr("{0}분", M) : ""].filter(Boolean).join(" "); }
+      if (u === UNIT_HOURS || u === UNIT_MINUTES) { const mins = u === UNIT_HOURS ? Math.round(v * 60) : Math.round(v); const H = Math.floor(mins / 60), M = mins % 60; return [H ? tr("{0}시간", H) : "", M ? tr("{0}분", M) : ""].filter(Boolean).join(" "); }
       return `${fmtNum(v)}${u}`;
     };
 
@@ -96,7 +96,7 @@ export class NewHabitModal extends Modal {
           const ex = card.createDiv({ cls: "hg-nh-extra" });
           lab(ex, tr("단위"));
           const row = ex.createDiv({ cls: "hg-nh-chips" });
-          for (const u of ["시간", "쪽", "km"]) chip(row, unitLabel(u), S.unit === u, () => { S.unit = u; draw(); });
+          for (const u of [UNIT_HOURS, UNIT_PAGES, "km"]) chip(row, unitLabel(u), S.unit === u, () => { S.unit = u; draw(); });
           chip(row, tr("직접 입력 +"), S.unit === "직접", () => { S.unit = "직접"; draw(); });
           if (S.unit === "직접") {
             const ci = ex.createEl("input", { type: "text", cls: "hg-nh-input", attr: { placeholder: tr("예: 잔, 문제, 장") } });
@@ -107,7 +107,7 @@ export class NewHabitModal extends Modal {
           lab(ex, tr("하루 목표"), tr("비워도 돼요"));
           const g = ex.createDiv({ cls: "hg-nh-goal" });
           const u = unitName();
-          if (u === "시간" || u === "분") {
+          if (u === UNIT_HOURS || u === UNIT_MINUTES) {
             numIn(g, "goalH", "0", "64px"); g.createSpan({ text: tr("시간") });
             numIn(g, "goalM", "0", "64px"); g.createSpan({ text: tr("분") });
           } else {

@@ -2,6 +2,7 @@ import { Modal } from "obsidian";
 import { DAY_NAMES, tr, unitLabel } from "../i18n";
 import { toDate } from "../dates";
 import { splitHM } from "../format";
+import { UNIT_HOURS } from "../constants";
 
 // 숫자 하나 입력받는 창
 export class DayItemsModal extends Modal {
@@ -45,7 +46,7 @@ export class NumberModal extends Modal {
     if (this.desc) contentEl.createEl("p", { cls: "hg-modal-desc", text: this.desc });
     const row = contentEl.createDiv({ cls: "hg-modal-row" });
     let read, input;
-    if (this.unit === "시간") {
+    if (this.unit === UNIT_HOURS) {
       const [H, M] = splitHM(this.value || 0);
       const hIn = row.createEl("input", { type: "number", attr: { min: "0", step: "1", inputmode: "numeric" } });
       hIn.addClass("hg-modal-input");

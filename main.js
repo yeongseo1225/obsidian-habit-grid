@@ -334,7 +334,7 @@ function setLang(l) {
 }
 function resolveLang(pref) {
   if (pref === "ko" || pref === "en") return pref;
-  try { return String(window.localStorage.getItem("language") || navigator.language || "").toLowerCase().startsWith("ko") ? "ko" : "en"; } catch (_) { return "ko"; }
+  try { return String(obsidian.moment.locale() || navigator.language || "").toLowerCase().startsWith("ko") ? "ko" : "en"; } catch (_) { return "ko"; }
 }
 // 시간·분·쪽은 저장된 단위 값은 그대로 두고, 화면에 보일 때만 번역해요
 function unitLabel(u) { return u === "시간" || u === "분" || u === "쪽" ? tr(u) : (u || ""); }
@@ -887,7 +887,7 @@ function renderMeasured(parent, name, entries, opts) {
   if (freq) stat(thisWeekCount, tr("/{0}회", freq), tr("이번 주 달성"), thisWeekCount >= freq);
   else stat(mDone, tr("/{0}일", monthLen), tr("이번 달 달성"), mDone > 0);
   stat(...sv(mSum), tr("이번 달 합계"));
-  stats.style.gridTemplateColumns = "repeat(3, minmax(0, 1fr))";
+  stats.addClass("hg-stats-3");
 
   renderWeekTop(card, {
     ...opts, kind: "measure", today, weekStart, freqOf, unit,
@@ -1527,9 +1527,9 @@ function compactChallengeBody(card, h, o) {
     const shown = finished ? days : dayNo;
     const NS = "http://www.w3.org/2000/svg";
     const ringBox = side.createDiv({ cls: "hg-ring" });
-    const svg = document.createElementNS(NS, "svg");
+    const svg = activeDocument.createElementNS(NS, "svg");
     svg.setAttribute("viewBox", "0 0 84 84"); svg.setAttribute("width", "84"); svg.setAttribute("height", "84");
-    const mkc = (cls) => { const c = document.createElementNS(NS, "circle"); c.setAttribute("cx", "42"); c.setAttribute("cy", "42"); c.setAttribute("r", "35"); c.setAttribute("class", cls); svg.appendChild(c); return c; };
+    const mkc = (cls) => { const c = activeDocument.createElementNS(NS, "circle"); c.setAttribute("cx", "42"); c.setAttribute("cy", "42"); c.setAttribute("r", "35"); c.setAttribute("class", cls); svg.appendChild(c); return c; };
     mkc("hg-ring-bg");
     const arc = mkc("hg-ring-fg");
     const circ = 2 * Math.PI * 35;
@@ -2556,7 +2556,7 @@ class NewHabitModal extends Modal {
       if (!noPeriod && S.customPeriod) {
         const r = ps.createDiv({ cls: "hg-nh-goal" });
         const i = r.createEl("input", { type: "number", cls: "hg-nh-num", attr: { min: "1", inputmode: "numeric", placeholder: tr("예: 21") } });
-        i.style.width = "84px";
+        i.addClass("hg-nh-num-wide");
         if (S.period) i.value = String(S.period);
         i.addEventListener("input", () => { S.period = parseInt(i.value, 10) || 0; sum(); });
         r.createSpan({ text: tr("일") });
@@ -2602,6 +2602,10 @@ class HabitGridPlugin extends Plugin {
       if (!this.settings.initialized) this.setup(false);
       setTimeout(() => this.tidyArchive(), 2000);
     });
+  }
+
+  onunload() {
+    activeDocument.querySelectorAll(".hg-pop").forEach((n) => n.remove());
   }
 
   get dashboardPath() {
@@ -2984,12 +2988,12 @@ class HabitGridPlugin extends Plugin {
       });
     };
     const cur = (current || "").toLowerCase();
-    document.querySelectorAll(".hg-pop").forEach((n) => n.remove());
-    const pop = document.body.createDiv({ cls: "hg-pop" });
+    activeDocument.querySelectorAll(".hg-pop").forEach((n) => n.remove());
+    const pop = activeDocument.body.createDiv({ cls: "hg-pop" });
     const close = () => {
       pop.remove();
-      document.removeEventListener("mousedown", onDoc, true);
-      document.removeEventListener("keydown", onKey, true);
+      activeDocument.removeEventListener("mousedown", onDoc, true);
+      activeDocument.removeEventListener("keydown", onKey, true);
     };
     const onDoc = (e) => { if (!pop.contains(e.target)) close(); };
     const onKey = (e) => { if (e.key === "Escape") close(); };
@@ -3007,8 +3011,7 @@ class HabitGridPlugin extends Plugin {
     for (const [name, hex] of PRESET_COLORS) row(tr(name), hex, cur === hex.toLowerCase(), () => apply(hex));
     pop.createDiv({ cls: "hg-pop-sep" });
     row(tr("직접 고르기…"), "conic-gradient(#ef4444, #eab308, #2fb67c, #3b82f6, #7c5cff, #ef4444)", false, () => {
-      const input = document.body.createEl("input", { type: "color" });
-      input.style.position = "fixed"; input.style.opacity = "0"; input.style.pointerEvents = "none";
+      const input = activeDocument.body.createEl("input", { type: "color", cls: "hg-hidden-color" });
       input.addEventListener("change", () => { apply(input.value); input.remove(); });
       input.addEventListener("blur", () => setTimeout(() => input.remove(), 500));
       input.click();
@@ -3016,11 +3019,11 @@ class HabitGridPlugin extends Plugin {
     // 누른 자리 근처에, 화면 밖으로 안 나가게
     const x = (evt && evt.clientX) || 80, y = (evt && evt.clientY) || 80;
     const w = pop.offsetWidth || 190, h = pop.offsetHeight || 340;
-    pop.style.left = `${Math.max(8, Math.min(x, window.innerWidth - w - 8))}px`;
-    pop.style.top = `${Math.max(8, Math.min(y + 8, window.innerHeight - h - 8))}px`;
+    pop.style.left = `${Math.max(8, Math.min(x, activeWindow.innerWidth - w - 8))}px`;
+    pop.style.top = `${Math.max(8, Math.min(y + 8, activeWindow.innerHeight - h - 8))}px`;
     setTimeout(() => {
-      document.addEventListener("mousedown", onDoc, true);
-      document.addEventListener("keydown", onKey, true);
+      activeDocument.addEventListener("mousedown", onDoc, true);
+      activeDocument.addEventListener("keydown", onKey, true);
     }, 0);
   }
 

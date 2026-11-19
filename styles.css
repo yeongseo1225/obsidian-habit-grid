@@ -1444,3 +1444,8 @@
 .hg-todaypage { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; }
 .hg-todaynav { display: inline-flex; align-items: center; gap: 6px; }
 .hg-todayempty { font-size: 0.85em; color: var(--text-muted); }
+
+/* static layout helpers (moved out of inline styles) */
+.hg-stats-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.hg-nh-num.hg-nh-num-wide { width: 84px; }
+.hg-hidden-color { position: fixed; opacity: 0; pointer-events: none; }

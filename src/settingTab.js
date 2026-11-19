@@ -28,14 +28,6 @@ export class HabitGridSettingTab extends PluginSettingTab {
       .addText((t) => t.setPlaceholder(DEFAULT_SETTINGS.dashboardName).setValue(s.dashboardName).onChange(async (v) => { s.dashboardName = v.trim() || DEFAULT_SETTINGS.dashboardName; await save(); }))
       .addButton((b) => b.setButtonText(tr("지금 만들기")).onClick(() => this.plugin.setup(true)));
 
-    new Setting(containerEl).setName(tr("보여줄 기간")).setDesc(tr("전체 기록: 첫 기록부터 오늘까지 모두 보여줘요 (옆으로 넘겨 보기)"))
-      .addDropdown((d) => d.addOption("year", tr("연도별 (넘겨 보기)")).addOption("all", tr("전체 기록")).addOption("recent", tr("최근 몇 주만"))
-        .setValue(s.range).onChange(async (v) => { s.range = v; await save(); this.display(); }));
-
-    if (s.range !== "year") new Setting(containerEl).setName(s.range === "all" ? tr("최소 표시 주 수") : tr("보여줄 주 수"))
-      .setDesc(s.range === "all" ? tr("기록이 적을 때도 이만큼은 칸을 그려요") : tr("격자에 표시할 최근 주 수"))
-      .addSlider((sl) => sl.setLimits(4, 104, 1).setValue(s.weeks).setDynamicTooltip().onChange(async (v) => { s.weeks = v; await save(); }));
-
     new Setting(containerEl).setName(tr("메인 화면 격자")).setDesc(tr("6개월: 큰 칸으로 반년씩 넘겨 봐요 · 1년: 한 해가 한 줄에 다 보이고 1년씩 넘겨 봐요"))
       .addDropdown((d) => d.addOption("year", tr("1년 (1년씩 넘기기)")).addOption("half", tr("6개월 (반년씩 넘기기)"))
         .setValue(s.gridMode === "half" ? "half" : "year").onChange(async (v) => { s.gridMode = v; await save(); this.plugin.app.workspace.trigger("habit-grid:refresh"); }));

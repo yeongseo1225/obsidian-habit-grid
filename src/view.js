@@ -51,8 +51,8 @@ export class HabitView extends MarkdownRenderChild {
     const common = {
       color: colorOf(h),
       onColor: (evt) => this.plugin.openColorMenu(evt, h.target, h.unit, h.color),
-      weeks: this.opts.weeks || settings.weeks,
-      range: this.opts.weeks ? "recent" : settings.range,
+      weeks: this.opts.weeks || 20,
+      range: this.opts.weeks ? "recent" : "year",
       year: this.years[key],
       onYear: (y) => { this.years[key] = y; this.render(); },
       mode: ((settings.modes || {})[h.name] === "month") ? "month" : "year",

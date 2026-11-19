@@ -147,8 +147,6 @@ Optional lines inside the block: `habit: Study, Workout` (only these habits), `w
 | Reminders log file name | Name of the log file the shortcut appends to |
 | Habits folder | Folder that holds your habit files |
 | Dashboard note name | Name of the dashboard note, with a "Create now" button |
-| Time range | By year, all records, or recent weeks only |
-| Weeks shown | Number of weeks (for "recent" / minimum for "all") |
 | Main screen grid | 1 year or 6 months per page |
 | Week starts on | Monday or Sunday |
 | Cell color | Grid color; empty uses your theme accent |

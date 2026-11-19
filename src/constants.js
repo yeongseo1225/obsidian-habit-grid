@@ -14,8 +14,6 @@ export const DEFAULT_SETTINGS = {
   folder: "Habits",
   lang: "auto",       // 화면 언어: "auto"(옵시디언 언어 따라감) | "ko" | "en"
   keyStyle: "auto",   // 습관 파일에 적는 속성 이름: "auto"(화면 언어 따라감) | "ko" | "en"
-  range: "year", // "year" = 연도별, "all" = 첫 기록부터 전부, "recent" = 최근 weeks주
-  weeks: 20,
   color: "",
   weekStart: 1, // 0 = 일요일, 1 = 월요일
   gridMode: "year", // 메인 화면 격자: "year" = 1년씩, "half" = 6개월씩

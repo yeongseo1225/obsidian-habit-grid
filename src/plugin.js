@@ -30,11 +30,12 @@ export class HabitGridPlugin extends Plugin {
 
     this.app.workspace.onLayoutReady(() => {
       if (!this.settings.initialized) this.setup(false);
-      setTimeout(() => this.tidyArchive(), 2000);
+      this.tidyTimer = window.setTimeout(() => this.tidyArchive(), 2000);
     });
   }
 
   onunload() {
+    window.clearTimeout(this.tidyTimer);
     activeDocument.querySelectorAll(".hg-pop").forEach((n) => n.remove());
   }
 

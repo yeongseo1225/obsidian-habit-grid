@@ -227,6 +227,7 @@ export const EN = {
   "추가": "Add",
   "시작일 바꾸기": "Change start date",
   "기간 정하기": "Set a duration",
+  "주 몇 회 정하기": "Set times per week",
   "총 며칠": "Total days",
   "{0}에 끝나요": "Ends on {0}",
   "'{0}'의 {1}일 챌린지를 설정했어요": "Set a {1}-day challenge for '{0}'",

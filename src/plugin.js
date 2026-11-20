@@ -376,6 +376,7 @@ export class HabitGridPlugin extends Plugin {
   // 기간 관련 메뉴 항목 (카드 ⋯ 메뉴와 기간 칩 메뉴가 같이 쓴다)
   addPeriodItems(menu, h) {
     if (h.period) {
+      menu.addItem((i) => i.setTitle(tr("주 몇 회 정하기")).setIcon("calendar-days").onClick(() => this.openGoals(h, new Date().getFullYear())));
       menu.addItem((i) => i.setTitle(tr("기간 +30일")).setIcon("calendar-plus").onClick(() => this.extendPeriod(h, 30)));
       menu.addItem((i) => i.setTitle(tr("기간 +66일")).setIcon("calendar-plus").onClick(() => this.extendPeriod(h, 66)));
       menu.addItem((i) => i.setTitle(tr("기간 직접 입력")).setIcon("pencil").onClick(() => this.askPeriod(h)));

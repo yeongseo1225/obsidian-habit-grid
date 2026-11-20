@@ -1,7 +1,7 @@
 import { DAY_NAMES, tr, unitLabel } from "../i18n";
 import { addDays, fmt, toDate, weekMonthKey, weekStartOf } from "../dates";
 import { fmtDurShort, fmtNum } from "../format";
-import { goalForMonth, scheduleAt } from "../stats";
+import { goalForMonth, habitStart, scheduleAt } from "../stats";
 import { stopEditorGrab } from "../ui";
 import { UNIT_HOURS } from "../constants";
 
@@ -23,14 +23,6 @@ export function doneOf(h, ds) {
 export function recOf(h, ds) {
   return h.kind === "check" ? h.set.has(ds) : (h.entries.get(ds) || 0) > 0;
 }
-// 습관이 시작된 날: 챌린지 시작일, 정해 둔 시작일, 없으면 첫 기록일 (아무것도 없으면 빈 문자열)
-export function habitStart(h) {
-  if (h.period && h.period.start) return h.period.start;
-  if (h.startDate) return h.startDate;
-  const all = h.kind === "check" ? [...h.set] : [...h.entries].filter(([, v]) => v > 0).map(([d]) => d);
-  return all.reduce((a, d) => (!a || d < a ? d : a), "");
-}
-
 // 그 날 이미 시작한 습관인지 (시작일 전이면 아직 아님)
 export function startedBy(h, ds, todayStr) {
   if (ds >= todayStr) return true;
@@ -50,10 +42,9 @@ export function weekHasHabit(h, ws, todayStr) {
   return true;
 }
 
-// 동그라미 안에 들어갈 짧은 양: 1시간 미만은 분, 이상은 소수 한 자리 시간
+// 칸 안에 들어갈 짧은 양: 시간은 2h40m처럼 시와 분으로 (소수 시간으로 줄이지 않는다)
 function cellAmount(h, v) {
-  if (h.unit === UNIT_HOURS) return v >= 1 ? `${fmtNum(Math.round(v * 10) / 10)}h` : `${Math.round(v * 60)}m`;
-  return fmtNum(Math.round(v * 10) / 10);
+  return h.unit === UNIT_HOURS ? fmtDurShort(v) : fmtNum(Math.round(v * 10) / 10);
 }
 
 // 주간 보기: 그 주의 목표 횟수. 요일을 정했으면 그 요일 수, 주 N회면 N, 정하지 않았으면 매일(7)

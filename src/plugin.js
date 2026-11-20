@@ -3,10 +3,11 @@ import { DASHBOARD_TEMPLATE, DEFAULT_GROUP_PREFIX, DEFAULT_SETTINGS, DONE_RE, PR
 import { resolveLang, setLang, tr, unitLabel } from "./i18n";
 import { fmDel, fmGet, fmKey, fmSet, fmSetUnit, normalizeUnit, resolveKeyStyle, unitForKey } from "./frontmatter";
 import { fmt, monthKey } from "./dates";
+import { habitStart } from "./stats";
 import { writeQty } from "./format";
 import { convertAmount, parseDates, parseEntries, parseLog, parseSkips, parseTitle } from "./parse";
 import { HabitView } from "./view";
-import { ConfirmModal, NumberModal } from "./modals/simple";
+import { ConfirmModal, DateModal, NumberModal } from "./modals/simple";
 import { GoalsModal } from "./modals/goals";
 import { RecordModal } from "./modals/record";
 import { NewHabitModal } from "./modals/newHabit";
@@ -241,6 +242,7 @@ export class HabitGridPlugin extends Plugin {
     menu.addItem((i) => i.setTitle(tr("위로 옮기기")).setIcon("arrow-up").onClick(() => this.moveHabit(h, -1)));
     menu.addItem((i) => i.setTitle(tr("아래로 옮기기")).setIcon("arrow-down").onClick(() => this.moveHabit(h, 1)));
     menu.addSeparator();
+    menu.addItem((i) => i.setTitle(tr("시작일 바꾸기")).setIcon("calendar").onClick(() => this.askStart(h)));
     menu.addItem((i) => i.setTitle(tr("지난 기록 채우기")).setIcon("calendar-check").onClick(() => this.openRecorder()));
     menu.addSeparator();
     menu.addItem((i) => i.setTitle(tr("보관함으로 옮기기")).setIcon("archive").onClick(() => this.setArchived(h, true)));
@@ -300,6 +302,17 @@ export class HabitGridPlugin extends Plugin {
     this.settings.habitOrder = [...names, ...rest];
     await this.saveSettings();
     this.app.workspace.trigger("habit-grid:refresh");
+  }
+  askStart(h) {
+    new DateModal(this.app, {
+      title: tr("시작일"), desc: tr("이 날부터 기록해요"),
+      value: habitStart(h) || fmt(new Date()),
+      onSubmit: async (ds) => {
+        const file = await this.mainFileOf(h.target, h.kind === "measure" ? h.unit : null);
+        await this.app.fileManager.processFrontMatter(file, (fm) => { fmSet(fm, "start", ds, this.keyStyle()); });
+        new Notice(tr("'{0}' 시작일을 바꿨어요", h.name));
+      },
+    }).open();
   }
   askPeriod(h) {
     new NumberModal(this.app, {

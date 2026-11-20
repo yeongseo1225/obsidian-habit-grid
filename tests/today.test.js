@@ -80,3 +80,8 @@ test("weekTargetOf uses the chosen weekdays, weekly times, or every day", () => 
   assert.equal(weekTargetOf(check([]), monday), 7);
   assert.equal(weekTargetOf(check([], { freqsRaw: { "2026-09": 2 } }), monday), 2);
 });
+
+test("hour amounts are shown as hours and minutes, not decimals", () => {
+  const cells = weekCellsOf(measure([["2026-11-16", 2 + 40 / 60], ["2026-11-17", 0.75]]), days, todayStr, 1);
+  assert.deepEqual(cells.slice(0, 2).map((c) => c.text), ["2h40m", "45m"]);
+});

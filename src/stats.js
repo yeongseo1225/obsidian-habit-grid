@@ -78,3 +78,11 @@ export function computeStats(set, today) {
 
   return { total: set.size, current, longest, monthDone, monthDays: new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate(), doneToday: set.has(fmt(today)) };
 }
+
+// 습관이 시작된 날: 챌린지 시작일, 정해 둔 시작일, 없으면 첫 기록일 (아무것도 없으면 빈 문자열)
+export function habitStart(h) {
+  if (h.period && h.period.start) return h.period.start;
+  if (h.startDate) return h.startDate;
+  const all = h.kind === "check" ? [...h.set] : [...h.entries].filter(([, v]) => v > 0).map(([d]) => d);
+  return all.reduce((a, d) => (!a || d < a ? d : a), "");
+}

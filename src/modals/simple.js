@@ -3,6 +3,28 @@ import { tr, unitLabel } from "../i18n";
 import { splitHM } from "../format";
 import { UNIT_HOURS } from "../constants";
 
+// 날짜 하나 고르는 창
+export class DateModal extends Modal {
+  constructor(app, { title, desc, value, onSubmit }) {
+    super(app);
+    Object.assign(this, { title, desc, value, onSubmit });
+  }
+  onOpen() {
+    const { contentEl } = this;
+    this.titleEl.setText(this.title);
+    if (this.desc) contentEl.createEl("p", { cls: "hg-modal-desc", text: this.desc });
+    const input = contentEl.createEl("input", { type: "date", cls: "hg-modal-input hg-modal-date" });
+    input.value = this.value || "";
+    const submit = () => { if (!input.value) return; const v = input.value; this.close(); this.onSubmit(v); };
+    const btns = contentEl.createDiv({ cls: "hg-modal-btns" });
+    btns.createEl("button", { text: tr("취소") }).addEventListener("click", () => this.close());
+    btns.createEl("button", { cls: "mod-cta", text: tr("저장") }).addEventListener("click", submit);
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
+    window.setTimeout(() => input.focus(), 50);
+  }
+  onClose() { this.contentEl.empty(); }
+}
+
 // 되돌릴 수 없는 변경 앞에서 한 번 더 확인
 export class ConfirmModal extends Modal {
   constructor(app, { title, desc, okText, onOk }) {

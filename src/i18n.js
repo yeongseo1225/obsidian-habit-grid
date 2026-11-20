@@ -215,6 +215,8 @@ export const EN = {
   "예: 21": "e.g. 21",
   "시작 {0} · 끝 {1} · 챌린지 카드로 보여요": "Starts {0} · ends {1} · shown as a challenge card",
   "시작일": "Start date",
+  "시작일 바꾸기": "Change start date",
+  "'{0}' 시작일을 바꿨어요": "Changed the start date of '{0}'",
   "이 날부터 기록해요": "Records count from this day",
   "이름을 적어 주세요": "Enter a name",
   "단위를 적어 주세요": "Enter a unit",

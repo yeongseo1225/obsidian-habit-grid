@@ -1509,3 +1509,4 @@
 }
 .hg-wkgoal.is-done { background: var(--hg-on); color: #fff; font-weight: 600; }
 .hg-nh-date { width: auto; }
+.hg-modal-date { width: auto; }

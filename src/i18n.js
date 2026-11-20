@@ -310,6 +310,8 @@ export const EN = {
   "중복 {0}줄을 지웠어요": "Removed {0} duplicate lines",
   "지울 중복 줄이 없어요": "No duplicate lines to remove",
   "Mac 동기화": "Mac sync",
+  "Mac 동기화 안내": "About Mac sync",
+  "설정 적용 안내": "When changes apply",
   "Mac에 설치": "Install on this Mac",
   "설치 파일을 볼트에 만들고, 터미널에 붙여 넣을 명령을 보여 줘요. 실행은 직접 해요. 옵시디언 파일 목록에는 .sh 파일이 보이지 않으니 Finder에서 확인하세요. 설치 뒤에 아래 '사용'을 켜세요.": "Creates the install files in your vault and shows a command to paste into Terminal. You run it yourself. Obsidian's file list does not show .sh files, so check in Finder. After installing, turn on \"Use Mac sync\" below.",
   "설치 파일 만들기": "Create install files",

@@ -6,3 +6,4 @@ export const normalizePath = (p) => p;
 export const moment = { locale: () => globalThis.__locale || "en" };
 export const setIcon = () => {};
 export const Platform = { isMacOS: false };
+export const requireApiVersion = () => false;

@@ -89,7 +89,6 @@
 
 .hg-scroll {
   overflow-x: auto;
-  scrollbar-width: thin;
   padding-bottom: 6px;
 }
 
@@ -1373,7 +1372,7 @@
 .hg-cell.is-sched.is-outside { outline: none; }
 
 /* v24.11 오늘 줄: 옆으로 넘기기 */
-.hg-todaypager { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; gap: 16px; }
+.hg-todaypager { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 16px; }
 .hg-todaypager::-webkit-scrollbar { display: none; }
 .hg-todaypage { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; }
 .hg-todaynav { display: inline-flex; align-items: center; gap: 6px; }

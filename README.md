@@ -139,6 +139,24 @@ The plugin recognizes the log file by name. The default is `Reminders log`; you 
 
 Optional lines inside the block: `habit: Study, Workout` (only these habits), `weeks: 20`, `color: #3b82f6`, `folder: habit-grid`.
 
+### Day and week view in your own notes
+
+Put the day or week records anywhere, for example on a home note:
+
+````
+```habit
+view: today
+```
+````
+
+| `view:` | Shows |
+| --- | --- |
+| `today` | The day and week view with a *Day / Week* switch (the choice is remembered and shared with the dashboard) |
+| `day` | The day strip only |
+| `week` | The week table only |
+
+Add `habit: Study, Workout` to show only some habits. The command **Insert day and week view** puts the `view: today` block at the cursor. Tapping works as on the dashboard, so you can log from the note.
+
 ## Settings
 
 | Setting | Description |

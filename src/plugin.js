@@ -27,6 +27,10 @@ export class HabitGridPlugin extends Plugin {
     this.addCommand({ id: "open-dashboard", name: tr("습관 대시보드 열기"), callback: () => this.openDashboard() });
     this.addCommand({ id: "setup", name: tr("습관 폴더와 대시보드 만들기"), callback: () => this.setup(true) });
     this.addCommand({ id: "new-habit", name: tr("새 습관 만들기"), callback: () => this.newHabit() });
+    this.addCommand({
+      id: "insert-today-view", name: tr("일간·주간 기록 코드 넣기"),
+      editorCallback: (editor) => editor.replaceSelection("```habit\nview: today\n```\n"),
+    });
     this.addCommand({ id: "record", name: tr("습관 기록하기 (날짜 골라서)"), callback: () => this.openRecorder() });
     this.addRibbonIcon("calendar-check", tr("습관 기록하기"), () => this.openRecorder());
 

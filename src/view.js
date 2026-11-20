@@ -105,6 +105,25 @@ export class HabitView extends MarkdownRenderChild {
     return renderHabit(wrap, h.name, h.set, o);
   }
 
+  // 오늘 줄(일간·주간)을 그릴 때 쓰는 값과 동작
+  todayOpts(colorOf, today, mode, toggle) {
+    const { settings } = this.plugin;
+    const todayStr = fmt(today);
+    return {
+      colorOf,
+      weekStart: settings.weekStart,
+      mode,
+      onMode: toggle ? (m) => { settings.todayMode = m; void this.plugin.saveSettings().then(() => this.plugin.app.workspace.trigger("habit-grid:refresh")); } : null,
+      onCheck: (h, ds) => this.plugin.recordCheck(h, ds, !h.set.has(ds)),
+      onItems: (h, ds) => this.plugin.openItems(h, ds),
+      onAdd: (h, delta) => this.plugin.recordValue(h, todayStr, Math.round(((h.entries.get(todayStr) || 0) + delta) * 100) / 100),
+      onValue: (h, ds) => this.plugin.askValue(h.target, ds, h.entries.get(ds) || 0, h.unit, goalForMonth(h.monthGoals, ds.slice(0, 7))),
+      onRecord: () => this.plugin.openRecorder(),
+    };
+  }
+
+  settingsMode() { return this.plugin.settings.todayMode === "week" ? "week" : "day"; }
+
   async render() {
     const { settings } = this.plugin;
     const el = this.containerEl;
@@ -122,7 +141,12 @@ export class HabitView extends MarkdownRenderChild {
     const today = new Date();
     const colorOf = (h) => h.color || this.opts.color || settings.color;
 
-    if (this.opts.habits) {
+    if (this.opts.view) {
+      // 노트에 ```habit view: day|week|today``` 처럼 적으면 오늘 줄(일간·주간)만 보여요. today는 전환 버튼이 있어요
+      const v = this.opts.view;
+      if (habits.length) renderTodayBar(wrap, habits, today, this.todayOpts(colorOf, today, v === "today" ? this.settingsMode() : v, v === "today"));
+      else wrap.createDiv({ cls: "hg-empty", text: tr("진행 중인 습관이 없어요.") });
+    } else if (this.opts.habits) {
       // 노트에 ```habit 습관: 이름``` 처럼 직접 고른 경우: 예전처럼 전체 카드를 그대로 보여 줘요
       if (!habits.length) wrap.createDiv({ cls: "hg-empty", text: tr("아직 기록된 습관이 없어요.") });
       for (const h of habits) this.fullCard(wrap, h, colorOf, false);
@@ -167,7 +191,6 @@ export class HabitView extends MarkdownRenderChild {
 
   renderMain(wrap, habits, archived, colorOf, today) {
     const { settings } = this.plugin;
-    const todayStr = fmt(today);
     const mode = settings.gridMode === "half" ? "half" : "year";
 
     // 가장 오래된 기록 (그 앞으로는 못 넘기게)
@@ -226,17 +249,7 @@ export class HabitView extends MarkdownRenderChild {
     stopEditorGrab(ab);
 
     // 오늘 줄
-    if (habits.length) renderTodayBar(wrap, habits, today, {
-      colorOf,
-      weekStart: settings.weekStart,
-      mode: settings.todayMode === "week" ? "week" : "day",
-      onMode: (m) => { settings.todayMode = m; void this.plugin.saveSettings(); void this.render(); },
-      onCheck: (h, ds) => this.plugin.recordCheck(h, ds, !h.set.has(ds)),
-      onItems: (h, ds) => this.plugin.openItems(h, ds),
-      onAdd: (h, delta) => this.plugin.recordValue(h, todayStr, Math.round(((h.entries.get(todayStr) || 0) + delta) * 100) / 100),
-      onValue: (h, ds) => this.plugin.askValue(h.target, ds, h.entries.get(ds) || 0, h.unit, goalForMonth(h.monthGoals, ds.slice(0, 7))),
-      onRecord: () => this.plugin.openRecorder(),
-    });
+    if (habits.length) renderTodayBar(wrap, habits, today, this.todayOpts(colorOf, today, this.settingsMode(), true));
     else wrap.createDiv({ cls: "hg-empty", text: tr("진행 중인 습관이 없어요.") });
 
     // 기간이 정해진 습관(66일 등)은 보고 있는 기간과 겹칠 때만 보여요

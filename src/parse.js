@@ -139,6 +139,7 @@ export function parseBlock(source) {
     else if (key === "color" || key === "색") opts.color = val;
     else if (key === "folder" || key === "폴더") opts.folder = val;
     else if (key === "goal" || key === "목표") opts.goal = parseInt(val, 10);
+    else if (key === "view" || key === "보기") { const v = val.toLowerCase(); if (v === "day" || v === "week" || v === "today") opts.view = v; }
   }
   return opts;
 }

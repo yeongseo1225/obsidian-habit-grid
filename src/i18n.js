@@ -218,6 +218,7 @@ export const EN = {
   "이 날 한 것을 골라요. 고르지 않아도 기록돼요.": "Pick what you did. The day counts even if you pick nothing.",
   "미리 알림에서 온 항목은 여기서 지울 수 없어요.": "Items from Reminders can't be removed here.",
   "예: 스쿼트": "e.g. Squats",
+  "일간·주간 기록 코드 넣기": "Insert day and week view",
   "예: 30회": "e.g. 30 reps",
   "이날 기록 지우기": "Delete this day's record",
   "'{0}' 항목을 추천 목록에서 뺄까요?": "Remove '{0}' from the suggestions?",

@@ -88,3 +88,11 @@ test("knownItems skips items not used since the given date", () => {
   assert.deepEqual(knownItems(items, "2026-09-21").names, ["스쿼트"]);
   assert.deepEqual(knownItems(items).names.sort(), ["벤치", "스쿼트"].sort());
 });
+
+test("parseBlock reads the view option", () => {
+  assert.equal(parseBlock("view: week").view, "week");
+  assert.equal(parseBlock("보기: Day").view, "day");
+  assert.equal(parseBlock("view: today\nhabit: 공부, 운동").view, "today");
+  assert.deepEqual(parseBlock("view: today\nhabit: 공부, 운동").habits, ["공부", "운동"]);
+  assert.equal(parseBlock("view: nonsense").view, undefined);
+});

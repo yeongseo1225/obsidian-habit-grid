@@ -3,5 +3,5 @@ _backup*
 .hotreload
 .DS_Store
 node_modules
-main.js
+/main.js
 .test-build

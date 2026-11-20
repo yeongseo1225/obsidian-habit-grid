@@ -78,13 +78,6 @@ export function weekCellsOf(h, days, todayStr, weekStart) {
   });
 }
 
-// 이름이 짧은지: 한글·한자는 두 칸, 나머지는 한 칸으로 세어 8칸 이하면 짧은 이름
-export function nameIsShort(name) {
-  let w = 0;
-  for (const ch of name) w += /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af\u4e00-\u9fff]/.test(ch) ? 2 : 1;
-  return w <= 8;
-}
-
 // 오늘 줄 접기·펼치기 버튼
 function addFold(parent, opts) {
   const b = parent.createEl("button", { cls: "hg-yearbtn hg-todayfold" });
@@ -157,7 +150,9 @@ function renderWeekBar(box, habits, today, opts) {
       const row = grid.createDiv({ cls: "hg-wkrow" });
       const color = opts.colorOf(h);
       if (color) row.style.setProperty("--hg-on", color);
-      row.createDiv({ cls: "hg-wkname" + (nameIsShort(h.name) ? " is-short" : ""), text: h.name });
+      // 긴 이름은 두 줄까지 보이고, 마우스를 올리면 전체 이름이 나온다
+      const nameEl = row.createDiv({ cls: "hg-wkname", text: h.name });
+      nameEl.setAttr("aria-label", h.name);
       for (const c of cells) {
         const open = c.state !== "future" && c.state !== "off";
         const cell = row.createDiv({

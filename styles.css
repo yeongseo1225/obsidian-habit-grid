@@ -1387,7 +1387,7 @@
 .hg-todayright { display: inline-flex; align-items: center; gap: 10px; }
 .hg-wkgrid {
   display: grid;
-  grid-template-columns: minmax(64px, 1.3fr) repeat(7, minmax(0, 1fr)) 46px;
+  grid-template-columns: minmax(72px, 1.9fr) repeat(7, minmax(0, 1fr)) 46px;
   gap: 6px 4px;
   align-items: center;
 }
@@ -1405,8 +1405,6 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
-/* 이름이 짧으면 가운데, 길면 왼쪽 정렬 (두 줄까지) */
-.hg-wkname.is-short { text-align: center; padding-right: 0; }
 .hg-wkcell {
   width: 100%;
   height: 30px;
@@ -1493,3 +1491,6 @@ button.hg-yearbtn:hover { background: color-mix(in srgb, var(--text-normal) 8%, 
 .hg-yearbtn.is-disabled, .hg-yearbtn.is-ghost { opacity: 0.25; cursor: default; pointer-events: none; }
 .hg-yearbtn svg { width: 18px; height: 18px; stroke-width: 2; }
 .hg-thisyear { white-space: nowrap; }
+
+.hg-modal-label { margin: 10px 0 4px; font-size: 0.85em; color: var(--text-muted); }
+.hg-modal-note { margin-top: 10px; font-size: 0.9em; color: var(--text-muted); min-height: 1.4em; }

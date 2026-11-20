@@ -65,3 +65,18 @@ export function upsertDays(text, days, opts) {
 export function safeFileName(name) {
   return name.replace(/[\\/:*?"<>|#^[\]]/g, " ").replace(/\s+/g, " ").trim().replace(/^\.+/, "").slice(0, 100);
 }
+
+// 습관 파일 글에서 그 날짜 줄을 바꾼다. line이 없으면(기록을 지움) 이미 기록이 있던 날에 한해 '- [ ] 날짜'를 남겨서,
+// 미리 알림 줄이 또 들어와도 지운 날이 되살아나지 않게 한다. 지금 쓰는 줄을 다시 쓰면 표시는 기록으로 바뀐다
+export function rewriteDay(text, ds, line) {
+  let had = false;
+  const lines = text.split("\n").filter((l) => {
+    const m = l.match(DONE_RE) || l.match(SKIP_RE);
+    if (m && m[1] === ds) { if (DONE_RE.test(l)) had = true; return false; }
+    return true;
+  });
+  while (lines.length && lines[lines.length - 1].trim() === "") lines.pop();
+  if (line) lines.push(line);
+  else if (had) lines.push(`- [ ] ${ds}`);
+  return lines.join("\n") + "\n";
+}

@@ -1,5 +1,6 @@
 import { Modal } from "obsidian";
-import { tr, unitLabel } from "../i18n";
+import { DAY_NAMES, tr, unitLabel } from "../i18n";
+import { addDays, toDate } from "../dates";
 import { splitHM } from "../format";
 import { UNIT_HOURS } from "../constants";
 
@@ -81,6 +82,50 @@ export class NumberModal extends Modal {
     ok.addEventListener("click", submit);
     input.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
     window.setTimeout(() => input.focus(), 50);
+  }
+  onClose() { this.contentEl.empty(); }
+}
+
+// 챌린지 기간(총 며칠)과 시작일을 한 창에서 받는다
+export class PeriodModal extends Modal {
+  constructor(app, { title, days, start, onSubmit }) {
+    super(app);
+    Object.assign(this, { title, days, start, onSubmit });
+  }
+  onOpen() {
+    const { contentEl } = this;
+    this.titleEl.setText(this.title);
+    contentEl.createEl("p", { cls: "hg-modal-label", text: tr("총 며칠") });
+    const row = contentEl.createDiv({ cls: "hg-modal-row" });
+    const daysIn = row.createEl("input", { type: "number", attr: { min: "1", step: "1", inputmode: "numeric" } });
+    daysIn.addClass("hg-modal-input");
+    daysIn.value = String(this.days || 66);
+    row.createSpan({ cls: "hg-modal-unit", text: tr("일") });
+    contentEl.createEl("p", { cls: "hg-modal-label", text: tr("시작일") });
+    const dateIn = contentEl.createEl("input", { type: "date", cls: "hg-modal-input hg-modal-date" });
+    dateIn.value = this.start || "";
+    // 며칠과 시작일을 바꿀 때마다 끝나는 날을 보여준다 (시작일을 첫날로 세서 시작일 + 며칠 - 1)
+    const note = contentEl.createDiv({ cls: "hg-modal-note" });
+    const update = () => {
+      const d = Math.round(parseFloat(daysIn.value));
+      if (!(d > 0) || !dateIn.value) { note.setText(""); return; }
+      const end = addDays(toDate(dateIn.value), d - 1);
+      note.setText(tr("{0}에 끝나요", `${end.getFullYear()}/${end.getMonth() + 1}/${end.getDate()} (${DAY_NAMES[end.getDay()]})`));
+    };
+    for (const el of [daysIn, dateIn]) { el.addEventListener("input", update); el.addEventListener("change", update); }
+    update();
+    const submit = () => {
+      const d = Math.round(parseFloat(daysIn.value));
+      if (!(d > 0) || !dateIn.value) return;
+      const ds = dateIn.value;
+      this.close();
+      this.onSubmit(d, ds);
+    };
+    const btns = contentEl.createDiv({ cls: "hg-modal-btns" });
+    btns.createEl("button", { text: tr("취소") }).addEventListener("click", () => this.close());
+    btns.createEl("button", { cls: "mod-cta", text: tr("저장") }).addEventListener("click", submit);
+    for (const el of [daysIn, dateIn]) el.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
+    window.setTimeout(() => daysIn.focus(), 50);
   }
   onClose() { this.contentEl.empty(); }
 }

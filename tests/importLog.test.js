@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { planImport, safeFileName, upsertDays } from "../src/importLog";
+import { planImport, rewriteDay, safeFileName, upsertDays } from "../src/importLog";
 
 test("planImport groups log lines into habits and days", () => {
   const plan = planImport([
@@ -48,4 +48,15 @@ test("upsertDays merges items into an existing day", () => {
 test("safeFileName removes characters a file name cannot hold", () => {
   assert.equal(safeFileName("a/b: c?"), "a b c");
   assert.equal(safeFileName("..hidden"), "hidden");
+});
+
+test("removing a recorded day leaves a marker so a later log line does not bring it back", () => {
+  const text = "- [x] 2026-11-17\n- [x] 2026-11-18\n";
+  const removed = rewriteDay(text, "2026-11-18", null);
+  assert.equal(removed, "- [x] 2026-11-17\n- [ ] 2026-11-18\n");
+  const days = new Map([["2026-11-18", { amount: 0, items: [] }]]);
+  assert.equal(upsertDays(removed, days, {}), removed);
+  // removing a day that had no record adds nothing, and filling the day again replaces the marker
+  assert.equal(rewriteDay(text, "2026-11-19", null), text);
+  assert.equal(rewriteDay(removed, "2026-11-18", "- [x] 2026-11-18"), "- [x] 2026-11-17\n- [x] 2026-11-18\n");
 });

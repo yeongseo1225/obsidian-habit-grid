@@ -1,14 +1,14 @@
 import { Plugin, TFile, TFolder, normalizePath, Notice, Menu } from "obsidian";
-import { DASHBOARD_TEMPLATE, DEFAULT_SETTINGS, DONE_RE, PRESET_COLORS, SKIP_RE, UNIT_HOURS, WD_ORDER } from "./constants";
+import { DASHBOARD_TEMPLATE, DEFAULT_SETTINGS, PRESET_COLORS, UNIT_HOURS, WD_ORDER } from "./constants";
 import { resolveLang, setLang, tr, unitLabel } from "./i18n";
 import { fmDel, fmGet, fmKey, fmSet, fmSetUnit, normalizeUnit, resolveKeyStyle, unitForKey } from "./frontmatter";
 import { addDays, fmt, monthKey } from "./dates";
 import { habitStart } from "./stats";
 import { writeQty } from "./format";
 import { convertAmount, itemsLine, knownItems, mergeItems, parseDates, parseEntries, parseItemLines, splitItem, parseLog, parseSkips, parseTitle } from "./parse";
-import { planImport, safeFileName, upsertDays } from "./importLog";
+import { planImport, rewriteDay, safeFileName, upsertDays } from "./importLog";
 import { HabitView } from "./view";
-import { ConfirmModal, DateModal, NumberModal } from "./modals/simple";
+import { ConfirmModal, DateModal, NumberModal, PeriodModal } from "./modals/simple";
 import { GoalsModal } from "./modals/goals";
 import { RecordModal } from "./modals/record";
 import { ItemsModal } from "./modals/items";
@@ -288,14 +288,7 @@ export class HabitGridPlugin extends Plugin {
   async writeDay(h, ds, line) {
     const file = await this.mainFileOf(h.target, h.kind === "measure" ? h.unit : null);
     await this.app.vault.process(file, (text) => {
-      const lines = text.split("\n").filter((l) => {
-        const m = l.match(DONE_RE) || l.match(SKIP_RE);
-        return !(m && m[1] === ds);
-      });
-      while (lines.length && lines[lines.length - 1].trim() === "") lines.pop();
-      if (line) lines.push(line);
-      else if (h.logDates && h.logDates.has(ds)) lines.push(`- [ ] ${ds}`);
-      return lines.join("\n") + "\n";
+      return rewriteDay(text, ds, line);
     });
   }
 
@@ -345,7 +338,7 @@ export class HabitGridPlugin extends Plugin {
       menu.addItem((i) => i.setTitle(tr("기간 직접 입력")).setIcon("pencil").onClick(() => this.askPeriod(h)));
       menu.addItem((i) => i.setTitle(tr("기간 없음으로 바꾸기")).setIcon("infinity").onClick(() => this.extendPeriod(h, 0)));
     } else {
-      menu.addItem((i) => i.setTitle(tr("기간 정하기 (오늘부터)")).setIcon("calendar-range").onClick(() => this.askPeriod(h)));
+      menu.addItem((i) => i.setTitle(tr("기간 정하기")).setIcon("calendar-range").onClick(() => this.askPeriod(h)));
     }
   }
 
@@ -353,6 +346,8 @@ export class HabitGridPlugin extends Plugin {
   openPeriodMenu(evt, h) {
     const menu = new Menu();
     this.addPeriodItems(menu, h);
+    menu.addSeparator();
+    menu.addItem((i) => i.setTitle(tr("시작일 바꾸기")).setIcon("calendar").onClick(() => this.askStart(h)));
     menu.showAtMouseEvent(evt);
   }
 
@@ -465,11 +460,21 @@ export class HabitGridPlugin extends Plugin {
     }).open();
   }
   askPeriod(h) {
-    new NumberModal(this.app, {
-      title: tr("기간 (일)"), desc: h.period ? tr("총 며칠로 할까요? (시작일부터 센 총 일수)") : tr("오늘부터 며칠 할까요?"),
-      value: h.period ? h.period.days : 66, unit: tr("일"),
-      onSubmit: async (v) => { const d = Math.round(v); if (d > 0) await this.extendPeriod(h, -d); },
+    // 기간(총 며칠)과 시작일을 한 창에서 정한다. 기본 시작일은 이 습관의 시작일, 없으면 오늘
+    new PeriodModal(this.app, {
+      title: tr("기간 정하기"),
+      days: h.period ? h.period.days : 66,
+      start: (h.period && h.period.start) || habitStart(h) || fmt(new Date()),
+      onSubmit: (days, ds) => this.startPeriod(h, days, ds),
     }).open();
+  }
+  async startPeriod(h, days, ds) {
+    const file = await this.mainFileOf(h.target, null);
+    await this.app.fileManager.processFrontMatter(file, (fm) => {
+      fmSet(fm, "duration", days, this.keyStyle());
+      fmSet(fm, "start", ds, this.keyStyle());
+    });
+    new Notice(tr("'{0}'의 {1}일 챌린지를 설정했어요", h.name, days));
   }
   async setArchived(h, on) {
     const file = await this.mainFileOf(h.target, h.kind === "measure" ? h.unit : null);

@@ -1,6 +1,6 @@
 import { DAY_NAMES, tr } from "../i18n";
 import { addDays, fmt, toDate, weekStartOf } from "../dates";
-import { computeStats } from "../stats";
+import { computeStats, isSchedDay } from "../stats";
 import { addMoreButton, enableHorizontalScroll, makeColorDot, stopEditorGrab } from "../ui";
 import { renderWeekTop } from "./weekTop";
 
@@ -102,6 +102,7 @@ export function renderChallenge(parent, name, set, opts) {
       const date = addDays(top, i);
       const ds = fmt(date);
       const cell = col.createDiv({ cls: "hg-cell" });
+      if (isSchedDay(opts.freqsRaw, opts.days, date, today, weekStart)) cell.addClass("is-sched");
       if (ds < startStr || ds > endStr) { cell.addClass("is-outside"); continue; }
       if (ds === todayStr) cell.addClass("is-today");
       const on = set.has(ds);

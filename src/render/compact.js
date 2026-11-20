@@ -116,6 +116,7 @@ export function compactChallengeBody(card, h, o) {
       const date = addDays(top, i);
       const ds = fmt(date);
       const cell = col.createDiv({ cls: "hg-cell" });
+      if (isSchedDay(h.freqsRaw, h.days, date, today, weekStart)) cell.addClass("is-sched");
       if (ds < startStr || ds > endStr) { cell.addClass("is-outside"); continue; }
       if (ds > todayStr) cell.addClass("is-planned");
       else if (set.has(ds)) cell.addClass("is-on");

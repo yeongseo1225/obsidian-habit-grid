@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { nameIsShort, weekCellsOf, weekHasHabit } from "../src/render/today";
+import { nameIsShort, weekCellsOf, weekHasHabit, weekTargetOf } from "../src/render/today";
 import { addDays, fmt, weekStartOf } from "../src/dates";
 
 const today = new Date(2026, 10, 20); // Fri 2026-11-20
@@ -54,4 +54,11 @@ test("nameIsShort counts Korean characters as two columns", () => {
   assert.equal(nameIsShort("Study"), true);
   assert.equal(nameIsShort("아침 스트레칭"), false);
   assert.equal(nameIsShort("Morning stretching"), false);
+});
+
+test("weekTargetOf uses the chosen weekdays, weekly times, or every day", () => {
+  assert.equal(weekTargetOf(check([], { days: { "2026-11": [1, 3, 5] }, freqsRaw: { "2026-11": 3 } }), monday), 3);
+  assert.equal(weekTargetOf(check([], { freqsRaw: { "2026-11": 4 } }), monday), 4);
+  assert.equal(weekTargetOf(check([]), monday), 7);
+  assert.equal(weekTargetOf(check([], { freqsRaw: { "2026-09": 2 } }), monday), 2);
 });

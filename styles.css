@@ -1454,7 +1454,7 @@
 .hg-todayright { display: inline-flex; align-items: center; gap: 10px; }
 .hg-wkgrid {
   display: grid;
-  grid-template-columns: minmax(64px, 1.3fr) repeat(7, minmax(0, 1fr));
+  grid-template-columns: minmax(64px, 1.3fr) repeat(7, minmax(0, 1fr)) 46px;
   gap: 6px 4px;
   align-items: center;
 }
@@ -1475,17 +1475,20 @@
 /* 이름이 짧으면 가운데, 길면 왼쪽 정렬 (두 줄까지) */
 .hg-wkname.is-short { text-align: center; padding-right: 0; }
 .hg-wkcell {
-  height: 30px;
+  width: 100%;
+  max-width: 32px;
+  aspect-ratio: 1;
+  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  font-size: 0.72em;
+  border-radius: 50%;
+  font-size: 0.68em;
   font-variant-numeric: tabular-nums;
   background: color-mix(in srgb, var(--text-normal) 8%, transparent);
   cursor: pointer;
   user-select: none;
-  transition: transform 0.1s ease;
+  transition: transform 0.1s ease, opacity 0.15s ease;
 }
 .hg-wkcell:active { transform: scale(0.94); }
 .hg-wkcell.is-on { background: var(--hg-on); color: #fff; font-weight: 600; }
@@ -1493,3 +1496,16 @@
 .hg-wkcell.is-rest:not(.is-on):not(.is-partial) { background: transparent; box-shadow: inset 0 0 0 1px var(--background-modifier-border); }
 .hg-wkcell.is-future, .hg-wkcell.is-off { background: transparent; box-shadow: inset 0 0 0 1px var(--background-modifier-border); opacity: 0.4; cursor: default; }
 .hg-wkcell.is-future:active, .hg-wkcell.is-off:active { transform: none; }
+.hg-wkcell.is-todaycell.is-none { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--hg-on) 65%, transparent); }
+.hg-wkcell.is-dim { opacity: 0.35; }
+.hg-wkday.is-today { background: color-mix(in srgb, var(--interactive-accent) 14%, transparent); border-radius: 10px; padding: 2px 0; }
+.hg-wkgoal {
+  text-align: center;
+  font-size: 0.72em;
+  font-variant-numeric: tabular-nums;
+  padding: 2px 0;
+  border-radius: 999px;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--text-normal) 8%, transparent);
+}
+.hg-wkgoal.is-done { background: var(--hg-on); color: #fff; font-weight: 600; }

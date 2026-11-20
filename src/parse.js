@@ -92,6 +92,26 @@ export function parseItemLines(text) {
   return map;
 }
 
+// "스쿼트 30회" -> { name: "스쿼트", amount: "30회" }. 이름 뒤에 숫자로 시작하는 말이 오면 그것이 양
+export function splitItem(text) {
+  const m = String(text).trim().match(/^(.*?)(?:\s+(\d.*))?$/);
+  return { name: (m[1] || "").trim(), amount: (m[2] || "").trim() };
+}
+
+// 항목 표에서 이름을 많이 쓴 순으로 모으고, 이름마다 가장 최근에 적은 양을 찾는다
+export function knownItems(items) {
+  const count = new Map(), last = new Map();
+  for (const ds of [...(items || new Map()).keys()].sort()) {
+    for (const raw of items.get(ds)) {
+      const { name, amount } = splitItem(raw);
+      if (!name) continue;
+      count.set(name, (count.get(name) || 0) + 1);
+      if (amount) last.set(name, amount);
+    }
+  }
+  return { names: [...count.keys()].sort((a, b) => count.get(b) - count.get(a)), last };
+}
+
 // 항목 표 두 개를 합친다 (같은 날의 같은 항목은 한 번만)
 export function mergeItems(a, b) {
   const out = new Map();

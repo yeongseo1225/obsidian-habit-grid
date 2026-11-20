@@ -5,7 +5,7 @@ import { fmDel, fmGet, fmKey, fmSet, fmSetUnit, normalizeUnit, resolveKeyStyle, 
 import { fmt, monthKey } from "./dates";
 import { habitStart } from "./stats";
 import { writeQty } from "./format";
-import { convertAmount, mergeItems, parseDates, parseEntries, parseItemLines, parseLog, parseSkips, parseTitle } from "./parse";
+import { convertAmount, knownItems, mergeItems, parseDates, parseEntries, parseItemLines, splitItem, parseLog, parseSkips, parseTitle } from "./parse";
 import { HabitView } from "./view";
 import { ConfirmModal, DateModal, NumberModal } from "./modals/simple";
 import { GoalsModal } from "./modals/goals";
@@ -311,15 +311,14 @@ export class HabitGridPlugin extends Plugin {
   }
   // 항목이 있는 습관: 그 날 한 항목을 고른다. 하나도 안 골라도 그 날은 기록돼요
   openItems(h, ds) {
-    const count = new Map();
-    for (const list of (h.items || new Map()).values()) for (const it of list) count.set(it, (count.get(it) || 0) + 1);
-    const known = [...count.keys()].sort((a, b) => count.get(b) - count.get(a));
+    const { names, last } = knownItems(h.items);
     const [, m, d] = ds.split("-").map(Number);
     new ItemsModal(this.app, {
       title: tr("{0} · {1}월 {2}일", h.name, m, d),
-      known,
+      known: names,
+      lastAmount: last,
       locked: (h.itemsLog && h.itemsLog.get(ds)) || [],
-      selected: (h.itemsFile && h.itemsFile.get(ds)) || [],
+      selected: ((h.itemsFile && h.itemsFile.get(ds)) || []).map(splitItem),
       hasRecord: h.set.has(ds),
       onSubmit: (items) => this.recordItems(h, ds, items),
       onClear: () => this.recordCheck(h, ds, false),

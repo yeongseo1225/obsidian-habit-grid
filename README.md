@@ -14,7 +14,7 @@ Track habits in plain Markdown files and see them as a GitHub-style contribution
 - **Three habit types**
   - *Simple check* – done or not done.
   - *Log amounts* – hours, minutes, pages, km, or any unit you type (e.g. "Study 2h").
-  - *Log items* – one habit with named items underneath (e.g. Workout → squats, plank). Tap a day to check it; tap a checked day to pick what you did or add new items. Picking nothing still counts. Items are stored on the day's line, `- [x] 2026-11-20 squats, plank`, and items from Reminders are shown too.
+  - *Log items* – one habit with named items underneath (e.g. Workout → squats, plank). Tap a day to check it; tap a checked day to pick what you did or add new items. Picking nothing still counts, and each item can carry an amount such as `30 reps`. Items are stored on the day's line, `- [x] 2026-11-20 squats 30 reps, plank`, and items from Reminders are shown too.
 - **Challenges** – give a habit a duration (30 / 66 / 100 days or custom) and it becomes a challenge card with progress, streak, and a "complete" banner. No duration means a regular card.
 - **Repeat rules** – "N times a week" or "specific days" (Mon, Wed, Fri…). Rules can differ per month; a month you leave empty keeps the previous month's rule.
 - **Goals** – a daily goal per month for amount habits, plus goal-week statistics.

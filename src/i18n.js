@@ -218,6 +218,7 @@ export const EN = {
   "이 날 한 것을 골라요. 고르지 않아도 기록돼요.": "Pick what you did. The day counts even if you pick nothing.",
   "미리 알림에서 온 항목은 여기서 지울 수 없어요.": "Items from Reminders can't be removed here.",
   "예: 스쿼트": "e.g. Squats",
+  "예: 30회": "e.g. 30 reps",
   "추가": "Add",
   "시작일 바꾸기": "Change start date",
   "'{0}' 시작일을 바꿨어요": "Changed the start date of '{0}'",

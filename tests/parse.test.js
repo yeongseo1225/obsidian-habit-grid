@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { convertAmount, mergeItems, parseAmount, parseBlock, parseItemLines, parseDates, parseEntries, parseLog, parseSkips, parseTitle } from "../src/parse";
+import { convertAmount, knownItems, mergeItems, parseAmount, parseBlock, parseItemLines, splitItem, parseDates, parseEntries, parseLog, parseSkips, parseTitle } from "../src/parse";
 
 test("parseTitle reads name, amount and unit from a reminder title", () => {
   assert.deepEqual(parseTitle("공부 2시간"), { base: "공부", amount: 2, unit: "시간" });
@@ -61,4 +61,24 @@ test("mergeItems unions items per day without duplicates", () => {
   const a = new Map([["2026-11-18", ["스쿼트"]]]);
   const b = new Map([["2026-11-18", ["스쿼트", "플랭크"]], ["2026-11-19", ["런지"]]]);
   assert.deepEqual([...mergeItems(a, b)], [["2026-11-18", ["스쿼트", "플랭크"]], ["2026-11-19", ["런지"]]]);
+});
+
+test("splitItem separates an item name from its amount", () => {
+  assert.deepEqual(splitItem("스쿼트 30회"), { name: "스쿼트", amount: "30회" });
+  assert.deepEqual(splitItem("플랭크"), { name: "플랭크", amount: "" });
+  assert.deepEqual(splitItem("벤치 프레스 60kg"), { name: "벤치 프레스", amount: "60kg" });
+  assert.deepEqual(splitItem("푸시업 3x10"), { name: "푸시업", amount: "3x10" });
+  assert.deepEqual(splitItem("3분 달리기"), { name: "3분 달리기", amount: "" });
+});
+
+test("knownItems orders names by use and remembers the latest amount", () => {
+  const items = new Map([
+    ["2026-11-16", ["스쿼트 20회", "플랭크"]],
+    ["2026-11-18", ["스쿼트 30회"]],
+    ["2026-11-19", ["런지"]],
+  ]);
+  const k = knownItems(items);
+  assert.deepEqual(k.names, ["스쿼트", "플랭크", "런지"]);
+  assert.equal(k.last.get("스쿼트"), "30회");
+  assert.equal(k.last.has("플랭크"), false);
 });

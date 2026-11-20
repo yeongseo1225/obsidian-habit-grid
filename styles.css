@@ -1510,3 +1510,6 @@
 .hg-wkgoal.is-done { background: var(--hg-on); color: #fff; font-weight: 600; }
 .hg-nh-date { width: auto; }
 .hg-modal-date { width: auto; }
+.hg-items-pick { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.hg-items-row { display: flex; align-items: center; gap: 8px; }
+.hg-items-amt { width: 130px; }

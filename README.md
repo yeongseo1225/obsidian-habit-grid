@@ -30,7 +30,7 @@ The plugin only reads and writes Markdown files in your vault. It makes no netwo
   - *Simple check* – done or not done.
   - *Log amounts* – hours, minutes, pages, km, or any unit you type (e.g. "Study 2h").
   - *Log items* – one habit with named items underneath (e.g. Workout → squats, plank). See [Item habits](#item-habits).
-- **Challenges** – give a habit a duration (30 / 66 / 100 days or custom) and it becomes a challenge card with progress, streak, and a "complete" banner. No duration means a regular card. Once a challenge reaches its weekly goal, the rest of that week is tinted like on regular cards.
+- **Challenges** – give a habit a duration (30 / 66 / 100 days or custom) and it becomes a challenge card with progress, streak, and a "complete" banner. No duration means a regular card. Once a challenge reaches its weekly goal, the rest of that week is tinted like on regular cards. You can set how many times a week from the duration chip menu on the card.
 
   ![Challenge card](./images/challenge-card.png)
 - **Repeat rules** – "N times a week" or "specific days" (Mon, Wed, Fri…). Rules can differ per month; a month you leave empty keeps the previous month's rule.
@@ -180,7 +180,24 @@ Items are stored on the day's line in the habit file, so you can also edit them 
 
 Habit logs can be collected from the Reminders app by an iOS Shortcut. It appends completed reminders from a list named **Habits** to `sync/Reminders log.md`.
 
-Build the shortcut with these actions, in order:
+### Quick install: download the shared Shortcut
+
+1. Download and add the shortcut on your iPhone, iPad, or Mac: **[Reminders to Habit Grid](https://www.icloud.com/shortcuts/8e5699174e95444996780e637ebdce18)**. If iOS refuses, turn on **Allow Untrusted Shortcuts** in **Settings → Shortcuts**.
+2. Everything is already set up. You only choose two things, because they are your own and are not shared with the shortcut:
+   - **The Reminders list:** in **Find Reminders**, next to **List is**, pick the list whose habits you want to log (for example `Habits`).
+   - **The file path:** in **both Append to File actions** (the one for reminders with a due date, and the one under *Otherwise*), set the folder to your vault's **`habit-grid/sync`** folder and keep the file name `Reminders log.md`. In the Files picker, your vault is under *iCloud Drive → Obsidian* or *On My iPhone → Obsidian*.
+3. Run it once and open `Reminders log.md`. You should see one line per reminder, like `- [x] 2026-11-19 Meditate`.
+4. Set it up the way you like:
+   - **When it syncs:** in the Shortcuts app, go to **Automation → Personal Automation → Time of Day** and pick a time (for example every night at 11:55 PM). Turn on **Run Immediately** so no confirmation pops up. You can add several automations for different times, or run it when you open Obsidian. It cannot repeat every N minutes; for that, use [Mac sync](#optional-sync-from-a-mac).
+   - **How many days it reads:** in **Find Reminders**, change *Completion Date is in the last 3 days* to any number of days. A bigger number catches reminders you complete late, but the log grows faster (see **Tidy log** below).
+
+The log may collect the same line more than once, because the shortcut looks back three days on every run. That is fine: a habit is recorded only once per day. If the duplicates bother you, click **Tidy log** in the plugin settings to remove them.
+
+The folder you pick for the shortcut is your own, so it is not included when the shortcut is shared. If a field is empty or points somewhere else, choose it yourself.
+
+### Build the shortcut yourself
+
+You can also build it yourself with the same actions, in order:
 
 1. **Find Reminders** – List is `Habits`, Is Completed is `Yes`, Completion Date is in the last 3 days.
 2. **Repeat with Each** item from step 1.
@@ -188,6 +205,15 @@ Build the shortcut with these actions, in order:
    - **Append to File** `habit-grid/sync/Reminders log.md` with the text `- [x] ` + the **Due Date** + a space + the **Repeat Item** (its title), with **Make New Line** on. Set the Due Date's date format to **Custom** `yyyy-MM-dd` (tap the Due Date variable to change it).
 4. **Otherwise**:
    - **Append to File**, the same file and settings, with the text `- [x] ` + the **Completion Date** + a space + the **Repeat Item**. Set the Completion Date's format to **Custom** `yyyy-MM-dd` too. Then **End If** and **End Repeat**.
+
+Name the shortcut anything you like, for example *Habit Grid log*.
+
+**Use the Repeat Item variable for the title, not Reminders** (the whole list that *Find Reminders* returned). If you use the list, every line gets all the titles, and your records end up under the wrong habit. A correct log has one line per reminder, like this:
+
+```
+- [x] 2026-11-19 Meditate
+- [x] 2026-11-20 Study 2h
+```
 
 Each reminder is logged under its **due date**, so yesterday's reminder that you check after midnight still counts for yesterday. A reminder without a due date is logged under the day you completed it. If you complete a reminder before its due day, it is logged on the due day.
 
@@ -381,7 +407,7 @@ Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에�
   - *단순 체크* – 했는지 안 했는지만 기록해요.
   - *양 기록* – 시간, 분, 쪽, km, 또는 직접 적은 단위(예: "공부 2시간").
   - *항목 기록* – 한 습관 아래에 이름 붙은 항목을 남겨요(예: 운동 → 스쿼트, 플랭크). [항목 습관](#항목-습관)을 보세요.
-- **챌린지** – 습관에 기간(30 / 66 / 100일 또는 직접 입력)을 주면 진행도, 연속 기록, "완료" 배너가 있는 챌린지 카드가 돼요. 기간이 없으면 일반 카드예요. 챌린지도 주간 목표를 채우면 그 주의 남은 칸이 일반 카드처럼 연하게 표시돼요.
+- **챌린지** – 습관에 기간(30 / 66 / 100일 또는 직접 입력)을 주면 진행도, 연속 기록, "완료" 배너가 있는 챌린지 카드가 돼요. 기간이 없으면 일반 카드예요. 챌린지도 주간 목표를 채우면 그 주의 남은 칸이 일반 카드처럼 연하게 표시돼요. 주 몇 회 할지는 카드의 기간 칩 메뉴에서 정할 수 있어요.
 
   ![챌린지 카드](./images/challenge-card.png)
 - **반복 규칙** – "주 N회" 또는 "요일 지정"(월, 수, 금…). 달마다 규칙을 다르게 정할 수 있고, 비워 둔 달은 앞 달의 규칙을 이어 써요.
@@ -531,7 +557,24 @@ habit-grid/
 
 미리 알림 앱의 완료 기록은 iOS 단축어로 모을 수 있어요. 단축어가 `Habits`라는 목록에서 완료한 미리 알림을 `sync/Reminders log.md`에 덧붙여요.
 
-단축어는 이 동작들로 순서대로 만들어요.
+### 빠른 설치: 공유된 단축어 내려받기
+
+1. iPhone, iPad, Mac에서 단축어를 내려받아 추가해요: **[Reminders to Habit Grid](https://www.icloud.com/shortcuts/8e5699174e95444996780e637ebdce18)**. iOS가 거부하면 **설정 → 단축어**에서 **신뢰할 수 없는 단축어 허용**을 켜세요.
+2. 나머지는 이미 만들어져 있어요. 아래 두 가지만 직접 고르면 돼요. 사용자마다 다른 값이라 단축어를 공유할 때 같이 넘어가지 않아요.
+   - **미리 알림 목록:** **미리 알림 찾기**에서 **목록 다음과 같음** 뒤에, 습관을 기록할 목록을 골라요(예: `Habits`).
+   - **파일 경로:** **파일에 덧붙이기** 동작 **두 개 모두**(마감일이 있는 미리 알림용과 *그렇지 않은 경우*의 것)에서 폴더를 내 보관함의 **`habit-grid/sync`** 폴더로 정하고, 파일 이름은 `Reminders log.md` 그대로 두세요. 파일 선택 화면에서 보관함은 *iCloud Drive → Obsidian* 또는 *나의 iPhone → Obsidian* 아래에 있어요.
+3. 한 번 실행하고 `Reminders log.md`를 열어 보세요. 미리 알림 하나가 한 줄로, `- [x] 2026-11-19 명상`처럼 보이면 돼요.
+4. 원하는 대로 정하세요.
+   - **동기화 시간:** 단축어 앱의 **자동화 → 개인용 자동화 → 하루 중 시간**에서 시각을 정해요(예: 매일 밤 11시 55분). **즉시 실행**을 켜면 확인 창이 뜨지 않아요. 시각이 다른 자동화를 여러 개 만들거나 Obsidian을 열 때 실행하게 할 수도 있어요. "N분마다" 반복은 안 돼요. 그럴 땐 [Mac 동기화](#선택-mac에서-자동으로-가져오기)를 쓰세요.
+   - **며칠치를 읽을지:** **미리 알림 찾기**의 *완료일이 최근 3일 이내*에서 일수를 원하는 만큼 바꿔요. 숫자가 크면 늦게 완료한 것도 잡히지만 로그가 더 빨리 길어져요(아래 **로그 정리** 참고).
+
+로그에는 같은 줄이 여러 번 모일 수 있어요. 단축어가 돌 때마다 최근 3일을 다시 읽기 때문이에요. 괜찮아요. 습관에는 하루에 한 번만 기록돼요. 중복 줄이 거슬리면 플러그인 설정의 **로그 정리**를 눌러 지울 수 있어요.
+
+단축어에서 고르는 폴더는 사용자 각자의 것이라 단축어를 공유할 때 같이 넘어가지 않아요. 빈 칸이거나 다른 곳을 가리키고 있으면 직접 고르세요.
+
+### 직접 만들기
+
+같은 동작으로 직접 만들 수도 있어요. 순서대로 만들어요.
 
 1. **미리 알림 찾기** – 목록 = `Habits`, 완료됨 = 예, 완료일이 최근 3일 이내.
 2. 1번의 항목에 **각 항목 반복**.
@@ -539,6 +582,15 @@ habit-grid/
    - `habit-grid/sync/Reminders log.md`에 **파일에 덧붙이기** – 문장은 `- [x] ` + **마감일** + 공백 + **반복 항목**(제목)이고, **새로운 줄 만들기**를 켜요. 마감일의 날짜 형식을 **사용자 지정** `yyyy-MM-dd`로 정해요(마감일 변수를 눌러 바꿔요).
 4. **그렇지 않은 경우**:
    - 같은 파일, 같은 설정으로 **파일에 덧붙이기** – 문장은 `- [x] ` + **완료일** + 공백 + **반복 항목**이에요. 완료일의 형식도 **사용자 지정** `yyyy-MM-dd`로 정해요. 그다음 **조건문 종료**와 **반복 종료**를 해요.
+
+단축어 이름은 마음대로 지어도 돼요. 예를 들면 *Habit Grid 기록*이에요.
+
+**제목에는 *미리 알림*(미리 알림 찾기가 돌려준 목록 전체)이 아니라 *반복 항목* 변수를 쓰세요.** 목록을 쓰면 줄마다 모든 제목이 붙어서 기록이 엉뚱한 습관에 들어가요. 제대로 된 로그는 미리 알림 하나가 한 줄이에요.
+
+```
+- [x] 2026-11-19 명상
+- [x] 2026-11-20 공부 2시간
+```
 
 각 미리 알림은 **마감일** 날짜로 기록돼요. 그래서 어제 것을 자정이 지난 뒤 체크해도 어제로 세요. 마감일이 없는 미리 알림은 완료한 날로 기록하고, 마감일보다 먼저 완료하면 마감일 날짜로 기록돼요.
 

@@ -1,6 +1,6 @@
 {
   "name": "habit-grid",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "private": true,
   "description": "Habit Grid plugin for Obsidian (build setup)",
   "main": "main.js",

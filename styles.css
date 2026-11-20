@@ -111,8 +111,9 @@
   user-select: none;
 }
 
-.hg-scroll.is-dragging .hg-cell {
-  transform: none !important;
+.hg-scroll.is-dragging .hg-cell,
+.hg-scroll.is-dragging .hg-cell.is-clickable:hover {
+  transform: none;
 }
 
 .hg-grid {
@@ -1366,7 +1367,7 @@
 
 /* v24.9 요일 지정 */
 .hg-goals-days { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
-.hg-daychip { padding: 3px 0 !important; min-width: 30px; text-align: center; font-size: 0.78em !important; flex: 1 1 0; }
+.hg-goals-days .hg-daychip { padding: 3px 0; min-width: 30px; text-align: center; font-size: 0.78em; flex: 1 1 0; }
 /* v24.10 이번 주 해야 할 요일 칸 */
 .hg-cell.is-sched { outline: 1.5px solid var(--hg-on); outline-offset: 1px; }
 .hg-cell.is-sched.is-outside { outline: none; }

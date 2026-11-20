@@ -57,7 +57,7 @@ export function enableHorizontalScroll(scroll) {
     if (!drag.moved && Math.abs(dx) > 4) {
       drag.moved = true;
       scroll.addClass ? scroll.addClass("is-dragging") : scroll.classList.add("is-dragging");
-      try { scroll.setPointerCapture(drag.id); } catch (_) { /* pointer already released */ }
+      try { scroll.setPointerCapture(drag.id); } catch { /* pointer already released */ }
     }
     if (drag.moved) scroll.scrollLeft = drag.left - dx;
   });

@@ -357,7 +357,7 @@ export function setLang(l) {
 
 export function resolveLang(pref) {
   if (pref === "ko" || pref === "en") return pref;
-  try { return String(moment.locale() || navigator.language || "").toLowerCase().startsWith("ko") ? "ko" : "en"; } catch (_) { return "en"; }
+  try { return String(moment.locale() || navigator.language || "").toLowerCase().startsWith("ko") ? "ko" : "en"; } catch { return "en"; }
 }
 
 // 시간·분·쪽은 저장된 단위 값은 그대로 두고, 화면에 보일 때만 번역해요

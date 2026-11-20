@@ -19,7 +19,7 @@ Track habits in plain Markdown files and see them as a GitHub-style contribution
 - **Repeat rules** – "N times a week" or "specific days" (Mon, Wed, Fri…). Rules can differ per month; a month you leave empty keeps the previous month's rule.
 - **Goals** – a daily goal per month for amount habits, plus goal-week statistics.
 - **Edit by clicking** – click a cell to add or remove a record, or fill in past days from the log dialog.
-- **Today row** – the top of the dashboard shows what to do today. Switch between *Day* (the last 14 days in a sideways-scrolling strip) and *Week* (one row per habit, one column per weekday; tap a circle to log that day, and page back through earlier weeks). Each row ends with done/goal for the week, using the times per week or weekdays you chose (every day if you set none); once the goal is met the remaining days fade out. The choice is remembered.
+- **Today row** – the top of the dashboard shows what to do today. Switch between *Day* (the last 14 days in a sideways-scrolling strip) and *Week* (one row per habit, one column per weekday; tap a cell to log that day, and page back through earlier weeks). Each row ends with done/goal for the week, using the times per week or weekdays you chose (every day if you set none); once the goal is met the remaining days switch to a light tint of the habit color. The choice is remembered.
 - **Archive** – finished habits move to an archive folder; records are kept and can be restored.
 - **Languages** – English, Korean, or automatic (follows the app language).
 - **Your data stays in your notes** – no database, no network access.

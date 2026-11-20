@@ -60,3 +60,17 @@ test("removing a recorded day leaves a marker so a later log line does not bring
   assert.equal(rewriteDay(text, "2026-11-19", null), text);
   assert.equal(rewriteDay(removed, "2026-11-18", "- [x] 2026-11-18"), "- [x] 2026-11-17\n- [x] 2026-11-18\n");
 });
+
+import { dedupeLog } from "../src/importLog";
+import { parseLog } from "../src/parse";
+
+test("dedupeLog keeps the first line of each day and title and the imported position", () => {
+  const text = "- [x] 2026-11-18 산책 \n- [x] 2026-11-18 공부\n- [x] 2026-11-18 산책\n- [x] 2026-11-19 산책\n- [x] 2026-11-18 산책\n- [ ] 2026-11-17 휴식\nmemo";
+  // 5 lines were already imported (4th duplicate is the 5th line); the last duplicate is not imported yet
+  const r = dedupeLog(text, 4);
+  assert.equal(r.removed, 2);
+  assert.equal(r.text, "- [x] 2026-11-18 산책 \n- [x] 2026-11-18 공부\n- [x] 2026-11-19 산책\n- [ ] 2026-11-17 휴식\nmemo");
+  assert.equal(parseLog(r.text).length, 3);
+  assert.equal(r.cursor, 3);
+  assert.equal(dedupeLog("- [x] 2026-11-18 a\n", 1).removed, 0);
+});

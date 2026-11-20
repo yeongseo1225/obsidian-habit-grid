@@ -1,4 +1,4 @@
-import { DONE_RE, SKIP_RE } from "./constants";
+import { DONE_RE, LOG_RE, SKIP_RE } from "./constants";
 import { writeQty } from "./format";
 import { convertAmount, itemsLine, parseEntries, parseItemLines, parseTitle } from "./parse";
 
@@ -79,4 +79,22 @@ export function rewriteDay(text, ds, line) {
   if (line) lines.push(line);
   else if (had) lines.push(`- [ ] ${ds}`);
   return lines.join("\n") + "\n";
+}
+
+// 로그 글에서 같은 날짜·같은 제목의 중복 줄을 지운다 (처음 줄만 남긴다. 다른 형식의 줄은 그대로 둔다).
+// cursor: 이미 습관 파일로 옮긴 줄 수(parseLog 기준). 옮긴 줄 중에서 지운 만큼 줄여서 돌려준다
+export function dedupeLog(text, cursor) {
+  const seen = new Set();
+  let idx = 0, removed = 0, dec = 0;
+  const out = [];
+  for (const line of text.split("\n")) {
+    const m = line.match(LOG_RE);
+    if (!m || !m[2]) { out.push(line); continue; }
+    const key = m[1] + "\u0001" + m[2].normalize("NFC");
+    if (seen.has(key)) { removed++; if (idx < cursor) dec++; idx++; continue; }
+    seen.add(key);
+    out.push(line);
+    idx++;
+  }
+  return { text: out.join("\n"), removed, cursor: Math.max(0, cursor - dec) };
 }

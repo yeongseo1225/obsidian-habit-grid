@@ -6,7 +6,7 @@ import { addDays, fmt, monthKey } from "./dates";
 import { habitStart } from "./stats";
 import { writeQty } from "./format";
 import { convertAmount, itemsLine, knownItems, mergeItems, parseDates, parseEntries, parseItemLines, splitItem, parseLog, parseSkips, parseTitle } from "./parse";
-import { planImport, rewriteDay, safeFileName, upsertDays } from "./importLog";
+import { dedupeLog, planImport, rewriteDay, safeFileName, upsertDays } from "./importLog";
 import { MAC_SYNC_FILES } from "./macSyncFiles";
 import { HabitView } from "./view";
 import { ConfirmModal, DateModal, NumberModal, PeriodModal } from "./modals/simple";
@@ -223,6 +223,31 @@ export class HabitGridPlugin extends Plugin {
         explicit, inferred, monthGoals: Object.assign({}, inferred, explicit) });
     }
     return out;
+  }
+
+  // 로그에서 같은 날짜·제목의 중복 줄을 지운다. 먼저 새 줄을 모두 습관 파일로 옮기고, 지운 줄 수를 돌려준다.
+  // 단축어가 다음에 다시 덧붙이므로, 그 사이에 새로 들어온 줄이 잘못 지워져도 복구된다
+  async tidyLog() {
+    const { vault } = this.app;
+    await this.importLog();
+    const folder = vault.getAbstractFileByPath(normalizePath(this.settings.folder));
+    if (!(folder instanceof TFolder)) return 0;
+    const nfc = (x) => x.normalize("NFC");
+    const dir = folder.children.find((c) => c instanceof TFolder && nfc(c.name) === nfc(this.settings.syncDir || "sync"));
+    const logs = dir ? dir.children.filter((f) => f instanceof TFile && f.extension === "md" && this.isLog(f)) : [];
+    const cursors = Object.assign({}, this.settings.logCursor);
+    let total = 0;
+    for (const lf of logs) {
+      let removed = 0, cursor = cursors[lf.path] || 0;
+      await vault.process(lf, (text) => {
+        const r = dedupeLog(text, cursor);
+        removed = r.removed; cursor = r.cursor;
+        return r.removed ? r.text : text;
+      });
+      if (removed) { cursors[lf.path] = cursor; total += removed; }
+    }
+    if (total) { this.settings.logCursor = cursors; await this.saveSettings(); }
+    return total;
   }
 
   // Mac 동기화 설치에 필요한 파일을 볼트 안(<습관 폴더>/mac-sync/)에 만들고, 터미널에 붙여 넣을 명령을 돌려준다.

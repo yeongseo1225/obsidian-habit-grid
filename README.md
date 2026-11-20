@@ -179,14 +179,18 @@ Habit logs can be collected from the Reminders app by an iOS Shortcut. It append
 
 Build the shortcut with these actions, in order:
 
-1. **Find Reminders** – List is `Habits`, Is Completed is `Yes`, Completion Date is in the last 7 days.
+1. **Find Reminders** – List is `Habits`, Is Completed is `Yes`, Completion Date is in the last 3 days.
 2. **Repeat with Each** item from step 1.
-3. Inside the loop: **Format Date** – the item's Completion Date, custom format `yyyy-MM-dd`.
-4. Inside the loop: **Text** – `- [x] ` + the formatted date + a space + the reminder's Title.
-5. After the loop: **Combine Text** – the repeat results, separated by **New Lines**.
-6. **Append to File** – the combined text, to `habit-grid/sync/Reminders log.md` in your vault (create the file first if needed).
+3. Inside the loop: **If** the reminder's **Due Date** **has any value**:
+   - **Append to File** `habit-grid/sync/Reminders log.md` with the text `- [x] ` + the **Due Date** + a space + the **Repeat Item** (its title), with **Make New Line** on. Set the Due Date's date format to **Custom** `yyyy-MM-dd` (tap the Due Date variable to change it).
+4. **Otherwise**:
+   - **Append to File**, the same file and settings, with the text `- [x] ` + the **Completion Date** + a space + the **Repeat Item**. Set the Completion Date's format to **Custom** `yyyy-MM-dd` too. Then **End If** and **End Repeat**.
 
-Run it by hand or with a personal automation. Because the shortcut looks back seven days, the same line can be appended more than once; duplicates are counted once. See *What a Reminders title becomes* above for how titles are read.
+Each reminder is logged under its **due date**, so yesterday's reminder that you check after midnight still counts for yesterday. A reminder without a due date is logged under the day you completed it. If you complete a reminder before its due day, it is logged on the due day.
+
+Run it by hand or with a personal automation, for example every night at 11:55 PM. Because it looks back three days, a reminder you complete late is still picked up.
+
+Looking back also means the shortcut appends the same lines again on every run. Your habit records are not duplicated (each day is counted once), but the log file keeps growing. Click **Tidy log** in the settings now and then to remove the duplicate lines. See *What a Reminders title becomes* above for how titles are read.
 
 The plugin recognizes the log file by name. The default is `Reminders log`; you can set another name in settings. On first setup the plugin creates `habit-grid/sync/` and an empty `Reminders log.md` for the shortcut to append to.
 
@@ -221,7 +225,7 @@ That is all. The default list is `Habits`; a new completed reminder in it shows 
 
 It copies the script to `~/.habit-grid-sync/` and sets up a background job that runs when you log in and wakes every 5 minutes; the script itself runs only when your chosen interval has passed. Nothing is downloaded. The files in your vault's `habit-grid/mac-sync/` folder are only used to install and to remove it (Obsidian's file list does not show `.sh` files, so use Finder or the **Show in Finder** button). The same files are in this repository's `scripts/` folder if you prefer to install without the plugin.
 
-The script only reads Reminders and appends lines to the log file. Lines already in the file are skipped.
+The script only reads Reminders and appends lines to the log file. Lines already in the file are skipped, so unlike the Shortcut it adds no duplicate lines.
 
 ### Remove it
 
@@ -422,14 +426,18 @@ Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에�
 
 미리 알림의 `Habits` 목록에서 완료한 항목을 `sync/Reminders log.md` 끝에 덧붙이는 iOS 단축어를 만들어요.
 
-1. **미리 알림 찾기** – 목록 = Habits, 완료됨 = 예, 완료일이 최근 7일 이내
+1. **미리 알림 찾기** – 목록 = Habits, 완료됨 = 예, 완료일이 최근 3일 이내
 2. **각 항목 반복**
-3. 반복 안에서 **날짜 서식** – 완료일, 사용자 지정 `yyyy-MM-dd`
-4. 반복 안에서 **텍스트** – `- [x] 날짜 제목`
-5. 반복이 끝난 뒤 **텍스트 결합** – 구분자는 새 줄
-6. **파일에 추가** – `habit-grid/sync/Reminders log.md`
+3. 반복 안에서 **조건문**: 미리 알림의 **마감일**이 **값을 가지고 있음**인 경우:
+   - `habit-grid/sync/Reminders log.md`에 **파일에 덧붙이기** – 문장은 `- [x] ` + **마감일** + 공백 + **반복 항목**(제목)이고 **새로운 줄 만들기**를 켜요. 마감일 칩을 눌러 날짜 형식을 **사용자 지정** `yyyy-MM-dd`로 바꿔요.
+4. **그렇지 않은 경우**:
+   - 같은 파일에 **파일에 덧붙이기** – 문장은 `- [x] ` + **완료일** + 공백 + **반복 항목**이에요. 완료일 칩도 **사용자 지정** `yyyy-MM-dd`로 바꿔요. 그다음 **조건문 종료**와 **반복 종료**예요.
 
-7일치를 다시 읽기 때문에 같은 줄이 여러 번 붙을 수 있지만, 중복은 한 번만 세요. 처음 설정할 때 `sync/` 폴더와 빈 `Reminders log.md`를 자동으로 만들어요.
+각 미리 알림은 **마감일** 날짜로 기록돼요. 그래서 어제 것을 자정 넘어 체크해도 어제로 세요. 마감일이 없는 미리 알림은 완료한 날로 기록하고, 마감일보다 먼저 완료하면 마감일 날짜로 기록돼요.
+
+단축어는 예를 들어 매일 밤 11시 55분에 개인 자동화로 돌리면 좋아요. 최근 3일을 읽기 때문에 늦게 완료한 미리 알림도 잡혀요.
+
+다시 읽기 때문에 단축어는 돌 때마다 같은 줄을 또 덧붙여요. 습관 기록에는 중복이 생기지 않지만(하루는 한 번만 세요) 로그 파일은 계속 길어져요. 설정의 **로그 정리**를 가끔 눌러 중복 줄을 지우세요. 처음 설정할 때 `sync/` 폴더와 빈 `Reminders log.md`를 자동으로 만들어요.
 
 ## 선택: Mac에서 자동으로 가져오기
 
@@ -462,7 +470,7 @@ Mac이 있다면 단축어 대신 작은 스크립트가 완료한 미리 알림
 
 스크립트를 `~/.habit-grid-sync/`에 복사하고, 로그인할 때 실행되고 5분마다 깨어나는 백그라운드 작업을 등록해요. 스크립트는 고른 간격이 지났을 때만 실제로 가져와요. 아무것도 내려받지 않아요. 볼트의 `habit-grid/mac-sync/` 폴더 파일은 설치와 제거에만 쓰여요(옵시디언 파일 목록에는 `.sh` 파일이 안 보이니 Finder나 **Finder에서 보기** 버튼을 쓰세요). 플러그인 없이 설치하고 싶으면 이 저장소의 `scripts/` 폴더에 같은 파일이 있어요.
 
-스크립트는 미리 알림을 읽기만 하고 로그 파일에 줄을 덧붙이기만 해요. 이미 있는 줄은 건너뛰어요.
+스크립트는 미리 알림을 읽기만 하고 로그 파일에 줄을 덧붙이기만 해요. 이미 있는 줄은 건너뛰어서 단축어와 달리 중복 줄을 만들지 않아요.
 
 ### 지우기
 

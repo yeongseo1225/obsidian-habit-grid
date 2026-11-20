@@ -24,6 +24,12 @@ export class HabitGridSettingTab extends PluginSettingTab {
     new Setting(containerEl).setName(tr("미리 알림 기록 파일 이름")).setDesc(tr("단축어가 덧붙이는 기록 파일의 이름(확장자 없이)이에요."))
       .addText((t) => t.setPlaceholder(DEFAULT_SETTINGS.logName).setValue(s.logName).onChange(async (v) => { s.logName = v.trim() || DEFAULT_SETTINGS.logName; await save(); this.plugin.app.workspace.trigger("habit-grid:refresh"); }));
 
+    new Setting(containerEl).setName(tr("로그 정리")).setDesc(tr("단축어가 같은 줄을 여러 번 덧붙여 로그가 길어졌다면 중복 줄을 지워요. 습관 기록은 바뀌지 않아요."))
+      .addButton((b) => b.setButtonText(tr("로그 정리")).onClick(async () => {
+        const n = await this.plugin.tidyLog();
+        new Notice(n ? tr("중복 {0}줄을 지웠어요", n) : tr("지울 중복 줄이 없어요"));
+      }));
+
     new Setting(containerEl).setName(tr("대시보드 노트 이름")).setDesc(tr("습관 폴더 안에 만들어지고, 습관 목록에서는 빠져요"))
       .addText((t) => t.setPlaceholder(DEFAULT_SETTINGS.dashboardName).setValue(s.dashboardName).onChange(async (v) => { s.dashboardName = v.trim() || DEFAULT_SETTINGS.dashboardName; await save(); }))
       .addButton((b) => b.setButtonText(tr("지금 만들기")).onClick(() => this.plugin.setup(true)));

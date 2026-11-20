@@ -92,20 +92,20 @@ Only these three subfolders are read; files placed directly in `habit-grid/` (ot
 
 A habit file is a Markdown note in `habit-grid/list/`. The file name is the habit name. Settings live in the frontmatter, and manual records are lines in the body.
 
-Every property has a Korean name and an English name. Both are always read; the plugin writes whichever style the file already uses, or the style you pick in settings (see *Property names*).
+The plugin writes the property names below. Korean property names are also read (see the Korean section of this README); in settings, *Property names* chooses which style new properties are written in.
 
-| English name | Korean name | Meaning |
-| --- | --- | --- |
-| `unit` | `단위` | Unit for an amount habit: `hours`, `minutes`, `pages`, `km`, or any text (Korean `시간`, `분`, `쪽` also work) |
-| `monthGoals` | `월별목표` | Daily goal per month: `"2026-11": 2` |
-| `weeklyTimes` | `월별횟수` | Times per week, per month: `"2026-11": 3` |
-| `weekdays` | `월별요일` | Specific weekdays per month, `0` = Sunday … `6` = Saturday: `"2026-11": [1, 3, 5]` |
-| `duration` | `기간` | Challenge length in days |
-| `start` | `시작` | Start date, `YYYY-MM-DD`. Set when you create a habit; the week view shows the habit from this date, and a challenge counts from it. Without it, the first record is the start |
-| `archived` | `보관` | `true` when archived |
-| `items` | `항목` | `true` turns on item logging for the habit (see [Item habits](#item-habits)) |
-| `hiddenItems` | `숨긴항목` | Items removed from the suggestions of an items habit (past records are untouched) |
-| `color` | `색` | Card color, e.g. `"#3b82f6"` |
+| Property | Meaning |
+| --- | --- |
+| `unit` | Unit for an amount habit: `hours`, `minutes`, `pages`, `km`, or any text |
+| `monthGoals` | Daily goal per month: `"2026-11": 2` |
+| `weeklyTimes` | Times per week, per month: `"2026-11": 3` |
+| `weekdays` | Specific weekdays per month, `0` = Sunday … `6` = Saturday: `"2026-11": [1, 3, 5]` |
+| `duration` | Challenge length in days |
+| `start` | Start date, `YYYY-MM-DD`. Set when you create a habit; the week view shows the habit from this date, and a challenge counts from it. Without it, the first record is the start |
+| `archived` | `true` when archived |
+| `items` | `true` turns on item logging for the habit (see [Item habits](#item-habits)) |
+| `hiddenItems` | Items removed from the suggestions of an items habit (past records are untouched) |
+| `color` | Card color, e.g. `"#3b82f6"` |
 
 Example:
 
@@ -143,12 +143,11 @@ That is a checked task, a date (`YYYY-MM-DD`), and the Reminders title. Rules:
 | Reminder title | Result |
 | --- | --- |
 | `Meditate` | A simple check habit named *Meditate* |
-| `Study 2h`, `Study 1h 30m`, `Study 45 min` | Hours logged for the habit *Study* (`h`, `hr`, `hours`, `m`, `min`, `minutes` and the Korean `시간`, `분` work) |
-| `Read 20 pages` | 20 pages for *Read* (`pages`, `쪽`, `페이지`) |
+| `Study 2h`, `Study 1h 30m`, `Study 45 min` | Hours logged for the habit *Study* (`h`, `hr`, `hours`, `m`, `min`, `minutes` work) |
+| `Read 20 pages` | 20 pages for *Read* (`pages`) |
 | `Run 5km` | 5 km for *Run* |
 | `Workout Squats 30 reps` | The item *Squats* with *30 reps*, under the item habit *Workout* |
 | `Workout 1h` | Counts the day for the item habit *Workout*; an amount right after the name is not an item, and is not kept |
-| `운동 스쿼트 30회` | The same in Korean: the item *스쿼트* with *30회* under the item habit *운동* |
 
 Titles are matched with the habit name from the start of the title, and the match is case sensitive.
 
@@ -305,6 +304,8 @@ With `year:` set, the year buttons are hidden.
 | Week starts on | Monday or Sunday |
 | Cell color | Grid color; empty uses your theme accent |
 | Click cells to add or remove records | Turn off to make the grid read-only |
+| Tidy log | Removes duplicate lines from the Reminders log. Habit records are not changed |
+| Mac sync | Settings for the optional Mac script: use it (off by default), the lists to read, days to read, interval, Sync now, and install and remove commands. See [Mac sync](#optional-sync-from-a-mac) |
 
 Changes apply when a note is reopened.
 
@@ -312,13 +313,13 @@ Changes apply when a note is reopened.
 
 ## Limitations
 
-- Reminder titles are parsed for the units `h`/`hours`, `m`/`min`/`minutes`, `pages`, `km` and the Korean `시간`, `분`, `회`, `쪽`, `페이지`. Other units are not recognized in a title; use an amount habit's file instead.
-- Item names cannot contain commas, and items from Reminders can't be removed in the item dialog.
+- Reminder titles are parsed for the units `h`/`hours`, `m`/`min`/`minutes`, `pages`, `km`. Other units are not recognized in a title; use an amount habit's file instead.
+- Item names cannot contain commas.
 - The item dialog opens from the day and week views, not from the year grid cards.
 - Amount habits cannot have a challenge duration yet.
 - Only the Reminders → Markdown direction is supported; editing a reminder does not change old records.
 - Days are counted in the device's local time zone.
-- The plugin moves a habit file between `list` and `archive` when you archive or restore it, and tidies already-archived habits at startup.
+- The plugin moves a habit file between `list` and `archive` when you archive or restore it.
 
 ## Development
 
@@ -340,13 +341,15 @@ npm test        # node tests for the pure logic
 
 # 한국어
 
-**애플 미리 알림 빠른 설정:** [iPhone 단축어](#단축어-연동) · [Mac 동기화](#선택-mac에서-자동으로-가져오기). 둘 중 **하나만** 고르세요(아래 참고).
+> English documentation is [above](#habit-grid).
 
-Habit Grid는 습관 기록을 GitHub 잔디 같은 격자로 보여주는 플러그인이에요. 주간 보기, 연속 기록, 목표, 챌린지를 지원해요.
+Habit 기록을 GitHub 잔디 같은 격자로 노트 안에 보여줘요. 주간 보기, 연속 기록, 목표, 챌린지를 지원해요.
+
+**애플 미리 알림 빠른 설정:** [iPhone 단축어](#iphone-단축어-연동-미리-알림) · [Mac 동기화](#선택-mac에서-자동으로-가져오기). 둘 중 **하나만** 고르세요(아래 참고).
 
 ## 애플 미리 알림을 위해 만들었지만, 없이도 쓸 수 있어요
 
-Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에서 시각화**하려고 만들었어요. iPhone에서 미리 알림을 완료하면 iOS 단축어가 그 기록을 마크다운 파일에 덧붙이고, 대시보드에 바로 보여요. [단축어 연동](#단축어-연동)이나, Mac이 있다면 [Mac 동기화](#선택-mac에서-자동으로-가져오기)를 보세요.
+Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에서 시각화**하려고 만들었어요. iPhone에서 미리 알림을 완료하면 iOS 단축어가 그 기록을 마크다운 파일에 덧붙이고, 대시보드에 바로 보여요. [iPhone 단축어 연동](#iphone-단축어-연동-미리-알림)을 보세요. Mac이 있다면 [Mac 동기화](#선택-mac에서-자동으로-가져오기)를 쓸 수도 있어요.
 
 미리 알림이 없어도 괜찮아요. 모든 기록이 평범한 마크다운 파일이라서 이렇게도 쓸 수 있어요.
 
@@ -356,56 +359,138 @@ Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에�
 
 플러그인은 보관함의 마크다운 파일만 읽고 쓰고, 네트워크를 쓰거나 데이터를 밖으로 보내지 않아요. 애플과는 관련이 없어요.
 
+![오늘 할 습관과 습관별 연간 격자가 있는 대시보드](./images/dashboard.png)
+
+![주간 목표 진행이 보이는 주간 보기](./images/week-view.png)
+
 ## 기능
 
-- **대시보드**: `habit` 코드 블록과 "Habits Dashboard" 노트로 습관 카드와 연간 격자를 보여줘요.
-- **습관 종류**: 기본(체크), 양 기록(시간·쪽·km 등), 항목 기록(운동 → 스쿼트, 플랭크). 양 기록과 항목 기록은 한 습관에서 함께 쓰지 않아요.
-- **챌린지**: 기간(30/66/100일 등)을 정하면 챌린지 카드, 없으면 일반 카드예요.
-- **반복 규칙**: 주 N회 또는 요일 지정. 달마다 따로 정할 수 있고 비워 둔 달은 앞 달 값을 이어 써요.
-- **목표**: 양 기록의 월별 하루 목표와 달성 주 통계.
-- **오늘 줄**: 일간(최근 14일)과 주간(습관별 요일 표) 중에 골라요. 주간 표는 줄마다 `달성/목표`가 보이고, 목표를 채우면 남은 칸이 습관 색의 연한 톤으로 바뀌어요. 선택은 기억해요.
-- **칸을 눌러 기록**하고, 지난 기록은 "지난 기록 채우기"로 채워요.
-- **보관함**: 끝낸 습관은 보관함으로 옮겨요. 기록은 남아요.
-- **한국어·영어·자동**을 지원해요.
+- **애플 미리 알림 기록 (선택)** – iOS 단축어로 완료한 미리 알림을 마크다운 로그 파일에서 읽어요.
+- **대시보드** – `habit` 코드 블록(과 미리 만들어 둔 "Habits Dashboard" 노트)이 습관마다 카드 한 장과 1년 또는 6개월 격자를 보여줘요.
+- **세 가지 습관 종류**
+  - *단순 체크* – 했는지 안 했는지만 기록해요.
+  - *양 기록* – 시간, 분, 쪽, km, 또는 직접 적은 단위(예: "공부 2시간").
+  - *항목 기록* – 한 습관 아래에 이름 붙은 항목을 남겨요(예: 운동 → 스쿼트, 플랭크). [항목 습관](#항목-습관)을 보세요.
+- **챌린지** – 습관에 기간(30 / 66 / 100일 또는 직접 입력)을 주면 진행도, 연속 기록, "완료" 배너가 있는 챌린지 카드가 돼요. 기간이 없으면 일반 카드예요.
+
+  ![챌린지 카드](./images/challenge-card.png)
+- **반복 규칙** – "주 N회" 또는 "요일 지정"(월, 수, 금…). 달마다 규칙을 다르게 정할 수 있고, 비워 둔 달은 앞 달의 규칙을 이어 써요.
+- **목표** – 양 습관의 월별 하루 목표와 목표 달성 주 통계.
+
+  ![하루 목표가 있는 양 습관](./images/amount-habit.png)
+
+  ![월별 목표 창](./images/monthly-goals.png)
+- **눌러서 고치기** – 칸을 눌러 기록을 더하거나 지우고, 지난 날은 기록 창에서 채워요.
+- **오늘 줄** – 대시보드 맨 위가 오늘 할 일을 보여줘요. *일간*(옆으로 넘기는 최근 14일)과 *주간*(습관마다 한 줄, 요일마다 한 칸. 칸을 눌러 그 날을 기록하고, 이전 주로 넘겨 볼 수 있어요) 중에서 골라요. 각 줄 끝에는 한 주의 달성/목표가 나오고, 정해 둔 주 횟수나 요일을 기준으로 해요(정하지 않았다면 매일). 목표를 채우면 남은 날은 습관 색의 연한 톤으로 바뀌어요. 고른 보기는 기억해요. `▾` 버튼으로 줄을 머리글만 남기고 접을 수 있고, 접은 상태도 기억해요.
+- **보관함** – 끝낸 습관은 보관함 폴더로 옮겨요. 기록은 남아 있고 다시 꺼낼 수 있어요.
+- **언어** – 영어, 한국어, 자동(앱 언어를 따라가요).
+- **데이터는 노트 안에** – 데이터베이스도, 네트워크 접속도 없어요.
 
 ## 설치
 
-공식 목록에서 "Habit Grid"를 검색해 설치하거나(승인 후), GitHub 릴리스의 `main.js`, `manifest.json`, `styles.css`를 `<보관함>/.obsidian/plugins/habit-grid/`에 복사하고 플러그인을 켜요. 처음 켜면 `habit-grid` 폴더와 `Habits Dashboard` 노트를 만들어요.
+### 커뮤니티 플러그인에서 (승인 후)
 
-## 폴더와 파일
+1. **설정 → 커뮤니티 플러그인 → 둘러보기**를 열어요.
+2. "Habit Grid"를 검색해 설치하고 켜요.
 
-`habit-grid/` 아래에 `Habits Dashboard.md`, `list/`(습관 파일), `sync/`(`Reminders log.md` 미리 알림 받은편지함), `archive/`(보관한 습관)가 있어요. 이 세 하위 폴더만 읽어요.
+### 직접 설치
 
-**기록이 있는 곳.** `list/`의 습관 파일 하나가 그 습관의 설정과 모든 기록을 담아요. `sync/Reminders log.md`는 단축어나 Mac 스크립트 같은 도구가 덧붙이는 받은편지함일 뿐이에요. 새 줄이 들어오면 플러그인이 습관 파일로 옮기고, 처음 보는 습관이면 파일을 만들어요. 기록은 앱에서 지우세요(칸을 누르거나 '이날 기록 지우기'). 지운 날에 `- [ ] 날짜` 표시를 남겨서 다시 가져오지 않아요. 파일에서 손으로 줄을 지우면 이후 미리 알림 줄이 그 날을 다시 살릴 수 있어요.
+1. [최신 릴리스](../../releases/latest)에서 `main.js`, `manifest.json`, `styles.css`를 받아요.
+2. `<보관함>/.obsidian/plugins/habit-grid/`에 복사해요.
+3. 앱을 다시 불러오고 **설정 → 커뮤니티 플러그인**에서 **Habit Grid**를 켜요.
 
-습관 파일의 속성은 한국어 이름과 영어 이름을 둘 다 읽어요.
+처음 켜면 `habit-grid` 폴더, `Habits Dashboard` 노트, `sync/Reminders log.md`를 만들어요. `list/`와 `archive/` 폴더는 첫 습관을 만들거나 보관할 때 생겨요. 명령 팔레트에서 **습관 폴더와 대시보드 만들기**를 실행해도 돼요.
+
+![새 습관 만들기 창](./images/new-habit.png)
+
+## 명령
+
+| 명령 | 하는 일 |
+| --- | --- |
+| 습관 대시보드 열기 | 대시보드 노트를 열어요(리본 아이콘도 있어요) |
+| 일간·주간 기록 코드 넣기 | 커서 위치에 `view: today`가 든 `habit` 블록을 넣어요 |
+| 습관 폴더와 대시보드 만들기 | 없으면 폴더와 노트를 만들어요 |
+| 새 습관 만들기 | 새 습관 만들기 창을 열어요 |
+| 습관 기록하기 (날짜 골라서) | 기록 창을 열어요(리본 아이콘도 있어요) |
+
+## 폴더 구조
+
+모든 것이 폴더 하나(기본 `habit-grid`) 아래에 있어요.
+
+```
+habit-grid/
+├── Habits Dashboard.md      대시보드 노트
+├── list/                    습관마다 파일 하나, 예: 공부.md (설정과 모든 기록)
+├── sync/                    미리 알림 받은편지함: Reminders log.md
+└── archive/                 보관한 습관 파일
+```
+
+이 세 하위 폴더만 읽어요. `habit-grid/`에 바로 놓은 파일(대시보드 제외)은 무시해요.
+
+**기록이 있는 곳.** `list/`의 습관 파일 하나가 그 습관의 설정과 모든 기록을 담아요. `sync/Reminders log.md`는 단축어나 Mac 스크립트 같은 도구가 덧붙이는 받은편지함일 뿐이에요. 새 줄이 들어오면 플러그인이 습관 파일로 옮기고, 처음 보는 습관이면 파일을 만들어요. 기록을 지우려면 앱에서 지우세요(칸을 누르거나 *이날 기록 지우기*). 플러그인이 `- [ ] 날짜` 표시를 남겨서 그 날을 다시 가져오지 않아요. 대신 파일에서 손으로 줄을 지우면 이후 미리 알림 줄이 그 날을 다시 살릴 수 있어요.
+
+### 습관 파일
+
+습관 파일은 `habit-grid/list/`에 있는 마크다운 노트예요. 파일 이름이 습관 이름이고, 설정은 프론트매터에, 직접 적은 기록은 본문 줄에 있어요.
+
+모든 속성에는 한국어 이름과 영어 이름이 있고, 둘 다 읽어요. 새로 적을 때는 파일이 이미 쓰는 이름을 따르고, 처음이면 설정의 *속성 이름*에서 고른 쪽으로 적어요.
 
 | 한국어 | 영어 | 뜻 |
 | --- | --- | --- |
-| `단위` | `unit` | 양 습관의 단위 (`시간`, `분`, `쪽`, `km` 또는 아무 글자) |
-| `월별목표` | `monthGoals` | 달마다 하루 목표 |
-| `월별횟수` | `weeklyTimes` | 달마다 주 몇 회 |
-| `월별요일` | `weekdays` | 달마다 요일 (0=일 … 6=토) |
+| `단위` | `unit` | 양 습관의 단위: `시간`, `분`, `쪽`, `km` 또는 아무 글자(영어 `hours`, `minutes`, `pages`도 돼요) |
+| `월별목표` | `monthGoals` | 달마다 하루 목표: `"2026-11": 2` |
+| `월별횟수` | `weeklyTimes` | 달마다 주 몇 회: `"2026-11": 3` |
+| `월별요일` | `weekdays` | 달마다 특정 요일, `0` = 일요일 … `6` = 토요일: `"2026-11": [1, 3, 5]` |
 | `기간` | `duration` | 챌린지 일수 |
-| `시작` | `start` | 시작일 (`YYYY-MM-DD`) |
+| `시작` | `start` | 시작일, `YYYY-MM-DD`. 습관을 만들 때 정해져요. 주간 보기는 이 날부터 습관을 보여주고 챌린지도 이 날부터 세요. 없으면 첫 기록이 시작이에요 |
 | `보관` | `archived` | 보관했으면 `true` |
-| `항목` | `items` | `true`면 항목 습관 |
-| `숨긴항목` | `hiddenItems` | 추천에서 뺀 항목 |
-| `색` | `color` | 카드 색 |
+| `항목` | `items` | `true`면 그 습관의 항목 기록을 켜요([항목 습관](#항목-습관) 참고) |
+| `숨긴항목` | `hiddenItems` | 항목 습관의 추천에서 뺀 항목(지난 기록은 그대로) |
+| `색` | `color` | 카드 색, 예: `"#3b82f6"` |
 
-기록은 한 줄에 하나예요: `- [x] 2026-11-19 스트레칭`. 같은 날짜·같은 제목의 중복 줄은 한 번만 세요. 습관 파일에서는 양 습관이면 `- [x] 2026-11-18 1h30m`, 항목 습관이면 `- [x] 2026-11-20 스쿼트 30회, 플랭크`처럼 적어요.
+예시:
 
-### 미리 알림 제목은 이렇게 읽어요
+```markdown
+---
+단위: 시간
+월별목표:
+  "2026-11": 2
+월별횟수:
+  "2026-11": 5
+색: "#3b82f6"
+---
+- [x] 2026-11-18 1시간30분
+- [x] 2026-11-19 2시간
+```
+
+플러그인 메뉴를 쓰면 이 속성들을 플러그인이 직접 적어요.
+
+### 기록 줄
+
+한 줄에 기록 하나예요.
+
+```
+- [x] 2026-11-19 스트레칭
+```
+
+체크한 할 일, 날짜(`YYYY-MM-DD`), 미리 알림 제목이에요. 규칙은 이래요.
+
+- 똑같은 줄(같은 날짜, 같은 제목)은 한 번만 세요.
+- 습관 파일 안의 체크하지 않은 줄 `- [ ] YYYY-MM-DD`는 가져온 날을 지웠다는 표시예요.
+- 양 습관 파일에서는 날짜 뒤에 양을 적을 수 있어요: `- [x] 2026-11-18 1시간30분`. 항목 습관 파일에서는 항목을 나열해요: `- [x] 2026-11-20 스쿼트 30회, 플랭크`.
+
+#### 미리 알림 제목은 이렇게 읽어요
 
 | 미리 알림 제목 | 결과 |
 | --- | --- |
-| `스트레칭` | 체크 습관 "스트레칭" |
-| `공부 2시간`, `공부 1h 30m` | 습관 "공부"의 시간 |
-| `독서 20쪽`, `달리기 5km` | 쪽, km 양 |
-| `운동 스쿼트 30회` | 항목 습관 "운동"의 항목 "스쿼트 30회" |
-| `운동 1h` | 항목 습관에서는 그 날만 한 날로 세요(시간은 안 남아요) |
+| `명상` | *명상*이라는 단순 체크 습관 |
+| `공부 2시간`, `공부 1시간 30분`, `공부 45분` | 습관 *공부*의 시간(`시간`, `분`과 영어 `h`, `hr`, `hours`, `m`, `min`, `minutes`를 읽어요) |
+| `독서 20쪽` | *독서* 20쪽(`쪽`, `페이지`, 영어 `pages`) |
+| `달리기 5km` | *달리기* 5 km |
+| `운동 스쿼트 30회` | 항목 습관 *운동* 아래의 항목 *스쿼트*, *30회* |
+| `운동 1시간` | 항목 습관 *운동*의 그 날만 한 날로 세요. 이름 바로 뒤의 양은 항목이 아니라서 남기지 않아요 |
 
-제목 앞부분이 습관 이름과 같아야 하고, 대소문자를 구분해요.
+제목은 습관 이름과 제목의 앞부분을 맞춰 보고, 대소문자를 구분해요.
 
 **양 습관(시간·쪽·km).** 플러그인에서 *새 습관* → *양 기록*으로 만들고 칸을 눌러 양을 입력하거나, 미리 알림 제목에 양을 적어요: `공부 2시간`, `공부 2시간 30분`, `독서 20쪽`. 제목으로 만든 습관은 자동으로 생겨요. 미리 알림 제목은 저절로 바뀌지 않아서, 날마다 양이 다르면 칸을 눌러 입력하는 편이 쉬워요. 항상 같은 형식으로 쓰세요. 어떤 날은 `공부`, 어떤 날은 `공부 2시간`이면 양이 없는 날은 보이지 않아요. 같은 날 양이 있는 제목이 둘이면 큰 값을 써요.
 
@@ -413,37 +498,47 @@ Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에�
 
 ## 항목 습관
 
-운동 → 스쿼트, 플랭크처럼 습관 아래에 한 것을 남기는 습관이에요.
+항목 습관은 운동 → 스쿼트, 플랭크처럼 습관 아래에 한 일을 남기는 습관이에요. 한 습관은 항목 습관이거나 양 습관(시간, 쪽, km)이고 둘 다는 아니에요. 단위가 있는 습관에서는 항목 기록을 쓸 수 없어요.
 
-- **켜는 법**: 새 습관에서 "항목 기록"을 고르거나, 카드 `⋯` 메뉴의 "항목 기록 켜기"를 누르거나, 습관 파일에 `항목: true`를 적어요. 켜면 그 습관 이름으로 시작하는 미리 알림(`운동 스쿼트`)이 항목이 돼요. 습관을 먼저 만들어야 해요.
-- **기록**: 빈 칸을 누르면 체크돼요. 체크한 칸을 다시 누르면 한 항목을 고르거나 새로 적어요. 하나도 안 골라도 그 날은 기록돼요. 항목마다 `30회` 같은 양을 적을 수 있어요.
-- **추천**은 최근 두 달 안에 쓴 항목이에요. `×`로 빼면 확인을 한 번 더 묻고, 지난 기록은 그대로예요.
-- **`이날 기록 지우기`**로 그날 기록을 지워요.
+- **켜는 법**: 습관을 만들 때 *항목 기록* 종류를 고르거나, 습관 `⋯` 메뉴에서 **항목 기록 켜기**를 고르거나, 습관 파일에 `항목: true`를 적어요. 켜면 그 습관 이름으로 시작하는 미리 알림 제목(`운동 스쿼트`)이 그 습관의 항목이 돼요. 켜지 않으면 `운동 스쿼트`는 그냥 다른 습관이에요.
+- **기록하는 법**: 날을 눌러 체크해요. 체크한 날을 다시 누르면 한 일을 고르거나 새 항목을 더해요. 아무것도 고르지 않아도 그 날은 기록돼요. 항목마다 `30회` 같은 양을 적을 수 있고, 양 칸은 마지막에 쓴 값을 추천해요.
+- **추천**은 최근 두 달 안에 쓴 항목을 보여줘요. 추천 옆의 `×`는 확인한 뒤 목록에서 빼요. 지난 기록은 남고, 그 항목을 다시 기록하면 돌아와요.
+- **하루 지우기**: 창의 *이날 기록 지우기*예요.
 
-## 단축어 연동
+항목은 습관 파일의 그 날 줄에 저장돼서 직접 고칠 수도 있어요.
+
+![항목 습관 상세](./images/item-habit.png)
+
+![항목 창](./images/item-dialog.png)
+
+## iPhone 단축어 연동 (미리 알림)
 
 > **이 단축어와 [Mac 동기화](#선택-mac에서-자동으로-가져오기) 중 하나만 쓰세요.** 둘 다 켜도 같은 줄은 한 번만 세지만, 한 가지만 쓰는 편이 단순하고 문제가 생겼을 때 찾기 쉬워요.
 
-미리 알림의 `Habits` 목록에서 완료한 항목을 `sync/Reminders log.md` 끝에 덧붙이는 iOS 단축어를 만들어요.
+미리 알림 앱의 완료 기록은 iOS 단축어로 모을 수 있어요. 단축어가 `Habits`라는 목록에서 완료한 미리 알림을 `sync/Reminders log.md`에 덧붙여요.
 
-1. **미리 알림 찾기** – 목록 = Habits, 완료됨 = 예, 완료일이 최근 3일 이내
-2. **각 항목 반복**
+단축어는 이 동작들로 순서대로 만들어요.
+
+1. **미리 알림 찾기** – 목록 = `Habits`, 완료됨 = 예, 완료일이 최근 3일 이내.
+2. 1번의 항목에 **각 항목 반복**.
 3. 반복 안에서 **조건문**: 미리 알림의 **마감일**이 **값을 가지고 있음**인 경우:
-   - `habit-grid/sync/Reminders log.md`에 **파일에 덧붙이기** – 문장은 `- [x] ` + **마감일** + 공백 + **반복 항목**(제목)이고 **새로운 줄 만들기**를 켜요. 마감일 칩을 눌러 날짜 형식을 **사용자 지정** `yyyy-MM-dd`로 바꿔요.
+   - `habit-grid/sync/Reminders log.md`에 **파일에 덧붙이기** – 문장은 `- [x] ` + **마감일** + 공백 + **반복 항목**(제목)이고, **새로운 줄 만들기**를 켜요. 마감일의 날짜 형식을 **사용자 지정** `yyyy-MM-dd`로 정해요(마감일 변수를 눌러 바꿔요).
 4. **그렇지 않은 경우**:
-   - 같은 파일에 **파일에 덧붙이기** – 문장은 `- [x] ` + **완료일** + 공백 + **반복 항목**이에요. 완료일 칩도 **사용자 지정** `yyyy-MM-dd`로 바꿔요. 그다음 **조건문 종료**와 **반복 종료**예요.
+   - 같은 파일, 같은 설정으로 **파일에 덧붙이기** – 문장은 `- [x] ` + **완료일** + 공백 + **반복 항목**이에요. 완료일의 형식도 **사용자 지정** `yyyy-MM-dd`로 정해요. 그다음 **조건문 종료**와 **반복 종료**를 해요.
 
-각 미리 알림은 **마감일** 날짜로 기록돼요. 그래서 어제 것을 자정 넘어 체크해도 어제로 세요. 마감일이 없는 미리 알림은 완료한 날로 기록하고, 마감일보다 먼저 완료하면 마감일 날짜로 기록돼요.
+각 미리 알림은 **마감일** 날짜로 기록돼요. 그래서 어제 것을 자정이 지난 뒤 체크해도 어제로 세요. 마감일이 없는 미리 알림은 완료한 날로 기록하고, 마감일보다 먼저 완료하면 마감일 날짜로 기록돼요.
 
-단축어는 예를 들어 매일 밤 11시 55분에 개인 자동화로 돌리면 좋아요. 최근 3일을 읽기 때문에 늦게 완료한 미리 알림도 잡혀요.
+직접 돌리거나 개인 자동화로 돌려요. 예를 들어 매일 밤 11시 55분이에요. 최근 3일을 읽기 때문에 늦게 완료한 미리 알림도 잡혀요.
 
-다시 읽기 때문에 단축어는 돌 때마다 같은 줄을 또 덧붙여요. 습관 기록에는 중복이 생기지 않지만(하루는 한 번만 세요) 로그 파일은 계속 길어져요. 설정의 **로그 정리**를 가끔 눌러 중복 줄을 지우세요. 처음 설정할 때 `sync/` 폴더와 빈 `Reminders log.md`를 자동으로 만들어요.
+다시 읽기 때문에 단축어는 돌 때마다 같은 줄을 또 덧붙여요. 습관 기록에는 중복이 생기지 않지만(하루는 한 번만 세요) 로그 파일은 계속 길어져요. 설정의 **로그 정리**를 가끔 눌러 중복 줄을 지우세요. 제목을 어떻게 읽는지는 위의 *미리 알림 제목은 이렇게 읽어요*를 보세요.
+
+플러그인은 로그 파일을 이름으로 알아봐요. 기본은 `Reminders log`이고 설정에서 다른 이름으로 바꿀 수 있어요. 처음 설정할 때 플러그인이 `habit-grid/sync/`와 단축어가 덧붙일 빈 `Reminders log.md`를 만들어요.
 
 ## 선택: Mac에서 자동으로 가져오기
 
-> **이 방법과 [iPhone 단축어](#단축어-연동) 중 하나만 쓰세요.** 둘 다 켜도 같은 줄은 한 번만 세지만, 한 가지만 쓰는 편이 단순하고 문제가 생겼을 때 찾기 쉬워요.
+> **이 방법과 [iPhone 단축어](#iphone-단축어-연동-미리-알림) 중 하나만 쓰세요.** 둘 다 켜도 같은 줄은 한 번만 세지만, 한 가지만 쓰는 편이 단순하고 문제가 생겼을 때 찾기 쉬워요.
 
-Mac이 있다면 단축어 대신 작은 스크립트가 완료한 미리 알림을 로그 파일에 덧붙일 수 있어요. 어느 기기에서 완료하든 iCloud로 Mac에 도착하면 스크립트가 덧붙이고, Mac이 꺼져 있었다면 켜진 뒤 다음 실행 때 따라잡아요(최근 30일을 읽어요).
+Mac이 있다면 단축어 대신 작은 스크립트가 완료한 미리 알림을 로그 파일에 덧붙일 수 있어요. 어느 기기에서 완료하든 iCloud로 Mac에 도착하면 스크립트가 덧붙여요. Mac이 꺼져 있었다면 켜진 뒤 다음 실행 때 따라잡아요(최근 30일을 읽어요).
 
 각 미리 알림은 단축어와 똑같이 **마감일** 날짜로 기록하고, 마감일이 없으면 완료한 날로 기록해요. 어제 것을 자정 넘어 체크해도 어제로 세요.
 
@@ -483,13 +578,22 @@ launchctl bootout "gui/$(id -u)/md.habitgrid.sync"
 rm -rf ~/Library/LaunchAgents/md.habitgrid.sync.plist ~/.habit-grid-sync
 ```
 
-## 노트에 일간·주간 기록 넣기
+## 대시보드 코드 블록
 
-홈 노트 같은 곳에 원하는 코드를 붙여 넣어요.
+````
+```habit
+```
+````
+
+블록 안에 더할 수 있는 줄: `habit: 공부, 운동`(이 습관만), `year: this`(아래 참고), `weeks: 20`, `color: #3b82f6`, `folder: habit-grid`. 한국어 이름(`습관`, `연도`, `주`, `색`, `폴더`)도 읽어요.
+
+### 노트에 일간·주간 기록 넣기
+
+일간이나 주간 기록을 홈 노트 같은 곳 어디든 넣어요. 원하는 코드를 골라 붙여 넣으세요.
 
 | 코드 | 보여주는 것 |
 | --- | --- |
-| `view: today` | 일간·주간을 한 번에, *일간 / 주간* 전환 버튼 포함 (고른 쪽은 기억하고 대시보드와 같이 써요) |
+| `view: today` | 일간과 주간을 *일간 / 주간* 전환 버튼과 함께(고른 쪽은 기억하고 대시보드와 같이 써요) |
 | `view: day` | 일간만 |
 | `view: week` | 주간만 |
 
@@ -499,26 +603,28 @@ view: day
 ```
 ````
 
-`day`를 `week`나 `today`로 바꾸면 다른 보기가 돼요. `habit: 공부, 운동`을 더하면 일부 습관만 보여줘요. 명령 "일간·주간 기록 코드 넣기"가 커서 위치에 `view: today`를 넣어 줘요. 지난 날이나 주로 넘겨 본 뒤에는 **오늘** / **이번 주** 버튼으로 바로 돌아와요.
+`day`를 `week`나 `today`로 바꾸면 다른 보기가 돼요. `habit: 공부, 운동`을 더하면 일부 습관만 보여줘요. 명령 **일간·주간 기록 코드 넣기**가 커서 위치에 `view: today` 블록을 넣어 줘요. 칸을 누르는 방법은 대시보드와 같아서 노트에서 바로 기록할 수 있어요. 각 보기에는 이전 날이나 주로 넘겨 본 뒤 돌아오는 **오늘** / **이번 주** 버튼이 있어요.
 
-## 노트에 습관 하나의 한 해 넣기
+![노트에 넣은 일간·주간 보기](./images/note-embed.png)
 
-습관 이름과 연도를 적으면 그 습관의 연간 격자를 보여줘요.
+### 노트에 습관 하나의 한 해 넣기
+
+습관 이름과 연도를 적으면 그 습관의 연간 격자를 노트에 보여줘요.
 
 ````
 ```habit
-습관: 공부
-연도: 올해
+habit: 공부
+year: this
 ```
 ````
 
-| `연도:` | 보여주는 것 |
+| `year:` | 보여주는 것 |
 | --- | --- |
-| `올해` (또는 `this`) | 올해. 해가 바뀌면 저절로 넘어가서 노트를 고칠 필요가 없어요 |
+| `this` (또는 `올해`) | 올해. 해가 바뀌면 저절로 넘어가서 노트를 고칠 필요가 없어요 |
 | `2025` | 그 해로 고정 |
 | (생략) | 올해, 그리고 해를 넘기는 버튼 |
 
-`연도`를 적으면 해 넘기기 버튼은 숨겨요.
+`year:`를 적으면 해 넘기기 버튼은 숨겨요.
 
 ## 공개 사항
 
@@ -528,4 +634,46 @@ view: day
 
 ## 설정
 
-언어, 속성 이름(한국어/영어), 미리 알림 기록 파일 이름, 습관 폴더, 대시보드 노트 이름, 메인 격자(1년/6개월), 한 주의 시작, 칸 색깔, 칸을 눌러 기록 고치기가 있어요.
+| 설정 | 설명 |
+| --- | --- |
+| 언어 | 자동(앱 언어를 따라가요), 한국어, 영어 |
+| 속성 이름 | 습관 파일에 적는 이름: 자동, 한국어, 영어. 이미 있는 속성은 이름을 유지해요 |
+| 미리 알림 기록 파일 이름 | 단축어가 덧붙이는 로그 파일의 이름(기본 `Reminders log`) |
+| 습관 폴더 | 습관 파일이 있는 폴더 |
+| 대시보드 노트 이름 | 대시보드 노트의 이름. "지금 만들기" 버튼이 있어요 |
+| 메인 화면 격자 | 한 쪽에 1년 또는 6개월 |
+| 한 주의 시작 | 월요일 또는 일요일 |
+| 칸 색깔 | 격자 색. 비워 두면 테마 강조색을 써요 |
+| 칸을 눌러 기록 고치기 | 끄면 격자가 읽기 전용이 돼요 |
+| 로그 정리 | 미리 알림 로그의 중복 줄을 지워요. 습관 기록은 바뀌지 않아요 |
+| Mac 동기화 | 선택 사항인 Mac 스크립트 설정: 사용 여부(기본 꺼짐), 읽을 목록, 가져올 기간, 간격, 지금 동기화, 설치와 지우는 명령. [Mac 동기화](#선택-mac에서-자동으로-가져오기)를 보세요 |
+
+설정을 바꾼 뒤에는 노트를 다시 열면 반영돼요.
+
+![설정](./images/settings.png)
+
+## 알려진 제한
+
+- 미리 알림 제목에서는 단위 `시간`, `분`, `쪽`, `페이지`, `km`와 영어 `h`/`hours`, `m`/`min`/`minutes`, `pages`를 읽어요. 그 밖의 단위는 제목에서 읽지 못해요. 양 습관의 파일에 단위를 적어 쓰세요.
+- 항목 이름에는 쉼표를 쓸 수 없어요.
+- 항목 창은 일간·주간 보기에서 열려요. 연간 격자 카드에서는 열리지 않아요.
+- 양 습관에는 아직 챌린지 기간을 줄 수 없어요.
+- 미리 알림 → 마크다운 방향만 지원해요. 미리 알림을 고쳐도 이미 쌓인 기록은 바뀌지 않아요.
+- 날짜는 기기의 현지 시간대로 세요.
+- 습관을 보관하거나 다시 꺼내면 플러그인이 그 습관 파일을 `list`와 `archive` 사이에서 옮겨요.
+
+## 개발
+
+소스는 `src/`에 있고 esbuild로 `main.js`에 묶여요. `main.js`가 아니라 `src/`를 고치세요.
+
+```bash
+npm install
+npm run dev     # 저장할 때마다 main.js를 다시 빌드해요(Hot Reload 플러그인과 같이 써요)
+npm run build   # 한 번 만드는 프로덕션 빌드
+npm run lint    # eslint
+npm test        # 순수 로직의 node 테스트
+```
+
+## 라이선스
+
+[MIT](LICENSE)

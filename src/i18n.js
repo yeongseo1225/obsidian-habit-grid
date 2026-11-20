@@ -313,7 +313,7 @@ export const EN = {
   "Finder에서 보기": "Show in Finder",
   "Finder에서 볼트의 {0} 폴더를 열어 보세요": "Open the {0} folder of your vault in Finder",
   "복사했어요": "Copied",
-  "Mac에서 동기화 스크립트를 쓸 때만 필요해요. 단축어를 쓰거나 Mac이 없다면 이 구역은 신경 쓰지 않아도 돼요.": "Only needed if you use the Mac sync script. If you use the Shortcut or have no Mac, you can ignore this section.",
+  "Mac에서 동기화 스크립트를 쓸 때만 필요해요. 단축어를 쓰거나 Mac이 없다면 이 구역은 신경 쓰지 않아도 돼요. 단축어와 Mac 동기화는 둘 중 하나만 쓰세요.": "Only needed if you use the Mac sync script. If you use the Shortcut or have no Mac, you can ignore this section. Use either the Shortcut or Mac sync, not both.",
   "가져올 기간 (일)": "Days to read",
   "한 번에 최근 며칠 치 완료 항목을 읽어요. Mac을 오래 꺼 두는 편이면 길게 잡아요.": "How many past days of completed reminders to read each time. Use a longer period if your Mac is often off.",
   "동기화 간격": "Sync interval",

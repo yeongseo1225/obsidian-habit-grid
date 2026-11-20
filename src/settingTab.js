@@ -43,7 +43,7 @@ export class HabitGridSettingTab extends PluginSettingTab {
       .addToggle((t) => t.setValue(s.clickToToggle).onChange(async (v) => { s.clickToToggle = v; await save(); }));
 
     new Setting(containerEl).setName(tr("Mac 동기화")).setHeading();
-    containerEl.createEl("p", { cls: "setting-item-description", text: tr("Mac에서 동기화 스크립트를 쓸 때만 필요해요. 단축어를 쓰거나 Mac이 없다면 이 구역은 신경 쓰지 않아도 돼요.") });
+    containerEl.createEl("p", { cls: "setting-item-description", text: tr("Mac에서 동기화 스크립트를 쓸 때만 필요해요. 단축어를 쓰거나 Mac이 없다면 이 구역은 신경 쓰지 않아도 돼요. 단축어와 Mac 동기화는 둘 중 하나만 쓰세요.") });
     if (Platform.isMacOS) {
       new Setting(containerEl).setName(tr("Mac에 설치")).setDesc(tr("설치 파일을 볼트에 만들고, 터미널에 붙여 넣을 명령을 보여 줘요. 실행은 직접 해요. 옵시디언 파일 목록에는 .sh 파일이 보이지 않으니 Finder에서 확인하세요. 설치 뒤에 아래 '사용'을 켜세요."))
         .addButton((b) => b.setButtonText(tr("설치 파일 만들기")).onClick(async () => {

@@ -1,4 +1,7 @@
 import { MarkdownRenderChild, normalizePath } from "obsidian";
+import type { Events, TAbstractFile } from "obsidian";
+import type { HabitGridPlugin } from "./plugin";
+import type { BlockOptions, CardOpts, CompactOpts, DateStr, Habit, TodayOpts } from "./types";
 import { tr } from "./i18n";
 import { addDays, fmt, toDate, weekStartOf } from "./dates";
 import { goalForMonth } from "./stats";
@@ -8,20 +11,25 @@ import { renderHabit } from "./render/habit";
 import { renderArchiveRow, renderCompact } from "./render/compact";
 import { renderTodayBar } from "./render/today";
 
+type ViewName = "main" | "detail" | "archive" | "archdetail";
+
 export class HabitView extends MarkdownRenderChild {
-  constructor(plugin, el, source) {
+  plugin: HabitGridPlugin;
+  opts: BlockOptions;
+  timer: number | null = null;
+  years: Record<string, number> = {};
+  months: Record<string, Date | undefined> = {};
+  weekAnchors: Record<string, Date | undefined> = {};
+  selDays: Record<string, DateStr> = {};
+  view: ViewName = "main";
+  openKey: string | null = null;
+  mainYear: number | null = null;
+  halfOffset = 0;
+
+  constructor(plugin: HabitGridPlugin, el: HTMLElement, source: string) {
     super(el);
     this.plugin = plugin;
     this.opts = parseBlock(source);
-    this.timer = null;
-    this.years = {};
-    this.months = {};
-    this.weekAnchors = {};
-    this.selDays = {};
-    this.view = "main"; // main | detail | archive | archdetail
-    this.openKey = null;
-    this.mainYear = null;
-    this.halfOffset = 0;
   }
 
   get folderPath() { return normalizePath(this.opts.folder || this.plugin.prefs.folder); }
@@ -29,59 +37,59 @@ export class HabitView extends MarkdownRenderChild {
   onload() {
     void this.render();
     const v = this.plugin.app.vault;
-    const maybe = (f) => { if (f && f.path && f.path.startsWith(this.folderPath + "/")) this.schedule(); };
+    const maybe = (f: TAbstractFile) => { if (f && f.path && f.path.startsWith(this.folderPath + "/")) this.schedule(); };
     this.registerEvent(v.on("modify", maybe));
     this.registerEvent(v.on("create", maybe));
     this.registerEvent(v.on("delete", maybe));
-    this.registerEvent(v.on("rename", (f, old) => { maybe(f); if (old && old.startsWith(this.folderPath + "/")) this.schedule(); }));
+    this.registerEvent(v.on("rename", (f: TAbstractFile, old: string) => { maybe(f); if (old && old.startsWith(this.folderPath + "/")) this.schedule(); }));
     this.registerEvent(this.plugin.app.metadataCache.on("changed", maybe));
-    this.registerEvent(this.plugin.app.workspace.on("habit-grid:refresh", () => this.schedule()));
-    this.register(() => window.clearTimeout(this.timer));
+    this.registerEvent((this.plugin.app.workspace as unknown as Events).on("habit-grid:refresh", () => this.schedule()));
+    this.register(() => { if (this.timer != null) window.clearTimeout(this.timer); });
   }
 
   schedule() {
-    window.clearTimeout(this.timer);
-    this.timer = window.setTimeout(() => this.render(), 250);
+    if (this.timer != null) window.clearTimeout(this.timer);
+    this.timer = window.setTimeout(() => { void this.render(); }, 250);
   }
 
   // 상세·읽기 전용 상세에서 쓰는 전체 카드 (예전 카드 그대로)
-  fullCard(wrap, h, colorOf, readonly, noMore) {
+  fullCard(wrap: HTMLElement, h: Habit, colorOf: (h: Habit) => string, readonly: boolean, noMore: boolean) {
     const settings = this.plugin.prefs;
     const key = h.key;
     // 노트에 year: 2025 또는 year: this(올해)라고 적으면 그 해로 고정하고 해 넘기기 버튼은 숨겨요
     const fixedYear = this.opts.year === "this" ? new Date().getFullYear() : this.opts.year || 0;
     const common = {
       color: colorOf(h),
-      onColor: (evt) => this.plugin.openColorMenu(evt, h.target, h.unit, h.color),
+      onColor: (evt: MouseEvent) => this.plugin.openColorMenu(evt, h.target, h.kind === "measure" ? h.unit : "", h.color),
       weeks: this.opts.weeks || 20,
-      range: this.opts.weeks && !fixedYear ? "recent" : "year",
+      range: this.opts.weeks && !fixedYear ? "recent" as const : "year" as const,
       year: fixedYear || this.years[key],
       yearFixed: !!fixedYear,
-      onYear: (y) => { this.years[key] = y; void this.render(); },
-      mode: ((settings.modes || {})[h.name] === "month") ? "month" : "year",
-      onMode: (m) => { settings.modes = Object.assign({}, settings.modes, { [h.name]: m }); this.plugin.saveSettings(); void this.render(); },
+      onYear: (y: number) => { this.years[key] = y; void this.render(); },
+      mode: ((settings.modes || {})[h.name] === "month") ? "month" as const : "year" as const,
+      onMode: (m: "year" | "month") => { settings.modes = { ...settings.modes, [h.name]: m }; void this.plugin.saveSettings(); void this.render(); },
       monthAnchor: this.months[key],
       weekAnchor: this.weekAnchors[key],
-      onNav: (delta) => {
+      onNav: (delta: number) => {
         const now = new Date();
         const cur = this.months[key] || new Date(now.getFullYear(), now.getMonth(), 1);
         this.months[key] = delta === 0 ? undefined : new Date(cur.getFullYear(), cur.getMonth() + delta, 1);
         void this.render();
       },
       weekStart: settings.weekStart,
-      onMore: (evt) => this.plugin.openHabitMenu(evt, h),
+      onMore: (evt: MouseEvent) => this.plugin.openHabitMenu(evt, h),
       freqs: h.freqs, freqsRaw: h.freqsRaw, days: h.days,
       period: h.kind === "check" ? h.period : null,
-      onExtend: (n) => this.plugin.extendPeriod(h, n),
-      onPeriod: (evt) => this.plugin.openPeriodMenu(evt, h),
+      onExtend: (n: number) => this.plugin.extendPeriod(h, n),
+      onPeriod: (evt: MouseEvent) => this.plugin.openPeriodMenu(evt, h),
       onArchive: () => this.plugin.setArchived(h, true),
-      itemsOf: h.items ? (ds) => h.items.get(ds) || [] : null,
+      itemsOf: h.items ? (ds: string) => h.items?.get(ds) || [] : null,
       itemsAll: h.items || null,
       selDay: this.selDays[key],
-      onGoals: (yr) => this.plugin.openGoals(h, yr),
+      onGoals: (yr: number) => this.plugin.openGoals(h, yr),
       goalsFolded: !!(settings.goalsFolded || {})[h.name],
-      onFoldGoals: (v) => { settings.goalsFolded = Object.assign({}, settings.goalsFolded, { [h.name]: v }); this.plugin.saveSettings(); void this.render(); },
-      onWeekNav: (delta) => {
+      onFoldGoals: (v: boolean) => { settings.goalsFolded = { ...settings.goalsFolded, [h.name]: v }; void this.plugin.saveSettings(); void this.render(); },
+      onWeekNav: (delta: number) => {
         const now = weekStartOf(new Date(), settings.weekStart);
         const cur = this.weekAnchors[key] || now;
         const next = delta === 0 ? undefined : addDays(cur, delta * 7);
@@ -89,45 +97,44 @@ export class HabitView extends MarkdownRenderChild {
         void this.render();
       },
     };
-    let o;
+    let o: CardOpts;
     if (h.kind === "check") {
       o = {
         ...common,
-        onToggle: settings.clickToToggle ? (ds, on) => this.plugin.recordCheck(h, ds, on) : null,
-        onSelect: h.items ? (ds) => { this.selDays[key] = ds; void this.render(); } : null,
+        onToggle: settings.clickToToggle ? (ds: string, on: boolean) => this.plugin.recordCheck(h, ds, on) : null,
+        onSelect: h.items ? (ds: string) => { this.selDays[key] = ds; void this.render(); } : null,
       };
     } else {
       o = {
         ...common, measure: true, unit: h.unit, entries: h.entries, monthGoals: h.monthGoals,
-        onValue: (ds, cur) => this.plugin.askValue(h.target, ds, cur, h.unit, goalForMonth(h.monthGoals, ds.slice(0, 7))),
-        onMonthGoal: (mk, cur) => this.plugin.askMonthGoal(h.target, mk, cur, h.unit),
+        onValue: (ds: string, cur: number) => this.plugin.askValue(h.target, ds, cur, h.unit, goalForMonth(h.monthGoals, ds.slice(0, 7))),
+        onMonthGoal: (mk: string, cur: number) => this.plugin.askMonthGoal(h.target, mk, cur, h.unit),
       };
     }
-    if (readonly) for (const k of ["onColor", "onMore", "onToggle", "onSelect", "onValue", "onMonthGoal", "onGoals", "onPeriod", "onExtend", "onArchive"]) o[k] = null;
+    if (readonly) {
+      o.onColor = o.onMore = o.onToggle = o.onSelect = o.onValue = o.onMonthGoal = o.onGoals = o.onPeriod = o.onExtend = o.onArchive = null;
+    }
     if (noMore) o.onMore = null;
     return renderHabit(wrap, h.name, h.set, o);
   }
 
   // 오늘 줄(일간·주간)을 그릴 때 쓰는 값과 동작
-  todayOpts(colorOf, today, mode, toggle) {
+  todayOpts(colorOf: (h: Habit) => string, today: Date, mode: "day" | "week", toggle: boolean): TodayOpts {
     const settings = this.plugin.prefs;
-    const todayStr = fmt(today);
     return {
       colorOf,
       weekStart: settings.weekStart,
       mode,
       collapsed: !!settings.todayCollapsed,
       onCollapse: () => { settings.todayCollapsed = !settings.todayCollapsed; void this.plugin.saveSettings().then(() => this.plugin.app.workspace.trigger("habit-grid:refresh")); },
-      onMode: toggle ? (m) => { settings.todayMode = m; void this.plugin.saveSettings().then(() => this.plugin.app.workspace.trigger("habit-grid:refresh")); } : null,
-      onCheck: (h, ds) => this.plugin.recordCheck(h, ds, !h.set.has(ds)),
-      onItems: (h, ds) => this.plugin.openItems(h, ds),
-      onAdd: (h, delta) => this.plugin.recordValue(h, todayStr, Math.round(((h.entries.get(todayStr) || 0) + delta) * 100) / 100),
-      onValue: (h, ds) => this.plugin.askValue(h.target, ds, h.entries.get(ds) || 0, h.unit, goalForMonth(h.monthGoals, ds.slice(0, 7))),
-      onRecord: () => this.plugin.openRecorder(),
+      onMode: toggle ? (m: "day" | "week") => { settings.todayMode = m; void this.plugin.saveSettings().then(() => this.plugin.app.workspace.trigger("habit-grid:refresh")); } : null,
+      onCheck: (h: Habit, ds: string) => this.plugin.recordCheck(h, ds, !h.set.has(ds)),
+      onItems: (h: Habit, ds: string) => this.plugin.openItems(h, ds),
+      onValue: (h: Habit, ds: string) => (h.kind === "measure" ? this.plugin.askValue(h.target, ds, h.entries.get(ds) || 0, h.unit, goalForMonth(h.monthGoals, ds.slice(0, 7))) : undefined),
     };
   }
 
-  settingsMode() { return this.plugin.prefs.todayMode === "week" ? "week" : "day"; }
+  settingsMode(): "day" | "week" { return this.plugin.prefs.todayMode === "week" ? "week" : "day"; }
 
   async render() {
     const settings = this.plugin.prefs;
@@ -144,7 +151,7 @@ export class HabitView extends MarkdownRenderChild {
     }
 
     const today = new Date();
-    const colorOf = (h) => h.color || this.opts.color || settings.color;
+    const colorOf = (h: Habit) => h.color || this.opts.color || settings.color;
 
     if (this.opts.view) {
       // 노트에 ```habit view: day|week|today``` 처럼 적으면 오늘 줄(일간·주간)만 보여요. today는 전환 버튼이 있어요
@@ -173,14 +180,14 @@ export class HabitView extends MarkdownRenderChild {
     iconifyNav(wrap);
   }
 
-  go(view, key) {
+  go(view: ViewName, key?: string) {
     this.view = view;
     this.openKey = key || null;
     void this.render();
   }
 
   // 상세·보관함 맨 위 줄: [‹ 목록] 가운데 이름 [⋯]
-  backBar(wrap, label, onBack, mid, color, onMore) {
+  backBar(wrap: HTMLElement, label: string, onBack: () => void, mid?: string, color?: string, onMore?: ((evt: MouseEvent) => void) | null) {
     const bar = wrap.createDiv({ cls: "hg-backbar" });
     if (color) bar.style.setProperty("--hg-on", color);
     const left = bar.createDiv({ cls: "hg-bb-left" });
@@ -195,50 +202,50 @@ export class HabitView extends MarkdownRenderChild {
     if (onMore) {
       const m = right.createEl("button", { cls: "hg-circbtn", text: "⋯" });
       m.setAttr("aria-label", tr("더 보기"));
-      m.addEventListener("click", (evt) => onMore(evt));
+      m.addEventListener("click", (evt: MouseEvent) => onMore(evt));
       stopEditorGrab(m);
     }
   }
 
   // 요약 카드(히트맵)에 넘기는 값과 동작. 카드를 누르면 상세로 가요
-  compactOpts(h, colorOf, today, mode, rangeStart, rangeEnd, rangeText) {
+  compactOpts(h: Habit, colorOf: (h: Habit) => string, today: Date, mode: "year" | "half", rangeStart: Date, rangeEnd: Date, rangeText: string): CompactOpts {
     const settings = this.plugin.prefs;
     const isCurrent = today >= rangeStart && today <= rangeEnd;
     return {
       color: colorOf(h), today, weekStart: settings.weekStart, mode, rangeStart, rangeEnd, rangeText,
       isCurrent, refDate: isCurrent ? today : rangeEnd,
-      onColor: (evt) => this.plugin.openColorMenu(evt, h.target, h.unit, h.color),
+      onColor: (evt: MouseEvent) => this.plugin.openColorMenu(evt, h.target, h.kind === "measure" ? h.unit : "", h.color),
       onOpen: () => this.go("detail", h.key),
-      onMore: (evt) => this.plugin.openHabitMenu(evt, h),
-      onGoals: (yr) => this.plugin.openGoals(h, yr),
-      onToggle: (h.kind === "check" && settings.clickToToggle) ? (ds, on) => this.plugin.recordCheck(h, ds, on) : null,
-      onValue: h.kind === "measure" ? (ds, cur) => this.plugin.askValue(h.target, ds, cur, h.unit, goalForMonth(h.monthGoals, ds.slice(0, 7))) : null,
-      onPeriod: (evt) => this.plugin.openPeriodMenu(evt, h),
-      onExtend: (n) => this.plugin.extendPeriod(h, n),
+      onMore: (evt: MouseEvent) => this.plugin.openHabitMenu(evt, h),
+      onGoals: (yr: number) => this.plugin.openGoals(h, yr),
+      onToggle: (h.kind === "check" && settings.clickToToggle) ? (ds: string, on: boolean) => this.plugin.recordCheck(h, ds, on) : null,
+      onValue: h.kind === "measure" ? (ds: string, cur: number) => this.plugin.askValue(h.target, ds, cur, h.unit, goalForMonth(h.monthGoals, ds.slice(0, 7))) : null,
+      onPeriod: (evt: MouseEvent) => this.plugin.openPeriodMenu(evt, h),
+      onExtend: (n: number) => this.plugin.extendPeriod(h, n),
       onArchive: () => this.plugin.setArchived(h, true),
     };
   }
 
   // 노트 코드 블록의 보여줄 기간: year: 2025 / this, weeks: 20, 없으면 올해
-  embedRange(today) {
+  embedRange(today: Date): { mode: "year" | "half"; start: Date; end: Date; text: string } {
     const fixed = this.opts.year === "this" ? today.getFullYear() : this.opts.year || 0;
     if (!fixed && this.opts.weeks) {
       const start = addDays(today, -this.opts.weeks * 7 + 1);
-      return { mode: "half", start, end: today, text: tr("최근 {0}주", this.opts.weeks) };
+      return { mode: "half" as const, start, end: today, text: tr("최근 {0}주", this.opts.weeks) };
     }
     const year = fixed || today.getFullYear();
-    return { mode: "year", start: new Date(year, 0, 1), end: new Date(year, 11, 31), text: tr("{0}년", year) };
+    return { mode: "year" as const, start: new Date(year, 0, 1), end: new Date(year, 11, 31), text: tr("{0}년", year) };
   }
 
-  renderMain(wrap, habits, archived, colorOf, today) {
+  renderMain(wrap: HTMLElement, habits: Habit[], archived: Habit[], colorOf: (h: Habit) => string, today: Date) {
     const settings = this.plugin.prefs;
-    const mode = settings.gridMode === "half" ? "half" : "year";
+    const mode: "year" | "half" = settings.gridMode === "half" ? "half" : "year";
 
     // 가장 오래된 기록 (그 앞으로는 못 넘기게)
     let earliest = "";
     for (const h of habits) for (const ds of h.set) if (!earliest || ds < earliest) earliest = ds;
 
-    let rangeStart, rangeEnd, label, rangeText, canPrev, atNow, onPrev, onNext, onNow;
+    let rangeStart: Date, rangeEnd: Date, label: string, rangeText: string, canPrev: boolean, atNow: boolean, onPrev: () => void, onNext: () => void, onNow: () => void;
     if (mode === "year") {
       const cur = today.getFullYear();
       const year = this.mainYear || cur;
@@ -268,7 +275,7 @@ export class HabitView extends MarkdownRenderChild {
     // 맨 위: ‹ 2026 › 와 보관함 버튼
     const bar = wrap.createDiv({ cls: "hg-topbar hg-maintop" });
     const nav = bar.createDiv({ cls: "hg-yearnav" });
-    const btn = (text, aria, enabled, fn) => {
+    const btn = (text: string, aria: string, enabled: boolean, fn: () => void) => {
       const b = nav.createEl("button", { cls: "hg-yearbtn", text });
       b.setAttr("aria-label", aria);
       stopEditorGrab(b);
@@ -317,22 +324,23 @@ export class HabitView extends MarkdownRenderChild {
     stopEditorGrab(rec);
   }
 
-  renderDetail(wrap, habits, archived, colorOf) {
+  renderDetail(wrap: HTMLElement, habits: Habit[], archived: Habit[], colorOf: (h: Habit) => string) {
     const arch = this.view === "archdetail";
     const h = (arch ? archived : habits).find((x) => x.key === this.openKey);
+    if (!h) return;
     this.backBar(wrap, arch ? tr("보관함") : tr("목록"), () => this.go(arch ? "archive" : "main"), h.name, colorOf(h), arch ? null : (evt) => this.plugin.openHabitMenu(evt, h));
     if (arch) {
       const ban = wrap.createDiv({ cls: "hg-archbanner" });
       const lastDs = [...h.set].sort().pop();
       ban.createDiv({ cls: "hg-archbanner-t", text: tr("보관함에 있어요{0}\n기록은 그대로 보여요 (읽기 전용)", lastDs ? tr(" · 마지막 기록 {0}.{1}.{2}", lastDs.slice(0, 4), Number(lastDs.slice(5, 7)), Number(lastDs.slice(8, 10))) : "") });
       const b = ban.createEl("button", { cls: "hg-abtn2 is-primary", text: tr("다시 시작") });
-      b.addEventListener("click", async () => { await this.plugin.setArchived(h, false); this.go("main"); });
+      b.addEventListener("click", () => { void this.plugin.setArchived(h, false).then(() => this.go("main")); });
       stopEditorGrab(b);
     }
     this.fullCard(wrap, h, colorOf, arch, true);
   }
 
-  renderArchive(wrap, archived, colorOf, today) {
+  renderArchive(wrap: HTMLElement, archived: Habit[], colorOf: (h: Habit) => string, today: Date) {
     this.backBar(wrap, tr("목록"), () => this.go("main"), tr("보관함"));
     wrap.createDiv({ cls: "hg-ainfo2 hg-aintro" + (archived.length ? "" : " is-empty"), text: archived.length ? tr("끝낸 습관 {0}개 · 눌러서 지난 기록을 볼 수 있어요", archived.length) : tr("보관함이 비었어요. 습관 카드의 ⋯ 메뉴에서 '보관함으로 옮기기'를 고르면 여기로 와요.") });
     for (const h of archived) {

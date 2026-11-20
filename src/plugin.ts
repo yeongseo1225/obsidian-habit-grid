@@ -1,4 +1,5 @@
 import { Plugin, TFile, TFolder, normalizePath, Notice, Menu } from "obsidian";
+import type { MenuItem, TAbstractFile } from "obsidian";
 import { DASHBOARD_TEMPLATE, DEFAULT_SETTINGS, PRESET_COLORS, UNIT_HOURS, WD_ORDER } from "./constants";
 import { resolveLang, setLang, tr, unitLabel } from "./i18n";
 import { fmDel, fmGet, fmKey, fmSet, fmSetUnit, normalizeUnit, resolveKeyStyle, unitForKey } from "./frontmatter";
@@ -14,14 +15,19 @@ import { GoalsModal } from "./modals/goals";
 import { RecordModal } from "./modals/record";
 import { ItemsModal } from "./modals/items";
 import { NewHabitModal } from "./modals/newHabit";
+import type { NewHabitResult } from "./modals/newHabit";
 import { HabitGridSettingTab } from "./settingTab";
+import type { DateStr, Dict, WriteTarget, Frontmatter, Habit, HabitBase, HabitTarget, ItemMap, MonthDays, MonthMap, Prefs } from "./types";
 
 export class HabitGridPlugin extends Plugin {
+  prefs!: Prefs;
+  importing: Promise<void> | null = null;
+
   async onload() {
-    const saved = (await this.loadData()) || {};
+    const saved = ((await this.loadData()) as Record<string, unknown> | null) || {};
     // 지금 쓰는 설정만 읽는다 (예전 버전에서 남은 키는 버린다)
     const known = [...Object.keys(DEFAULT_SETTINGS), "habitOrder", "modes", "logCursor"];
-    this.prefs = Object.assign({}, DEFAULT_SETTINGS, Object.fromEntries(Object.entries(saved).filter(([k]) => known.includes(k))));
+    this.prefs = { ...DEFAULT_SETTINGS, ...(Object.fromEntries(Object.entries(saved).filter(([k]) => known.includes(k))) as Partial<Prefs>) };
     setLang(resolveLang(this.prefs.lang));
     this.registerMarkdownCodeBlockProcessor("habit", (source, el, ctx) => {
       ctx.addChild(new HabitView(this, el, source));
@@ -52,14 +58,14 @@ export class HabitGridPlugin extends Plugin {
     return normalizePath(`${this.prefs.folder}/${this.prefs.dashboardName}.md`);
   }
 
-  isDashboard(file) {
+  isDashboard(file: TFile) {
     if (file.path === this.dashboardPath) return true;
     const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
     return !!(fm && fm["habit-dashboard"]);
   }
 
   // 습관 폴더와 대시보드가 없으면 만든다
-  async setup(notify) {
+  async setup(notify: boolean) {
     const { vault } = this.app;
     const folder = normalizePath(this.prefs.folder);
     try {
@@ -88,7 +94,7 @@ export class HabitGridPlugin extends Plugin {
     if (file instanceof TFile) await this.app.workspace.getLeaf(false).openFile(file);
   }
 
-  isLog(file) {
+  isLog(file: TFile) {
     const name = file.basename.normalize("NFC");
     return name === this.prefs.logName.normalize("NFC");
   }
@@ -99,32 +105,33 @@ export class HabitGridPlugin extends Plugin {
   // Habit 폴더의 습관들을 읽어 온다.
   //  - 습관 파일(공부.md 등): 플러그인만 고친다 (색·목표·직접 기록·제외한 날)
   //  - 미리 알림 기록.md: 단축어만 쓴다. 플러그인은 읽기만 한다
-  async loadHabits(folderPath, only) {
+  async loadHabits(folderPath: string, only?: string[] | null): Promise<Habit[] | null> {
     await this.importLog();
     const { app } = this;
     const folder = app.vault.getAbstractFileByPath(folderPath);
     if (!(folder instanceof TFolder)) return null;
-    const nfc = (x) => x.normalize("NFC");
+    const nfc = (x: string) => x.normalize("NFC");
     // list/ 와 archive/ 의 습관 파일, sync/ 의 미리 알림 기록을 읽는다 (폴더 이름은 설정값)
-    const sub = (name) => folder.children.find((c) => c instanceof TFolder && nfc(c.name) === nfc(name));
-    const mdIn = (fd) => (Array.isArray(fd) ? fd : fd ? [fd] : []).flatMap((d) => d.children.filter((f) => f instanceof TFile && f.extension === "md"));
-    const subs = (...names) => names.map(sub).filter(Boolean);
+    const sub = (name: string) => folder.children.find((c) => c instanceof TFolder && nfc(c.name) === nfc(name));
+    const mdIn = mdFiles;
+    const subs = (...names: string[]) => names.map(sub).filter(Boolean);
     const hDirs = subs(this.prefs.habitsDir || "list", this.prefs.archiveDir || "archive"), sDirs = subs(this.prefs.syncDir || "sync");
     const logFiles = mdIn(sDirs).filter((f) => this.isLog(f));
     const logFile = logFiles[0];
     const files = mdIn(hDirs).filter((f) => !this.isDashboard(f) && !this.isLog(f));
 
-    const groups = new Map();
-    const group = (name) => {
-      if (!groups.has(name)) groups.set(name, { name, main: null, log: new Map() });
-      return groups.get(name);
+    const groups = new Map<string, HabitTarget>();
+    const group = (name: string): HabitTarget => {
+      let g = groups.get(name);
+      if (!g) { g = { name, main: null, log: new Map() }; groups.set(name, g); }
+      return g;
     };
     for (const f of files) group(nfc(f.basename)).main = f;
     // 항목 기록이 켜진 습관(items 속성)의 이름으로 시작하는 미리 알림 제목은 그 습관의 항목이 된다
     const filePrefixes = files.filter((f) => fmGet(app.metadataCache.getFileCache(f)?.frontmatter, "items")).map((f) => nfc(f.basename));
     const prefixes = [...new Set(filePrefixes)];
     if (logFile) {
-      const splitPrefix = (title) => {
+      const splitPrefix = (title: string) => {
         for (const p of prefixes) {
           if (title === p) return { prefix: p, rest: "" };
           if (title.startsWith(p) && /[\s·]/.test(title[p.length])) return { prefix: p, rest: title.slice(p.length).replace(/^[\s·]+/, "") };
@@ -164,52 +171,52 @@ export class HabitGridPlugin extends Plugin {
       }
     }
 
-    let list = [...groups.values()];
-    if (only) list = only.map((h) => groups.get(nfc(h))).filter(Boolean);
+    let list: HabitTarget[] = [...groups.values()];
+    if (only) list = only.map((h) => groups.get(nfc(h))).filter((g): g is HabitTarget => !!g);
     const order = (this.prefs.habitOrder || []).map(nfc);
-    const rank = (n) => { const i = order.indexOf(nfc(n)); return i < 0 ? 1e6 : i; };
+    const rank = (n: string) => { const i = order.indexOf(nfc(n)); return i < 0 ? 1e6 : i; };
     list.sort((a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name, "ko"));
 
-    const out = [];
+    const out: Habit[] = [];
     for (const g of list) {
       const mainText = g.main ? await app.vault.cachedRead(g.main) : "";
-      const fm = (g.main && app.metadataCache.getFileCache(g.main)?.frontmatter) || {};
+      const fm: Frontmatter = (g.main && app.metadataCache.getFileCache(g.main)?.frontmatter) || {};
       const unitRaw = normalizeUnit(fmGet(fm, "unit"));
       const skips = parseSkips(mainText);
       const rawStart = fmGet(fm, "start") ? String(fmGet(fm, "start")).slice(0, 10) : "";
       const ps = /^\d{4}-\d{2}-\d{2}$/.test(rawStart) ? rawStart : "";
       const logDates = new Set(g.log.keys());
       const logUnit = [...g.log.values()].map((v) => v.unit).find(Boolean);
-      const freqsRaw = Object.assign({}, fmGet(fm, "weeklyTimes") || {});
-      const daysRaw = {};
-      for (const [k, v] of Object.entries(fmGet(fm, "weekdays") || {})) { const a = (Array.isArray(v) ? v : []).map(Number).filter((n) => n >= 0 && n <= 6); if (a.length) daysRaw[String(k)] = [...new Set(a)]; }
-      const freqs = Object.assign({}, freqsRaw);
+      const freqsRaw = numMap(fmGet(fm, "weeklyTimes"));
+      const daysRaw: MonthDays = {};
+      for (const [k, v] of Object.entries(asRecord(fmGet(fm, "weekdays")))) { const a = (Array.isArray(v) ? v : []).map(Number).filter((n) => n >= 0 && n <= 6); if (a.length) daysRaw[String(k)] = [...new Set(a)]; }
+      const freqs: MonthMap = { ...freqsRaw };
       for (const [k, v] of Object.entries(daysRaw)) freqs[k] = v.length;
       const isItems = prefixes.includes(nfc(g.name));
-      const logItems = new Map(g.items || []);
-      const fileItems = isItems ? parseItemLines(mainText) : new Map();
+      const logItems: ItemMap = new Map(g.items || []);
+      const fileItems: ItemMap = isItems ? parseItemLines(mainText) : new Map<string, string[]>();
       for (const ds of skips) { logItems.delete(ds); fileItems.delete(ds); }
       const items = mergeItems(logItems, fileItems);
-      const base = {
-        name: g.name, key: `${folderPath}/${g.name}`, fm, color: fmGet(fm, "color") || "", freqs, freqsRaw, days: daysRaw,
-        target: g, file: g.main, logDates, items: isItems || items.size ? items : null, itemsLog: logItems, itemsFile: fileItems, isItems,
+      const base: Omit<HabitBase, "set"> = {
+        name: g.name, key: `${folderPath}/${g.name}`, fm, color: asString(fmGet(fm, "color")), freqs, freqsRaw, days: daysRaw,
+        target: g, file: g.main ?? null, logDates, items: isItems || items.size ? items : null, itemsLog: logItems, itemsFile: fileItems, isItems,
         archived: !!fmGet(fm, "archived"), startDate: ps,
-        hiddenItems: [].concat(fmGet(fm, "hiddenItems") || []).map(String),
+        hiddenItems: asArray(fmGet(fm, "hiddenItems")).map(String),
       };
 
       if (!unitRaw && !logUnit) {
         const set = new Set([...parseDates(mainText), ...logDates]);
         for (const ds of skips) set.delete(ds);
-        const pd = parseInt(fmGet(fm, "duration") ?? 0, 10) || 0;
+        const pd = parseInt(asString(fmGet(fm, "duration")) || "0", 10) || 0;
         out.push({ ...base, kind: "check", set,
           period: pd > 0 && ps ? { days: pd, start: ps } : null });
         continue;
       }
 
-      const unit = (unitRaw === true ? null : unitRaw) || logUnit || UNIT_HOURS;
-      const entries = new Map();
-      const inferred = {};
-      const addAuto = (ds, amount) => {
+      const unit: string = (typeof unitRaw === "string" ? unitRaw : "") || logUnit || UNIT_HOURS;
+      const entries = new Map<DateStr, number>();
+      const inferred: MonthMap = {};
+      const addAuto = (ds: string, amount: number) => {
         entries.set(ds, Math.max(entries.get(ds) || 0, amount));
         if (amount) { const mk = ds.slice(0, 7); inferred[mk] = Math.max(inferred[mk] || 0, amount); }
       };
@@ -217,10 +224,10 @@ export class HabitGridPlugin extends Plugin {
       for (const [ds, v] of parseEntries(mainText)) if (v > 0) entries.set(ds, v); // 직접 적은 값이 우선
       for (const ds of skips) entries.delete(ds);
       for (const [ds, v] of [...entries]) if (!v) entries.delete(ds);
-      const explicit = fmGet(fm, "monthGoals") || {};
+      const explicit = numMap(fmGet(fm, "monthGoals"));
       // 시간·양 습관은 항목 습관과 겹치지 않는다
       out.push({ ...base, isItems: false, items: null, itemsLog: null, itemsFile: null, kind: "measure", unit, entries, set: new Set(entries.keys()),
-        explicit, inferred, monthGoals: Object.assign({}, inferred, explicit) });
+        explicit, inferred, monthGoals: { ...inferred, ...explicit } });
     }
     return out;
   }
@@ -232,9 +239,9 @@ export class HabitGridPlugin extends Plugin {
     await this.importLog();
     const folder = vault.getAbstractFileByPath(normalizePath(this.prefs.folder));
     if (!(folder instanceof TFolder)) return 0;
-    const nfc = (x) => x.normalize("NFC");
+    const nfc = (x: string) => x.normalize("NFC");
     const dir = folder.children.find((c) => c instanceof TFolder && nfc(c.name) === nfc(this.prefs.syncDir || "sync"));
-    const logs = dir ? dir.children.filter((f) => f instanceof TFile && f.extension === "md" && this.isLog(f)) : [];
+    const logs = mdFiles(dir).filter((f) => this.isLog(f));
     const cursors = Object.assign({}, this.prefs.logCursor);
     let total = 0;
     for (const lf of logs) {
@@ -262,7 +269,7 @@ export class HabitGridPlugin extends Plugin {
       const existing = vault.getAbstractFileByPath(path);
       if (existing instanceof TFile) await vault.modify(existing, text); else await vault.create(path, text);
     }
-    const ad = vault.adapter;
+    const ad = vault.adapter as { getBasePath?: () => string };
     const base = typeof ad.getBasePath === "function" ? ad.getBasePath() : "/path/to/your/vault";
     return `bash "${base}/${dir}/install-mac-sync.sh" "${base}"`;
   }
@@ -280,9 +287,9 @@ export class HabitGridPlugin extends Plugin {
     if (typeof vault.create !== "function" || !fileManager) return;
     const folder = vault.getAbstractFileByPath(normalizePath(this.prefs.folder));
     if (!(folder instanceof TFolder)) return;
-    const nfc = (x) => x.normalize("NFC");
-    const sub = (name) => folder.children.find((c) => c instanceof TFolder && nfc(c.name) === nfc(name));
-    const mdIn = (fd) => (fd ? fd.children.filter((f) => f instanceof TFile && f.extension === "md") : []);
+    const nfc = (x: string) => x.normalize("NFC");
+    const sub = (name: string) => folder.children.find((c) => c instanceof TFolder && nfc(c.name) === nfc(name));
+    const mdIn = mdFiles;
     const logFiles = mdIn(sub(this.prefs.syncDir || "sync")).filter((f) => this.isLog(f));
     if (!logFiles.length) return;
     const cursors = Object.assign({}, this.prefs.logCursor);
@@ -294,7 +301,7 @@ export class HabitGridPlugin extends Plugin {
     }
     if (todo.every((t) => !t.fresh.length && cursors[t.lf.path] === t.entries.length)) return;
 
-    const files = new Map();
+    const files = new Map<string, TFile>();
     for (const f of [...mdIn(sub(this.prefs.habitsDir || "list")), ...mdIn(sub(this.prefs.archiveDir || "archive"))]) {
       if (!this.isDashboard(f) && !this.isLog(f)) files.set(nfc(f.basename), f);
     }
@@ -313,12 +320,13 @@ export class HabitGridPlugin extends Plugin {
         files.set(nfc(safe), file);
       }
       const fm = metadataCache.getFileCache(file)?.frontmatter;
-      let unit = normalizeUnit(fmGet(fm, "unit"));
-      if (unit === true) unit = undefined;
+      const unitRaw = normalizeUnit(fmGet(fm, "unit"));
+      let unit: string | undefined = typeof unitRaw === "string" ? unitRaw : undefined;
       const isItems = prefixes.includes(nfc(safe));
       if (h.unit && !unit && !isItems) {
-        unit = h.unit;
-        await fileManager.processFrontMatter(file, (f) => fmSetUnit(f, h.unit, this.keyStyle()));
+        const hu = h.unit;
+        unit = hu;
+        await fileManager.processFrontMatter(file, (f: Frontmatter) => fmSetUnit(f, hu, this.keyStyle()));
       }
       await vault.process(file, (text) => upsertDays(text, h.days, { unit: isItems ? undefined : unit, isItems, amountUnit: h.unit }));
     }
@@ -328,75 +336,75 @@ export class HabitGridPlugin extends Plugin {
   }
 
   // 습관 파일에서 그 날짜 줄을 바꾼다. 미리 알림으로 들어온 날을 지우면 '- [ ] 날짜'로 제외 표시
-  async writeDay(h, ds, line) {
-    const file = await this.mainFileOf(h.target, h.kind === "measure" ? h.unit : null);
+  async writeDay(h: WriteTarget, ds: string, line: string | null) {
+    const file = await this.mainFileOf(h.target, h.kind === "measure" ? (h.unit ?? null) : null);
     await this.app.vault.process(file, (text) => {
       return rewriteDay(text, ds, line);
     });
   }
 
-  async recordCheck(h, ds, on) {
+  async recordCheck(h: Habit, ds: string, on: boolean) {
     if (h.period && ds < h.period.start) { new Notice(tr("기간 시작 전 날짜는 기록할 수 없어요")); return; }
     await this.writeDay(h, ds, on ? `- [x] ${ds}` : null);
     const [, m, d] = ds.split("-").map(Number);
     new Notice(tr("{0} · {1}월 {2}일 {3}", h.name, m, d, on ? tr("기록했어요") : tr("기록을 지웠어요")));
   }
 
-  async recordValue(h, ds, v) {
-    await this.writeDay(h, ds, v > 0 ? `- [x] ${ds} ${writeQty(v, h.unit)}` : null);
+  async recordValue(h: WriteTarget, ds: string, v: number) {
+    await this.writeDay(h, ds, v > 0 ? `- [x] ${ds} ${writeQty(v, h.unit ?? UNIT_HOURS)}` : null);
   }
 
   // group(target)으로 기록에 필요한 정보를 만든다
-  habitOf(target, unit) {
-    if (target && target.name !== undefined && !(target instanceof TFile)) {
-      return { name: target.name, target, kind: "measure", unit, logDates: new Set([...(target.log ? target.log.keys() : [])]) };
+  habitOf(target: HabitTarget | TFile, unit: string) {
+    if (!(target instanceof TFile)) {
+      return { name: target.name, target, kind: "measure" as const, unit, logDates: new Set<DateStr>(target.log.keys()) };
     }
-    return { name: target.basename, target, kind: "measure", unit, logDates: new Set() };
+    return { name: target.basename, target, kind: "measure" as const, unit, logDates: new Set<DateStr>() };
   }
 
-  openHabitMenu(evt, h) {
+  openHabitMenu(evt: MouseEvent, h: Habit) {
     const menu = new Menu();
-    menu.addItem((i) => i.setTitle(tr("색 바꾸기")).setIcon("palette").onClick(() => this.openColorMenu(evt, h.target, h.unit, h.color)));
+    menu.addItem((i: MenuItem) => i.setTitle(tr("색 바꾸기")).setIcon("palette").onClick(() => this.openColorMenu(evt, h.target, h.kind === "measure" ? h.unit : "", h.color)));
     if (h.kind === "check") {
       menu.addSeparator();
       this.addPeriodItems(menu, h);
       menu.addSeparator();
     }
-    if (h.kind === "check") menu.addItem((i) => i.setTitle(h.isItems ? tr("항목 기록 끄기") : tr("항목 기록 켜기")).setIcon("list-checks").onClick(() => this.toggleItems(h)));
-    menu.addItem((i) => i.setTitle(tr("위로 옮기기")).setIcon("arrow-up").onClick(() => this.moveHabit(h, -1)));
-    menu.addItem((i) => i.setTitle(tr("아래로 옮기기")).setIcon("arrow-down").onClick(() => this.moveHabit(h, 1)));
+    if (h.kind === "check") menu.addItem((i: MenuItem) => i.setTitle(h.isItems ? tr("항목 기록 끄기") : tr("항목 기록 켜기")).setIcon("list-checks").onClick(() => this.toggleItems(h)));
+    menu.addItem((i: MenuItem) => i.setTitle(tr("위로 옮기기")).setIcon("arrow-up").onClick(() => this.moveHabit(h, -1)));
+    menu.addItem((i: MenuItem) => i.setTitle(tr("아래로 옮기기")).setIcon("arrow-down").onClick(() => this.moveHabit(h, 1)));
     menu.addSeparator();
-    menu.addItem((i) => i.setTitle(tr("시작일 바꾸기")).setIcon("calendar").onClick(() => this.askStart(h)));
-    menu.addItem((i) => i.setTitle(tr("지난 기록 채우기")).setIcon("calendar-check").onClick(() => this.openRecorder()));
+    menu.addItem((i: MenuItem) => i.setTitle(tr("시작일 바꾸기")).setIcon("calendar").onClick(() => this.askStart(h)));
+    menu.addItem((i: MenuItem) => i.setTitle(tr("지난 기록 채우기")).setIcon("calendar-check").onClick(() => this.openRecorder()));
     menu.addSeparator();
-    menu.addItem((i) => i.setTitle(tr("보관함으로 옮기기")).setIcon("archive").onClick(() => this.setArchived(h, true)));
+    menu.addItem((i: MenuItem) => i.setTitle(tr("보관함으로 옮기기")).setIcon("archive").onClick(() => this.setArchived(h, true)));
     menu.showAtMouseEvent(evt);
   }
 
   // 기간 관련 메뉴 항목 (카드 ⋯ 메뉴와 기간 칩 메뉴가 같이 쓴다)
-  addPeriodItems(menu, h) {
+  addPeriodItems(menu: Menu, h: Habit) {
     if (h.period) {
-      menu.addItem((i) => i.setTitle(tr("주 몇 회 정하기")).setIcon("calendar-days").onClick(() => this.openGoals(h, new Date().getFullYear())));
-      menu.addItem((i) => i.setTitle(tr("기간 +30일")).setIcon("calendar-plus").onClick(() => this.extendPeriod(h, 30)));
-      menu.addItem((i) => i.setTitle(tr("기간 +66일")).setIcon("calendar-plus").onClick(() => this.extendPeriod(h, 66)));
-      menu.addItem((i) => i.setTitle(tr("기간 직접 입력")).setIcon("pencil").onClick(() => this.askPeriod(h)));
-      menu.addItem((i) => i.setTitle(tr("기간 없음으로 바꾸기")).setIcon("infinity").onClick(() => this.extendPeriod(h, 0)));
+      menu.addItem((i: MenuItem) => i.setTitle(tr("주 몇 회 정하기")).setIcon("calendar-days").onClick(() => this.openGoals(h, new Date().getFullYear())));
+      menu.addItem((i: MenuItem) => i.setTitle(tr("기간 +30일")).setIcon("calendar-plus").onClick(() => this.extendPeriod(h, 30)));
+      menu.addItem((i: MenuItem) => i.setTitle(tr("기간 +66일")).setIcon("calendar-plus").onClick(() => this.extendPeriod(h, 66)));
+      menu.addItem((i: MenuItem) => i.setTitle(tr("기간 직접 입력")).setIcon("pencil").onClick(() => this.askPeriod(h)));
+      menu.addItem((i: MenuItem) => i.setTitle(tr("기간 없음으로 바꾸기")).setIcon("infinity").onClick(() => this.extendPeriod(h, 0)));
     } else {
-      menu.addItem((i) => i.setTitle(tr("기간 정하기")).setIcon("calendar-range").onClick(() => this.askPeriod(h)));
+      menu.addItem((i: MenuItem) => i.setTitle(tr("기간 정하기")).setIcon("calendar-range").onClick(() => this.askPeriod(h)));
     }
   }
 
   // 기간 칩을 눌렀을 때 뜨는 메뉴
-  openPeriodMenu(evt, h) {
+  openPeriodMenu(evt: MouseEvent, h: Habit) {
     const menu = new Menu();
     this.addPeriodItems(menu, h);
     menu.addSeparator();
-    menu.addItem((i) => i.setTitle(tr("시작일 바꾸기")).setIcon("calendar").onClick(() => this.askStart(h)));
+    menu.addItem((i: MenuItem) => i.setTitle(tr("시작일 바꾸기")).setIcon("calendar").onClick(() => this.askStart(h)));
     menu.showAtMouseEvent(evt);
   }
 
   // n>0: 기간을 n일 늘림(없으면 오늘부터 n일), n===0: 기간 없음, n<0: 총 기간을 -n일로 지정
-  async extendPeriod(h, n, confirmed) {
+  async extendPeriod(h: Habit, n: number, confirmed?: boolean) {
     if (n === 0 && h.period && !confirmed) {
       new ConfirmModal(this.app, {
         title: tr("기간 없음으로 바꿀까요?"),
@@ -407,18 +415,18 @@ export class HabitGridPlugin extends Plugin {
       return;
     }
     const file = await this.mainFileOf(h.target, null);
-    await this.app.fileManager.processFrontMatter(file, (fm) => {
+    await this.app.fileManager.processFrontMatter(file, (fm: Frontmatter) => {
       const style = this.keyStyle();
       if (n === 0) { fmDel(fm, "duration"); fmDel(fm, "start"); return; }
       if (n < 0) { fmSet(fm, "duration", -n, style); if (!fmGet(fm, "start")) fmSet(fm, "start", fmt(new Date()), style); return; }
-      const cur = parseInt(fmGet(fm, "duration") ?? 0, 10) || 0;
+      const cur = parseInt(asString(fmGet(fm, "duration")) || "0", 10) || 0;
       if (cur > 0 && fmGet(fm, "start")) fmSet(fm, "duration", cur + n, style);
       else { fmSet(fm, "duration", n, style); fmSet(fm, "start", fmt(new Date()), style); }
     });
     new Notice(n === 0 ? tr("'{0}'은 기간 없이 계속해요", h.name) : tr("'{0}' 기간을 늘렸어요", h.name));
   }
-  async moveHabit(h, delta) {
-    const nfc = (x) => x.normalize("NFC");
+  async moveHabit(h: Habit, delta: number) {
+    const nfc = (x: string) => x.normalize("NFC");
     const all = (await this.loadHabits(normalizePath(this.prefs.folder))) || [];
     const names = all.filter((x) => !x.archived).map((x) => nfc(x.name));
     const i = names.indexOf(nfc(h.name));
@@ -431,17 +439,17 @@ export class HabitGridPlugin extends Plugin {
     this.app.workspace.trigger("habit-grid:refresh");
   }
   // 습관의 항목 기록을 켜거나 끈다. 켜면 같은 이름으로 시작하는 미리 알림도 항목으로 모인다
-  async toggleItems(h) {
+  async toggleItems(h: Habit) {
     const file = await this.mainFileOf(h.target, null);
     const turnOn = !h.isItems;
-    await this.app.fileManager.processFrontMatter(file, (fm) => {
+    await this.app.fileManager.processFrontMatter(file, (fm: Frontmatter) => {
       if (turnOn) fmSet(fm, "items", true, this.keyStyle()); else fmDel(fm, "items");
     });
     new Notice(turnOn ? tr("'{0}'에 항목 기록을 켰어요", h.name) : tr("'{0}'의 항목 기록을 껐어요", h.name));
   }
 
   // 항목이 있는 습관: 그 날 한 항목을 고른다. 하나도 안 골라도 그 날은 기록돼요
-  openItems(h, ds) {
+  openItems(h: Habit, ds: string) {
     // 추천은 최근 두 달 안에 쓴 항목만, 사용자가 뺀 항목은 제외
     const { names, last } = knownItems(h.items, fmt(addDays(new Date(), -60)));
     const hidden = new Set(h.hiddenItems || []);
@@ -453,22 +461,22 @@ export class HabitGridPlugin extends Plugin {
       locked: (h.itemsLog && h.itemsLog.get(ds)) || [],
       selected: ((h.itemsFile && h.itemsFile.get(ds)) || []).map(splitItem),
       hasRecord: h.set.has(ds),
-      onSubmit: (items) => this.recordItems(h, ds, items),
+      onSubmit: (items: string[]) => this.recordItems(h, ds, items),
       onClear: () => this.recordCheck(h, ds, false),
-      onHide: (name, done) => this.hideItem(h, name, done),
+      onHide: (name: string, done: () => void) => this.hideItem(h, name, done),
     }).open();
   }
 
   // 추천 목록에서 항목을 뺀다. 지난 기록은 그대로 두고, 실수로 지우지 않게 한 번 더 묻는다
-  hideItem(h, name, done) {
+  hideItem(h: Habit, name: string, done: () => void) {
     new ConfirmModal(this.app, {
       title: tr("'{0}' 항목을 추천 목록에서 뺄까요?", name),
       desc: [tr("지난 기록은 그대로 남아요. 다시 기록하면 목록에 돌아와요.")],
       okText: tr("목록에서 빼기"),
       onOk: async () => {
         const file = await this.mainFileOf(h.target, null);
-        await this.app.fileManager.processFrontMatter(file, (fm) => {
-          const list = [].concat(fmGet(fm, "hiddenItems") || []).map(String);
+        await this.app.fileManager.processFrontMatter(file, (fm: Frontmatter) => {
+          const list = asArray(fmGet(fm, "hiddenItems")).map(String);
           if (!list.includes(name)) list.push(name);
           fmSet(fm, "hiddenItems", list, this.keyStyle());
         });
@@ -477,14 +485,14 @@ export class HabitGridPlugin extends Plugin {
     }).open();
   }
 
-  async recordItems(h, ds, items) {
+  async recordItems(h: Habit, ds: string, items: string[]) {
     await this.writeDay(h, ds, itemsLine(ds, items));
     // 다시 기록한 항목은 추천 목록에 돌아온다
-    const used = new Set(items.map((t) => splitItem(t).name));
+    const used = new Set(items.map((x) => splitItem(x).name));
     if ((h.hiddenItems || []).some((n) => used.has(n))) {
       const file = await this.mainFileOf(h.target, null);
-      await this.app.fileManager.processFrontMatter(file, (fm) => {
-        const rest = [].concat(fmGet(fm, "hiddenItems") || []).map(String).filter((n) => !used.has(n));
+      await this.app.fileManager.processFrontMatter(file, (fm: Frontmatter) => {
+        const rest = asArray(fmGet(fm, "hiddenItems")).map(String).filter((n) => !used.has(n));
         if (rest.length) fmSet(fm, "hiddenItems", rest, this.keyStyle()); else fmDel(fm, "hiddenItems");
       });
     }
@@ -492,37 +500,37 @@ export class HabitGridPlugin extends Plugin {
     new Notice(tr("{0}월 {1}일 기록을 저장했어요", m, d));
   }
 
-  askStart(h) {
+  askStart(h: Habit) {
     new DateModal(this.app, {
       title: tr("시작일"), desc: tr("이 날부터 기록해요"),
       value: habitStart(h) || fmt(new Date()),
-      onSubmit: async (ds) => {
+      onSubmit: async (ds: string) => {
         const file = await this.mainFileOf(h.target, h.kind === "measure" ? h.unit : null);
-        await this.app.fileManager.processFrontMatter(file, (fm) => { fmSet(fm, "start", ds, this.keyStyle()); });
+        await this.app.fileManager.processFrontMatter(file, (fm: Frontmatter) => { fmSet(fm, "start", ds, this.keyStyle()); });
         new Notice(tr("'{0}' 시작일을 바꿨어요", h.name));
       },
     }).open();
   }
-  askPeriod(h) {
+  askPeriod(h: Habit) {
     // 기간(총 며칠)과 시작일을 한 창에서 정한다. 기본 시작일은 이 습관의 시작일, 없으면 오늘
     new PeriodModal(this.app, {
       title: tr("기간 정하기"),
       days: h.period ? h.period.days : 66,
       start: (h.period && h.period.start) || habitStart(h) || fmt(new Date()),
-      onSubmit: (days, ds) => this.startPeriod(h, days, ds),
+      onSubmit: (days: number, ds: string) => this.startPeriod(h, days, ds),
     }).open();
   }
-  async startPeriod(h, days, ds) {
+  async startPeriod(h: Habit, days: number, ds: string) {
     const file = await this.mainFileOf(h.target, null);
-    await this.app.fileManager.processFrontMatter(file, (fm) => {
+    await this.app.fileManager.processFrontMatter(file, (fm: Frontmatter) => {
       fmSet(fm, "duration", days, this.keyStyle());
       fmSet(fm, "start", ds, this.keyStyle());
     });
     new Notice(tr("'{0}'의 {1}일 챌린지를 설정했어요", h.name, days));
   }
-  async setArchived(h, on) {
+  async setArchived(h: Habit, on: boolean) {
     const file = await this.mainFileOf(h.target, h.kind === "measure" ? h.unit : null);
-    await this.app.fileManager.processFrontMatter(file, (fm) => {
+    await this.app.fileManager.processFrontMatter(file, (fm: Frontmatter) => {
       if (on) fmSet(fm, "archived", true, this.keyStyle()); else fmDel(fm, "archived");
     });
     await this.moveHabitFile(file, on);
@@ -530,7 +538,7 @@ export class HabitGridPlugin extends Plugin {
   }
 
   // 보관하면 archive 폴더로, 다시 꺼내면 list 폴더로 파일을 옮긴다
-  async moveHabitFile(file, toArchive) {
+  async moveHabitFile(file: TFile, toArchive: boolean) {
     try {
       const { vault, fileManager } = this.app;
       const dirName = toArchive ? (this.prefs.archiveDir || "archive") : (this.prefs.habitsDir || "list");
@@ -542,11 +550,11 @@ export class HabitGridPlugin extends Plugin {
       await fileManager.renameFile(file, dest);
     } catch (e) { console.error("habit-grid archive move", e); }
   }
-  openRecorder(date) {
+  openRecorder(date?: Date) {
     new RecordModal(this.app, this, date || new Date()).open();
   }
 
-  habitFilePath(name) {
+  habitFilePath(name: string) {
     return normalizePath(`${this.prefs.folder}/${this.prefs.habitsDir || "list"}/${name}.md`);
   }
   async ensureHabitDir() {
@@ -557,7 +565,7 @@ export class HabitGridPlugin extends Plugin {
   }
 
   // 묶음(group)이면 본 파일을 찾고, 없으면 만든다
-  async mainFileOf(target, unit) {
+  async mainFileOf(target: HabitTarget | TFile, unit?: string | null): Promise<TFile> {
     if (target instanceof TFile) return target;
     if (target.main) return target.main;
     const path = this.habitFilePath(target.name);
@@ -565,26 +573,27 @@ export class HabitGridPlugin extends Plugin {
     if (existing instanceof TFile) return existing;
     await this.ensureHabitDir();
     const unitKey = fmKey("unit", this.keyStyle());
-    target.main = await this.app.vault.create(path, unit ? `---\n${unitKey}: ${unitForKey(unit, unitKey)}\n---\n` : "");
-    return target.main;
+    const created = await this.app.vault.create(path, unit ? `---\n${unitKey}: ${unitForKey(unit, unitKey)}\n---\n` : "");
+    target.main = created;
+    return created;
   }
 
-  askValue(target, ds, cur, unit, fallback) {
-    const u = unit === true ? UNIT_HOURS : unit;
+  askValue(target: HabitTarget | TFile, ds: string, cur: number, unit: string, fallback: number) {
+    const u = unit;
     const name = target instanceof TFile ? target.basename : target.name;
     const [, m, d] = ds.split("-").map(Number);
     new NumberModal(this.app, {
       title: tr("{0} · {1}월 {2}일", name, m, d), desc: u === UNIT_HOURS ? tr("이날 한 시간을 적어 주세요.") : tr("이날 한 양을 적어 주세요."),
       value: cur || fallback || 0, unit: u, allowClear: cur > 0,
-      onSubmit: async (v) => this.recordValue(this.habitOf(target, u), ds, v),
+      onSubmit: async (v: number) => this.recordValue(this.habitOf(target, u), ds, v),
     }).open();
   }
 
   // 색 고르기: 맥의 기본(네이티브) 메뉴에는 동그라미를 못 넣어서 직접 그린 작은 창을 쓴다
-  openColorMenu(evt, target, unit, current) {
-    const apply = async (color) => {
+  openColorMenu(evt: MouseEvent | null | undefined, target: HabitTarget | TFile, unit: string, current: string) {
+    const apply = async (color: string) => {
       const file = await this.mainFileOf(target, unit || null);
-      await this.app.fileManager.processFrontMatter(file, (fm) => {
+      await this.app.fileManager.processFrontMatter(file, (fm: Frontmatter) => {
         if (color) fmSet(fm, "color", color, this.keyStyle()); else fmDel(fm, "color");
       });
     };
@@ -596,9 +605,9 @@ export class HabitGridPlugin extends Plugin {
       activeDocument.removeEventListener("mousedown", onDoc, true);
       activeDocument.removeEventListener("keydown", onKey, true);
     };
-    const onDoc = (e) => { if (!pop.contains(e.target)) close(); };
-    const onKey = (e) => { if (e.key === "Escape") close(); };
-    const row = (label, bg, active, fn) => {
+    const onDoc = (e: MouseEvent) => { if (!pop.contains(e.target as Node)) close(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
+    const row = (label: string, bg: string, active: boolean, fn: () => void) => {
       const r = pop.createDiv({ cls: "hg-pop-row" + (active ? " is-on" : "") });
       const sw = r.createSpan({ cls: "hg-pop-sw" });
       sw.style.background = bg;
@@ -607,9 +616,9 @@ export class HabitGridPlugin extends Plugin {
       r.addEventListener("click", () => { close(); fn(); });
       return r;
     };
-    row(tr("기본 색"), "var(--interactive-accent)", !cur, () => apply(""));
+    row(tr("기본 색"), "var(--interactive-accent)", !cur, () => { void apply(""); });
     pop.createDiv({ cls: "hg-pop-sep" });
-    for (const [name, hex] of PRESET_COLORS) row(tr(name), hex, cur === hex.toLowerCase(), () => apply(hex));
+    for (const [name, hex] of PRESET_COLORS) row(tr(name), hex, cur === hex.toLowerCase(), () => { void apply(hex); });
     pop.createDiv({ cls: "hg-pop-sep" });
     row(tr("직접 고르기…"), "conic-gradient(#cf5f66, #c98a2b, #4f9d5d, #3f7fd1, #7567d9, #cf5f66)", false, () => {
       const input = activeDocument.body.createEl("input", { type: "color", cls: "hg-hidden-color" });
@@ -628,15 +637,15 @@ export class HabitGridPlugin extends Plugin {
     }, 0);
   }
 
-  openGoals(h, year) {
+  openGoals(h: Habit, year: number) {
     new GoalsModal(this.app, {
-      name: h.name, unit: h.unit, year, measure: h.kind === "measure", color: h.color || this.prefs.color || "",
+      name: h.name, unit: h.kind === "measure" ? h.unit : "", year, measure: h.kind === "measure", color: h.color || this.prefs.color || "",
       explicit: h.kind === "measure" ? h.explicit : {}, inferred: h.kind === "measure" ? h.inferred : {}, freqs: h.freqsRaw, days: h.days,
-      onSave: async (work, fwork, dwork) => {
+      onSave: async (work: MonthMap, fwork: MonthMap, dwork: MonthDays) => {
         const file = await this.mainFileOf(h.target, h.kind === "measure" ? h.unit : null);
-        await this.app.fileManager.processFrontMatter(file, (fm) => {
+        await this.app.fileManager.processFrontMatter(file, (fm: Frontmatter) => {
           const style = this.keyStyle();
-          const sortObj = (o) => { const r = {}; for (const k of Object.keys(o).sort()) r[k] = o[k]; return r; };
+          const sortObj = <T,>(o: Dict<T>): Dict<T> => { const r: Dict<T> = {}; for (const k of Object.keys(o).sort()) r[k] = o[k]; return r; };
           if (h.kind === "measure") {
             if (Object.keys(work).length) fmSet(fm, "monthGoals", sortObj(work), style); else fmDel(fm, "monthGoals");
             if (!fmGet(fm, "unit")) fmSetUnit(fm, h.unit, style);
@@ -650,17 +659,17 @@ export class HabitGridPlugin extends Plugin {
     }).open();
   }
 
-  askMonthGoal(target, key, cur, unit) {
-    const u = unit === true ? UNIT_HOURS : unit;
+  askMonthGoal(target: HabitTarget | TFile, key: string, cur: number, unit: string) {
+    const u = unit;
     const name = target instanceof TFile ? target.basename : target.name;
     const [y, m] = key.split("-").map(Number);
     new NumberModal(this.app, {
       title: tr("{0} · {1}년 {2}월 목표", name, y, m), desc: tr("하루에 몇 {0} 하면 달성으로 볼까요? 비워 두면 앞 달 목표를 이어서 써요.", unitLabel(u)),
       value: cur, unit: u, allowClear: true,
-      onSubmit: async (v) => this.app.fileManager.processFrontMatter(await this.mainFileOf(target, u), (fm) => {
-        const goals = Object.assign({}, fmGet(fm, "monthGoals") || {});
+      onSubmit: async (v: number) => this.app.fileManager.processFrontMatter(await this.mainFileOf(target, u), (fm: Frontmatter) => {
+        const goals: MonthMap = numMap(fmGet(fm, "monthGoals"));
         if (v > 0) goals[key] = Math.round(v * 10000) / 10000; else delete goals[key];
-        const sorted = {};
+        const sorted: MonthMap = {};
         for (const k of Object.keys(goals).sort()) sorted[k] = goals[k];
         fmSet(fm, "monthGoals", sorted, this.keyStyle());
       }),
@@ -668,13 +677,13 @@ export class HabitGridPlugin extends Plugin {
   }
 
   newHabit() {
-    new NewHabitModal(this.app, async ({ name, kind, unit, goal, freq, days, period, start }) => {
+    new NewHabitModal(this.app, async ({ name, kind, unit, goal, freq, days, period, start }: NewHabitResult) => {
       const path = this.habitFilePath(name);
       if (this.app.vault.getAbstractFileByPath(path)) { new Notice(tr("같은 이름의 습관이 이미 있어요")); return; }
       await this.ensureHabitDir();
       const key = monthKey(new Date());
       const style = this.keyStyle();
-      const fm = [];
+      const fm: string[] = [];
       if (kind === "measure") {
         fm.push(`${fmKey("unit", style)}: ${unitForKey(unit, fmKey("unit", style))}`);
         if (goal > 0) fm.push(`${fmKey("monthGoals", style)}:`, `  "${key}": ${Math.round(goal * 10000) / 10000}`);
@@ -693,3 +702,19 @@ export class HabitGridPlugin extends Plugin {
 
   async saveSettings() { await this.saveData(this.prefs); }
 }
+
+function mdFiles(fd: TAbstractFile | null | undefined | (TAbstractFile | null | undefined)[]): TFile[] {
+  const dirs = Array.isArray(fd) ? fd : [fd];
+  return dirs.flatMap((d) => (d instanceof TFolder ? d.children.filter((f): f is TFile => f instanceof TFile && f.extension === "md") : []));
+}
+
+function asRecord(v: unknown): Record<string, unknown> {
+  return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
+}
+function asArray(v: unknown): unknown[] { return Array.isArray(v) ? v : v == null || v === "" ? [] : [v]; }
+function numMap(v: unknown): MonthMap {
+  const out: MonthMap = {};
+  for (const [k, x] of Object.entries(asRecord(v))) { const n = Number(x); if (!Number.isNaN(n)) out[k] = n; }
+  return out;
+}
+function asString(v: unknown): string { return typeof v === "string" || typeof v === "number" || typeof v === "boolean" ? String(v) : ""; }

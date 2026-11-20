@@ -1,7 +1,8 @@
 import { addDays, fmt, toDate, weekMonthKey, weekStartOf } from "./dates";
+import type { Habit, MonthDays, MonthMap, Schedule } from "./types";
 
-export function weekCounts(set, weekStart) {
-  const counts = new Map();
+export function weekCounts(set: Set<string>, weekStart: number) {
+  const counts = new Map<string, number>();
   for (const s of set) {
     const k = fmt(weekStartOf(toDate(s), weekStart));
     counts.set(k, (counts.get(k) || 0) + 1);
@@ -9,14 +10,14 @@ export function weekCounts(set, weekStart) {
   return counts;
 }
 
-export function freqOfWeek(freqs, ws) {
+export function freqOfWeek(freqs: MonthMap | undefined, ws: Date) {
   const f = goalForMonth(freqs || {}, weekMonthKey(ws));
   return f > 0 && f < 7 ? Math.round(f) : 0;
 }
 
-export function computeWeeklyStats(set, today, freqOf, weekStart) {
+export function computeWeeklyStats(set: Set<string>, today: Date, freqOf: (d: Date) => number, weekStart: number) {
   const counts = weekCounts(set, weekStart);
-  const hit = (k) => { const f = freqOf(toDate(k)); return f > 0 && (counts.get(k) || 0) >= f; };
+  const hit = (k: string) => { const f = freqOf(toDate(k)); return f > 0 && (counts.get(k) || 0) >= f; };
   const thisWeek = weekStartOf(today, weekStart);
   const thisCount = counts.get(fmt(thisWeek)) || 0;
   const goal = freqOf(thisWeek);
@@ -25,7 +26,7 @@ export function computeWeeklyStats(set, today, freqOf, weekStart) {
   let w = hit(fmt(thisWeek)) ? thisWeek : addDays(thisWeek, -7);
   while (hit(fmt(w))) { current++; w = addDays(w, -7); }
 
-  let longest = 0, run = 0, prev = null;
+  let longest = 0, run = 0, prev: Date | null = null;
   for (const k of [...counts.keys()].filter(hit).sort()) {
     run = prev && fmt(addDays(prev, 7)) === k ? run + 1 : 1;
     if (run > longest) longest = run;
@@ -35,7 +36,7 @@ export function computeWeeklyStats(set, today, freqOf, weekStart) {
 }
 
 // 이번 주에 해야 하는 요일 칸인지
-export function isSchedDay(fr, dd, date, today, weekStart) {
+export function isSchedDay(fr: MonthMap | undefined, dd: MonthDays | undefined, date: Date, today: Date, weekStart: number) {
   if (!dd || !Object.keys(dd).length) return false;
   const ws = weekStartOf(today, weekStart);
   if (fmt(weekStartOf(date, weekStart)) !== fmt(ws)) return false;
@@ -44,7 +45,7 @@ export function isSchedDay(fr, dd, date, today, weekStart) {
 }
 
 // 그 달에 적용되는 방식: 요일 지정이면 {days}, 횟수면 {n}. 가장 가까운 앞 달 설정을 이어서 쓴다
-export function scheduleAt(fr, dd, key) {
+export function scheduleAt(fr: MonthMap | undefined, dd: MonthDays | undefined, key: string): Schedule | null {
   const ks = [...new Set([...Object.keys(fr || {}), ...Object.keys(dd || {})])].filter((k) => k <= key).sort();
   if (!ks.length) return null;
   const k = ks[ks.length - 1];
@@ -53,19 +54,19 @@ export function scheduleAt(fr, dd, key) {
 }
 
 // 그 달의 목표. 정해진 게 없으면 가장 최근에 정한 목표를 이어서 쓴다
-export function goalForMonth(goals, key) {
+export function goalForMonth(goals: MonthMap | null | undefined, key: string) {
   if (!goals) return 0;
   if (goals[key] != null) return Number(goals[key]) || 0;
   const earlier = Object.keys(goals).filter((k) => k < key).sort();
   return earlier.length ? Number(goals[earlier[earlier.length - 1]]) || 0 : 0;
 }
 
-export function computeStats(set, today) {
+export function computeStats(set: Set<string>, today: Date) {
   let current = 0;
   let d = set.has(fmt(today)) ? today : addDays(today, -1);
   while (set.has(fmt(d))) { current++; d = addDays(d, -1); }
 
-  let longest = 0, run = 0, prev = null;
+  let longest = 0, run = 0, prev: Date | null = null;
   for (const s of [...set].sort()) {
     run = prev && fmt(addDays(prev, 1)) === s ? run + 1 : 1;
     if (run > longest) longest = run;
@@ -80,7 +81,7 @@ export function computeStats(set, today) {
 }
 
 // 습관이 시작된 날: 챌린지 시작일, 정해 둔 시작일, 없으면 첫 기록일 (아무것도 없으면 빈 문자열)
-export function habitStart(h) {
+export function habitStart(h: Habit) {
   if (h.period && h.period.start) return h.period.start;
   if (h.startDate) return h.startDate;
   const all = h.kind === "check" ? [...h.set] : [...h.entries].filter(([, v]) => v > 0).map(([d]) => d);

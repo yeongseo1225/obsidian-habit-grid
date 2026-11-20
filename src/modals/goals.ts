@@ -1,4 +1,6 @@
 import { Modal } from "obsidian";
+import type { App } from "obsidian";
+import type { MonthDays, MonthMap } from "../types";
 import { UNIT_HOURS, WD_ORDER } from "../constants";
 import { DAY_NAMES, tr, unitLabel } from "../i18n";
 import { monthKey, pad } from "../dates";
@@ -7,19 +9,25 @@ import { goalForMonth, scheduleAt } from "../stats";
 import { iconifyNav } from "../ui";
 
 // 달별 목표를 정하는 창: 12개 달을 타일로 보여 주고, 누른 달의 목표를 아래에서 고친다
+export interface GoalsModalOptions {
+  name: string; unit: string; year: number; explicit?: MonthMap; inferred?: MonthMap; freqs?: MonthMap; days?: MonthDays;
+  measure?: boolean; color?: string; onSave: (work: MonthMap, fwork: MonthMap, dwork: MonthDays) => void | Promise<void>;
+}
+
 export class GoalsModal extends Modal {
-  constructor(app, { name, unit, year, explicit, inferred, freqs, days, measure, color, onSave }) {
+  private name: string; private unit: string; private year: number; private color?: string;
+  private onSave: GoalsModalOptions["onSave"];
+  private measure: boolean; private inferred: MonthMap;
+  private work: MonthMap = {}; private fwork: MonthMap = {}; private dwork: MonthDays = {};
+  private sel: string | null = null;
+  constructor(app: App, o: GoalsModalOptions) {
     super(app);
-    Object.assign(this, { name, unit, year, color, onSave });
-    this.measure = measure !== false;
-    this.inferred = inferred || {};
-    this.work = {};
-    for (const [k, v] of Object.entries(explicit || {})) this.work[String(k)] = Number(v);
-    this.fwork = {};
-    for (const [k, v] of Object.entries(freqs || {})) this.fwork[String(k)] = Number(v);
-    this.dwork = {};
-    for (const [k, v] of Object.entries(days || {})) this.dwork[String(k)] = [...v];
-    this.sel = null;
+    this.name = o.name; this.unit = o.unit; this.year = o.year; this.color = o.color; this.onSave = o.onSave;
+    this.measure = o.measure !== false;
+    this.inferred = o.inferred || {};
+    for (const [k, v] of Object.entries(o.explicit || {})) this.work[String(k)] = Number(v);
+    for (const [k, v] of Object.entries(o.freqs || {})) this.fwork[String(k)] = Number(v);
+    for (const [k, v] of Object.entries(o.days || {})) this.dwork[String(k)] = [...v];
   }
   onOpen() {
     this.titleEl.setText(tr("{0} · 달별 목표", this.name));
@@ -30,12 +38,12 @@ export class GoalsModal extends Modal {
     this.draw();
   }
   // 그 달에 적용되는 방식을 글로: 매일 / 주 N회 / 요일
-  scheduleText(key) {
+  scheduleText(key: string) {
     const sc = scheduleAt(this.fwork, this.dwork, key);
     if (!sc || (!sc.days && !sc.n)) return tr("매일");
-    return sc.days ? daysLabel(sc.days) : tr("주 {0}회", sc.n);
+    return sc.days ? daysLabel(sc.days) : tr("주 {0}회", sc.n ?? 0);
   }
-  hasEarlier(key) {
+  hasEarlier(key: string) {
     const keys = [...Object.keys(this.fwork), ...Object.keys(this.dwork), ...Object.keys(this.work), ...Object.keys(this.inferred)];
     return keys.some((k) => k < key);
   }
@@ -52,7 +60,7 @@ export class GoalsModal extends Modal {
     next.addEventListener("click", () => { this.year++; this.sel = null; this.draw(); });
 
     const cur = monthKey(new Date());
-    const merged = Object.assign({}, this.inferred, this.work);
+    const merged: MonthMap = { ...this.inferred, ...this.work };
     const grid = contentEl.createDiv({ cls: "hg-gt-grid" });
     for (let m = 1; m <= 12; m++) {
       const key = `${this.year}-${pad(m)}`;
@@ -73,13 +81,13 @@ export class GoalsModal extends Modal {
     const ok = btns.createEl("button", { cls: "mod-cta", text: tr("저장") });
     ok.addEventListener("click", () => {
       const active = contentEl.querySelector("input:focus");
-      if (active) active.blur();
+      if (active?.instanceOf(HTMLElement)) active.blur();
       this.close();
-      this.onSave(this.work, this.fwork, this.dwork);
+      void this.onSave(this.work, this.fwork, this.dwork);
     });
   }
   // 누른 달을 고치는 곳: 주 몇 회 또는 요일, 하루 목표
-  drawPanel(parent, key, merged) {
+  drawPanel(parent: HTMLElement, key: string, merged: MonthMap) {
     const panel = parent.createDiv({ cls: "hg-gt-panel" });
     const [sy, sm] = key.split("-").map(Number);
     panel.createDiv({ cls: "hg-gt-ptitle", text: tr("{0}년 {1}월", sy, sm) });
@@ -89,9 +97,9 @@ export class GoalsModal extends Modal {
     const ownF = this.fwork[key] != null || ownD;
     const prevKeys = [...new Set([...Object.keys(this.fwork), ...Object.keys(this.dwork)])].filter((k) => k < key).sort();
     const prevSch = prevKeys.length ? scheduleAt(this.fwork, this.dwork, prevKeys[prevKeys.length - 1]) : null;
-    const prevText = (!prevSch || (!prevSch.days && !prevSch.n)) ? tr("매일") : (prevSch.days ? daysLabel(prevSch.days) : tr("주 {0}회", prevSch.n));
+    const prevText = (!prevSch || (!prevSch.days && !prevSch.n)) ? tr("매일") : (prevSch.days ? daysLabel(prevSch.days) : tr("주 {0}회", prevSch.n ?? 0));
     const chips = panel.createDiv({ cls: "hg-nh-chips" });
-    const chip = (label, on, fn) => {
+    const chip = (label: string, on: boolean, fn: () => void) => {
       const c = chips.createEl("button", { cls: "hg-nh-chip" + (on ? " is-on" : ""), text: label });
       c.addEventListener("click", fn);
     };
@@ -117,7 +125,7 @@ export class GoalsModal extends Modal {
       const row = panel.createDiv({ cls: "hg-gt-inputs" });
       const effective = goalForMonth(merged, key);
       const own = this.work[key] != null;
-      const save = (v) => {
+      const save = (v: number) => {
         if (isNaN(v) || v <= 0) delete this.work[key]; else this.work[key] = Math.round(v * 10000) / 10000;
         this.draw();
       };

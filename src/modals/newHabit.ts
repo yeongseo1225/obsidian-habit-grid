@@ -1,20 +1,31 @@
 import { Notice, Modal } from "obsidian";
+import type { App } from "obsidian";
 import { UNIT_HOURS, UNIT_MINUTES, UNIT_PAGES, WD_ORDER } from "../constants";
 import { DAY_NAMES, tr, unitLabel } from "../i18n";
 import { addDays, fmt, toDate } from "../dates";
 import { daysLabel, fmtNum } from "../format";
 
+export type NewHabitKind = "check" | "measure" | "items";
+export interface NewHabitResult {
+  name: string; kind: NewHabitKind; unit: string; goal: number; start: string; freq: number; days: number[]; period: number;
+}
+interface NewHabitState {
+  name: string; kind: NewHabitKind; unit: string; customUnit: string; goalH: string; goalM: string; goalN: string;
+  freq: number; mode: "count" | "days"; days: number[]; period: number; customPeriod: boolean; start: string;
+}
+
 // 새 습관 만들기 창
 export class NewHabitModal extends Modal {
-  constructor(app, onSubmit) { super(app); this.onSubmit = onSubmit; }
+  private onSubmit: (r: NewHabitResult) => void | Promise<void>;
+  constructor(app: App, onSubmit: (r: NewHabitResult) => void | Promise<void>) { super(app); this.onSubmit = onSubmit; }
   onOpen() {
     const { contentEl } = this;
     contentEl.addClass("hg-nh");
     this.titleEl.setText(tr("새 습관"));
-    const S = { name: "", kind: "check", unit: UNIT_HOURS, customUnit: "", goalH: "", goalM: "", goalN: "", freq: 0, mode: "count", days: [], period: 0, customPeriod: false, start: "" };
+    const S: NewHabitState = { name: "", kind: "check", unit: UNIT_HOURS, customUnit: "", goalH: "", goalM: "", goalN: "", freq: 0, mode: "count", days: [], period: 0, customPeriod: false, start: "" };
     const today = new Date();
     S.start = fmt(today);
-    const md = (d) => `${d.getMonth() + 1}/${d.getDate()}`;
+    const md = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`;
     const unitName = () => (S.unit === "직접" ? S.customUnit.trim() : S.unit);
     const goalValue = () => {
       const u = unitName();
@@ -29,7 +40,7 @@ export class NewHabitModal extends Modal {
       return `${fmtNum(v)}${u}`;
     };
 
-    const lab = (parent, text, hint) => {
+    const lab = (parent: HTMLElement, text: string, hint?: string) => {
       const r = parent.createDiv({ cls: "hg-nh-label" });
       r.createSpan({ text });
       if (hint) r.createSpan({ cls: "hg-nh-hint", text: hint });
@@ -51,7 +62,7 @@ export class NewHabitModal extends Modal {
     const sum = () => {
       sumBox.empty();
       sumBox.createDiv({ cls: "hg-nh-sumt", text: tr("이렇게 만들어져요") });
-      const parts = [];
+      const parts: string[] = [];
       if (S.kind === "measure") { const g = goalText(); parts.push(g ? tr("하루 {0}", g) : tr("{0} 기록", unitLabel(unitName()) || tr("단위"))); }
       else if (S.kind === "items") parts.push(tr("항목 기록"));
       else parts.push(tr("기본"));
@@ -62,12 +73,12 @@ export class NewHabitModal extends Modal {
       line.createSpan({ text: parts.join(" · ") });
     };
 
-    const chip = (parent, text, on, fn, disabled) => {
+    const chip = (parent: HTMLElement, text: string, on: boolean, fn: () => void, disabled?: boolean) => {
       const c = parent.createEl("button", { cls: "hg-nh-chip" + (on ? " is-on" : "") + (disabled ? " is-disabled" : ""), text });
       if (!disabled) c.addEventListener("click", fn);
       return c;
     };
-    const numIn = (parent, key, ph, w) => {
+    const numIn = (parent: HTMLElement, key: "goalH" | "goalM" | "goalN", ph: string, w?: string) => {
       const i = parent.createEl("input", { type: "number", cls: "hg-nh-num", attr: { min: "0", inputmode: "numeric", placeholder: ph || "" } });
       i.value = S[key] || "";
       if (w) i.style.width = w;
@@ -80,7 +91,7 @@ export class NewHabitModal extends Modal {
       // 종류
       const ks = body.createDiv({ cls: "hg-nh-sec" });
       lab(ks, tr("종류"));
-      const kinds = [
+      const kinds: [NewHabitKind, string, string][] = [
         ["check", tr("기본"), tr("했는지만 체크해요 · 예: 영양제 먹기")],
         ["measure", tr("양 기록"), tr("시간·쪽·km처럼 양을 적어요 · 예: 공부 2시간")],
         ["items", tr("항목 기록"), tr("이 습관 안에서 한 것을 하나씩 적어요 · 예: 운동 → 스쿼트, 플랭크")],
@@ -92,7 +103,7 @@ export class NewHabitModal extends Modal {
         head.createSpan({ cls: "hg-nh-ktitle", text: t });
         card.createDiv({ cls: "hg-nh-ksub", text: sub });
         head.addEventListener("click", () => { S.kind = k; draw(); });
-        card.querySelector(".hg-nh-ksub").addEventListener("click", () => { S.kind = k; draw(); });
+        card.querySelector(".hg-nh-ksub")?.addEventListener("click", () => { S.kind = k; draw(); });
         if (k === "measure" && S.kind === "measure") {
           const ex = card.createDiv({ cls: "hg-nh-extra" });
           lab(ex, tr("단위"));
@@ -162,7 +173,7 @@ export class NewHabitModal extends Modal {
       if (!S.name) { new Notice(tr("이름을 적어 주세요")); nameIn.focus(); return; }
       if (S.kind === "measure" && !unitName()) { new Notice(tr("단위를 적어 주세요")); return; }
       this.close();
-      this.onSubmit({
+      void this.onSubmit({
         name: S.name, kind: S.kind,
         unit: S.kind === "measure" ? unitName() : "",
         goal: S.kind === "measure" ? goalValue() : 0,

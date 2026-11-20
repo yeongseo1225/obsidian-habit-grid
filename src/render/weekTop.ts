@@ -1,11 +1,13 @@
+import type { PeriodOpts } from "../types";
 import { DAY_NAMES, tr } from "../i18n";
 import { addDays, fmt, weekStartOf } from "../dates";
 import { fmtQty, fmtQtyShort } from "../format";
 import { stopEditorGrab } from "../ui";
 import { renderItemLog } from "./measured";
 
-export function renderWeekTop(card, c) {
-  const { today, weekStart, kind, unit } = c;
+export function renderWeekTop(card: HTMLElement, c: PeriodOpts) {
+  const { today, weekStart, kind } = c;
+  const unit = c.unit ?? "";
   const measure = kind === "measure";
   const todayStr = fmt(today);
   const curWs = weekStartOf(today, weekStart);
@@ -16,11 +18,11 @@ export function renderWeekTop(card, c) {
 
   const bar = card.createDiv({ cls: "hg-weektop" });
   const nav = bar.createDiv({ cls: "hg-yearnav" });
-  const navBtn = (label, aria, delta, enabled = true) => {
-    const b = nav.createEl ? nav.createEl("button", { cls: "hg-yearbtn", text: label }) : nav.createDiv({ cls: "hg-yearbtn", text: label });
+  const navBtn = (label: string, aria: string, delta: number, enabled = true) => {
+    const b = nav.createEl("button", { cls: "hg-yearbtn", text: label });
     b.setAttr("aria-label", aria);
     if (!enabled) b.addClass("is-disabled");
-    else if (c.onWeekNav) b.addEventListener("click", () => c.onWeekNav(delta));
+    else if (c.onWeekNav) b.addEventListener("click", () => { void c.onWeekNav?.(delta); });
     stopEditorGrab(b);
   };
   navBtn("‹", tr("지난주"), -1);
@@ -29,11 +31,11 @@ export function renderWeekTop(card, c) {
   navBtn("›", tr("다음 주"), 1, !isCur);
   {
     const back = nav.createSpan({ cls: "hg-yearbtn hg-thisyear" + (isCur ? " is-ghost" : ""), text: tr("이번 주") });
-    if (!isCur && c.onWeekNav) back.addEventListener("click", () => c.onWeekNav(0));
+    if (!isCur && c.onWeekNav) back.addEventListener("click", () => { void c.onWeekNav?.(0); });
     stopEditorGrab(back);
   }
   let sum = 0, hits = 0;
-  const days = [...Array(7)].map((_, i) => addDays(ws, i));
+  const days = Array.from({ length: 7 }, (_, i) => addDays(ws, i));
   for (const d of days) { const ds = fmt(d); const v = c.value(ds); sum += v; if (v && c.hit(ds)) hits++; }
   bar.createSpan({ cls: "hg-yearsum", text: measure ? tr("합계 {0}", fmtQty(sum, unit)) : tr("{0}/7일", hits) });
 
@@ -53,7 +55,7 @@ export function renderWeekTop(card, c) {
     b.createDiv({ cls: "hg-day-dow", text: ds === todayStr ? tr("오늘") : DAY_NAMES[d.getDay()] });
     b.createDiv({ cls: "hg-day-mark", text: fut ? String(d.getDate()) : v ? (measure ? fmtQtyShort(v, unit) : "✓") : String(d.getDate()) });
     b.setAttr("aria-label", tr("{0}월 {1}일", d.getMonth() + 1, d.getDate()));
-    if (c.onTap && !fut && !locked) b.addEventListener("click", () => c.onTap(ds));
+    if (c.onTap && !fut && !locked) b.addEventListener("click", () => { void c.onTap?.(ds); });
     stopEditorGrab(b);
   }
 

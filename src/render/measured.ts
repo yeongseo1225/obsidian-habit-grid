@@ -1,3 +1,4 @@
+import type { CardOpts, ItemMap } from "../types";
 import { DAY_NAMES, tr, unitLabel } from "../i18n";
 import { addDays, fmt, monthKey, pad, toDate, weekMonthKey, weekStartOf } from "../dates";
 import { daysLabel, fmtDur, fmtNum, fmtQty } from "../format";
@@ -8,7 +9,7 @@ import { modeTabs, renderPeriodView } from "./periodView";
 import { UNIT_HOURS } from "../constants";
 
 // ── 시간 기록 습관 (달마다 목표 시간이 다른 습관) ──
-export function renderMeasured(parent, name, entries, opts) {
+export function renderMeasured(parent: HTMLElement, name: string, entries: Map<string, number>, opts: CardOpts): HTMLElement {
   const today = opts.today || new Date();
   const weekStart = opts.weekStart ?? 1;
   const unit = opts.unit || UNIT_HOURS;
@@ -17,11 +18,11 @@ export function renderMeasured(parent, name, entries, opts) {
   const todayStr = fmt(today);
   const curKey = monthKey(today);
   const curGoal = goalForMonth(goals, curKey);
-  const hit = (ds, v) => v > 0 && v >= goalForMonth(goals, ds.slice(0, 7));
-  const freqOf = (ws) => freqOfWeek(opts.freqs, ws);
+  const hit = (ds: string, v: number) => v > 0 && v >= goalForMonth(goals, ds.slice(0, 7));
+  const freqOf = (ws: Date) => freqOfWeek(opts.freqs, ws);
   const freq = freqOf(weekStartOf(today, weekStart));
   // 주 N회 목표: 주마다 목표량을 채운 날 수
-  const weekHits = new Map();
+  const weekHits = new Map<string, number>();
   for (const [ds, v] of entries) {
     if (!hit(ds, v)) continue;
     const k = fmt(weekStartOf(toDate(ds), weekStart));
@@ -52,19 +53,19 @@ export function renderMeasured(parent, name, entries, opts) {
     : tr("목표 정하기");
   const chip = head.createSpan({ cls: "hg-goal is-clickable" + (freq && thisWeekCount >= freq ? " is-done" : ""), text: chipText });
   chip.setAttr("aria-label", tr("달별 목표 정하기"));
-  if (opts.onGoals) chip.addEventListener("click", () => opts.onGoals(today.getFullYear()));
+  if (opts.onGoals) chip.addEventListener("click", () => { void opts.onGoals?.(today.getFullYear()); });
   stopEditorGrab(chip);
   addMoreButton(head, opts);
 
   const stats = card.createDiv({ cls: "hg-stats" });
-  const stat = (value, u, label, accent) => {
+  const stat = (value: number | string, u: string, label: string, accent?: boolean) => {
     const box = stats.createDiv({ cls: "hg-stat" + (accent ? " is-accent" : "") });
     const v = box.createDiv({ cls: "hg-stat-value" });
     v.createSpan({ text: String(value) });
     v.createSpan({ cls: "hg-stat-unit", text: u });
     box.createDiv({ cls: "hg-stat-label", text: label });
   };
-  const sv = (v) => unit === UNIT_HOURS ? [fmtDur(v), ""] : [fmtNum(Math.round(v * 10) / 10), unitLabel(unit)];
+  const sv = (v: number): [string, string] => unit === UNIT_HOURS ? [fmtDur(v), ""] : [fmtNum(Math.round(v * 10) / 10), unitLabel(unit)];
   stat(...sv(tv), tr("오늘"), hit(todayStr, tv));
   const monthLen = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
   if (freq) stat(thisWeekCount, tr("/{0}회", freq), tr("이번 주 달성"), thisWeekCount >= freq);
@@ -74,19 +75,19 @@ export function renderMeasured(parent, name, entries, opts) {
 
   renderWeekTop(card, {
     ...opts, kind: "measure", today, weekStart, freqOf, unit,
-    value: (ds) => entries.get(ds) || 0,
-    goalOf: (ds) => goalForMonth(goals, ds.slice(0, 7)),
-    hit: (ds) => hit(ds, entries.get(ds) || 0),
-    onTap: opts.onValue ? (ds) => opts.onValue(ds, entries.get(ds) || 0) : null,
+    value: (ds: string) => entries.get(ds) || 0,
+    goalOf: (ds: string) => goalForMonth(goals, ds.slice(0, 7)),
+    hit: (ds: string) => hit(ds, entries.get(ds) || 0),
+    onTap: opts.onValue ? (ds: string) => opts.onValue?.(ds, entries.get(ds) || 0) : null,
   });
 
   if (opts.mode === "month") {
     renderPeriodView(card, {
       ...opts, kind: "measure", today, weekStart, freqOf, unit,
-      value: (ds) => entries.get(ds) || 0,
-      goalOf: (ds) => goalForMonth(goals, ds.slice(0, 7)),
-      hit: (ds) => hit(ds, entries.get(ds) || 0),
-      onCell: opts.onValue ? (ds) => opts.onValue(ds, entries.get(ds) || 0) : null,
+      value: (ds: string) => entries.get(ds) || 0,
+      goalOf: (ds: string) => goalForMonth(goals, ds.slice(0, 7)),
+      hit: (ds: string) => hit(ds, entries.get(ds) || 0),
+      onCell: opts.onValue ? (ds: string) => opts.onValue?.(ds, entries.get(ds) || 0) : null,
     });
     return card;
   }
@@ -94,12 +95,12 @@ export function renderMeasured(parent, name, entries, opts) {
   // 연도 넘기기
   const bar = card.createDiv({ cls: "hg-yearbar" });
   const nav = bar.createDiv({ cls: "hg-yearnav" });
-  const btn = (label, aria, target, enabled = true) => {
-    const b = nav.createEl ? nav.createEl("button", { cls: "hg-yearbtn", text: label }) : nav.createDiv({ cls: "hg-yearbtn", text: label });
+  const btn = (label: string, aria: string, target: number, enabled = true) => {
+    const b = nav.createEl("button", { cls: "hg-yearbtn", text: label });
     b.setAttr("aria-label", aria);
     stopEditorGrab(b);
     if (!enabled) b.addClass("is-disabled");
-    else if (opts.onYear) b.addEventListener("click", () => opts.onYear(target));
+    else if (opts.onYear) b.addEventListener("click", () => { void opts.onYear?.(target); });
   };
   btn("‹", tr("이전 해"), year - 1);
   nav.createSpan({ cls: "hg-year", text: `${year}` });
@@ -107,7 +108,7 @@ export function renderMeasured(parent, name, entries, opts) {
     const isNow = year >= today.getFullYear();
     btn("›", tr("다음 해"), year + 1, !isNow);
     const back = nav.createSpan({ cls: "hg-yearbtn hg-thisyear" + (isNow ? " is-ghost" : ""), text: tr("올해") });
-    if (!isNow) back.addEventListener("click", () => opts.onYear && opts.onYear(today.getFullYear()));
+    if (!isNow) back.addEventListener("click", () => { void opts.onYear?.(today.getFullYear()); });
     stopEditorGrab(back);
   }
   let ySum = 0;
@@ -124,7 +125,7 @@ export function renderMeasured(parent, name, entries, opts) {
   for (let i = 0; i < 7; i++) labels.createDiv({ cls: "hg-daylabel", text: i % 2 === 0 ? DAY_NAMES[(weekStart + i) % 7] : "" });
 
   const start = weekStartOf(new Date(year, 0, 1), weekStart);
-  const weeks = Math.round((weekStartOf(new Date(year, 11, 31), weekStart) - start) / (7 * 86400000)) + 1;
+  const weeks = Math.round((weekStartOf(new Date(year, 11, 31), weekStart).getTime() - start.getTime()) / (7 * 86400000)) + 1;
   let prevMonth = -1;
   for (let w = 0; w < weeks; w++) {
     const top = addDays(start, w * 7);
@@ -152,7 +153,7 @@ export function renderMeasured(parent, name, entries, opts) {
       cell.setAttr("aria-label", tr("{0}월 {1}일 · {2}{3}", date.getMonth() + 1, date.getDate(), v ? fmtQty(v, unit) : tr("기록 없음"), g ? tr(" / 목표 {0}", fmtQty(g, unit)) : ""));
       if (opts.onValue) {
         cell.addClass("is-clickable");
-        cell.addEventListener("click", () => opts.onValue(ds, v));
+        cell.addEventListener("click", () => { void opts.onValue?.(ds, v); });
       }
     }
   }
@@ -167,14 +168,14 @@ export function renderMeasured(parent, name, entries, opts) {
   fold.setAttr("aria-label", opts.goalsFolded ? tr("펼치기") : tr("접기"));
   stopEditorGrab(fold);
   tbar.createSpan({ text: tr("{0}년 달별 목표", year), cls: "hg-mtitle-text" });
-  if (opts.onFoldGoals) tbar.addEventListener("click", (e) => { if (e.target.closest(".hg-mmanage")) return; opts.onFoldGoals(!opts.goalsFolded); });
+  if (opts.onFoldGoals) tbar.addEventListener("click", (e: MouseEvent) => { if ((e.target as HTMLElement).closest(".hg-mmanage")) return; void opts.onFoldGoals?.(!opts.goalsFolded); });
   if (opts.onGoals && !opts.goalsFolded) {
     const manage = tbar.createSpan({ cls: "hg-mmanage", text: tr("목표 정하기") });
-    manage.addEventListener("click", () => opts.onGoals(year));
+    manage.addEventListener("click", () => { void opts.onGoals?.(year); });
     stopEditorGrab(manage);
   }
   const freqs = opts.freqs || {};
-  const monthFreq = (key) => { const f = goalForMonth(freqs, key); return f > 0 && f < 7 ? Math.round(f) : 0; };
+  const monthFreq = (key: string) => { const f = goalForMonth(freqs, key); return f > 0 && f < 7 ? Math.round(f) : 0; };
   let hasFreq = false;
   for (let m = 0; m < 12; m++) if (monthFreq(`${year}-${pad(m + 1)}`)) hasFreq = true;
   if (hasFreq) table.addClass("has-weeks");
@@ -200,12 +201,12 @@ export function renderMeasured(parent, name, entries, opts) {
     row.createDiv({ cls: "hg-mname", text: tr("{0}월", m + 1) });
     const gcell = row.createDiv({ cls: "hg-mgoal is-clickable" + (goals[key] == null ? " is-inherited" : ""), text: g ? fmtQty(g, unit) : "—" });
     gcell.setAttr("aria-label", goals[key] == null ? tr("앞 달 목표를 이어서 쓰는 중 · 눌러서 바꾸기") : tr("눌러서 목표 바꾸기"));
-    if (opts.onMonthGoal) gcell.addEventListener("click", () => opts.onMonthGoal(key, g));
+    if (opts.onMonthGoal) gcell.addEventListener("click", () => { void opts.onMonthGoal?.(key, g); });
     stopEditorGrab(gcell);
     const mf = monthFreq(key);
     if (hasFreq) {
       const fcell = row.createDiv({ cls: "hg-mgoal is-clickable" + (freqs[key] == null ? " is-inherited" : ""), text: mf ? ((() => { const sc = scheduleAt(opts.freqsRaw, opts.days, key); return sc && sc.days ? daysLabel(sc.days) : tr("주 {0}회", mf); })()) : tr("매일") });
-      if (opts.onGoals) fcell.addEventListener("click", () => opts.onGoals(year));
+      if (opts.onGoals) fcell.addEventListener("click", () => { void opts.onGoals?.(year); });
       stopEditorGrab(fcell);
     }
     if (future) {
@@ -240,7 +241,7 @@ export function renderMeasured(parent, name, entries, opts) {
     scroll.classList.toggle("is-overflow", scroll.scrollWidth > scroll.clientWidth + 1);
     if (year === today.getFullYear()) {
       const t = scroll.querySelector(".is-today");
-      if (t) scroll.scrollLeft = t.parentElement.offsetLeft - scroll.clientWidth + 40;
+      if (t?.instanceOf(HTMLElement) && t.parentElement) scroll.scrollLeft = t.parentElement.offsetLeft - scroll.clientWidth + 40;
     }
   });
   return card;
@@ -248,7 +249,7 @@ export function renderMeasured(parent, name, entries, opts) {
 
 // 카드 위쪽: 이번 주(월~일) 타일 + 주 N회 진행 막대. ‹ › 로 다른 주
 // 운동처럼 "무엇을 했는지"가 있는 습관: 보고 있는 주(7일)의 기록을 쭉 보여 줌
-export function renderItemLog(card, itemsAll, days, todayStr) {
+export function renderItemLog(card: HTMLElement, itemsAll: ItemMap, days: Date[], todayStr: string) {
   const box = card.createDiv({ cls: "hg-itemlog" });
   box.createDiv({ cls: "hg-itemlog-title", text: tr("이 주의 운동 기록") });
   for (const d of days) {

@@ -1,9 +1,11 @@
 import { UNIT_HOURS, UNIT_MINUTES, UNIT_PAGES } from "./constants";
 import { LANG } from "./i18n";
+import type { Frontmatter } from "./types";
 
 // Habit file properties. The first name is the Korean name, the second the English one.
 // Older files use the Korean names; English names are read everywhere and written when chosen.
-export const FM = {
+export type FmName = "unit" | "monthGoals" | "weeklyTimes" | "weekdays" | "duration" | "start" | "archived" | "hiddenItems" | "items" | "color";
+export const FM: Record<FmName, string[]> = {
   unit: ["단위", "unit"],
   monthGoals: ["월별목표", "monthGoals"],
   weeklyTimes: ["월별횟수", "weeklyTimes"],
@@ -16,53 +18,53 @@ export const FM = {
   color: ["색", "color"],
 };
 
-const UNIT_EN = { [UNIT_HOURS]: "hours", [UNIT_MINUTES]: "minutes", [UNIT_PAGES]: "pages" };
-const UNIT_ALIASES = {
+const UNIT_EN: Record<string, string> = { [UNIT_HOURS]: "hours", [UNIT_MINUTES]: "minutes", [UNIT_PAGES]: "pages" };
+const UNIT_ALIASES: Record<string, string> = {
   hours: UNIT_HOURS, hour: UNIT_HOURS, hrs: UNIT_HOURS, hr: UNIT_HOURS, h: UNIT_HOURS,
   minutes: UNIT_MINUTES, minute: UNIT_MINUTES, mins: UNIT_MINUTES, min: UNIT_MINUTES,
   pages: UNIT_PAGES, page: UNIT_PAGES, pg: UNIT_PAGES,
 };
 
 // Which property names to write: "ko" or "en". "auto" follows the display language.
-export function resolveKeyStyle(pref) {
+export function resolveKeyStyle(pref: unknown) {
   return pref === "ko" || pref === "en" ? pref : LANG === "ko" ? "ko" : "en";
 }
 
-function has(v) { return v !== undefined && v !== null && v !== "" && v !== false; }
+function has(v: unknown) { return v !== undefined && v !== null && v !== "" && v !== false; }
 
 // Value of a property under any of its names (Korean name first)
-export function fmGet(fm, name) {
+export function fmGet(fm: Frontmatter | null | undefined, name: FmName): unknown {
   if (!fm) return undefined;
   for (const key of FM[name]) if (has(fm[key])) return fm[key];
   return undefined;
 }
 
-export function fmKey(name, style) { return FM[name][style === "en" ? 1 : 0]; }
+export function fmKey(name: FmName, style?: string) { return FM[name][style === "en" ? 1 : 0]; }
 
-export function fmDel(fm, name) { for (const key of FM[name]) delete fm[key]; }
+export function fmDel(fm: Frontmatter, name: FmName) { for (const key of FM[name]) delete fm[key]; }
 
 // Write under the name the file already uses; otherwise use the chosen style.
 // Other names for the same property are removed so the file never holds two copies.
-export function fmSet(fm, name, value, style) {
+export function fmSet(fm: Frontmatter, name: FmName, value: unknown, style?: string) {
   const keys = FM[name];
-  const key = keys.slice(0, 2).find((k) => fm[k] !== undefined) || fmKey(name, style);
+  const key = keys.slice(0, 2).find((k: string) => fm[k] !== undefined) || fmKey(name, style);
   for (const k of keys) if (k !== key) delete fm[k];
   fm[key] = value;
   return key;
 }
 
 // Unit text as stored internally: hours, minutes and pages use the Korean words
-export function normalizeUnit(u) {
+export function normalizeUnit(u: unknown) {
   if (typeof u !== "string") return u;
   return UNIT_ALIASES[u.trim().toLowerCase()] || u;
 }
 
 // Unit text for a file whose property name is Korean or English
-export function unitForKey(unit, key) {
+export function unitForKey(unit: string, key: string) {
   return key === FM.unit[1] ? UNIT_EN[unit] || unit : unit;
 }
 
-export function fmSetUnit(fm, unit, style) {
+export function fmSetUnit(fm: Frontmatter, unit: string, style?: string) {
   const key = FM.unit.find((k) => fm[k] !== undefined) || fmKey("unit", style);
   for (const k of FM.unit) if (k !== key) delete fm[k];
   fm[key] = unitForKey(unit, key);

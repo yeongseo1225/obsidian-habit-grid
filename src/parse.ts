@@ -1,8 +1,9 @@
+import type { BlockOptions, ItemMap } from "./types";
 import { DONE_RE, LOG_RE, SKIP_RE, TITLE_HM_EN_RE, TITLE_RE, UNIT_HOURS, UNIT_MINUTES, UNIT_PAGES } from "./constants";
 
 // 날짜 -> 값(시간). 값이 없는 기록은 0
-export function parseEntries(text) {
-  const map = new Map();
+export function parseEntries(text: string) {
+  const map = new Map<string, number>();
   for (const line of text.split("\n")) {
     const m = line.match(DONE_RE);
     if (!m) continue;
@@ -11,7 +12,7 @@ export function parseEntries(text) {
   return map;
 }
 
-export function parseTitle(name) {
+export function parseTitle(name: string) {
   const hm = name.match(/^(.+?)\s+(\d+)\s*시간\s*(\d+)\s*분\s*(?:이상)?$/);
   if (hm) return { base: hm[1].trim(), amount: parseInt(hm[2], 10) + parseInt(hm[3], 10) / 60, unit: UNIT_HOURS };
   const hmEn = name.match(TITLE_HM_EN_RE);
@@ -22,7 +23,7 @@ export function parseTitle(name) {
 }
 
 // 제목에 적힌 단위를 저장 단위로: h·hours는 시간, m·min은 분, pages는 쪽
-function titleUnit(u) {
+function titleUnit(u: string) {
   const k = u.toLowerCase();
   if (/^(h|hrs?|hours?)$/.test(k)) return UNIT_HOURS;
   if (/^(m|mins?|minutes?)$/.test(k)) return UNIT_MINUTES;
@@ -31,7 +32,7 @@ function titleUnit(u) {
 }
 
 // 시간과 분이 섞여 있으면 습관의 단위에 맞춘다
-export function convertAmount(amount, from, to) {
+export function convertAmount(amount: number, from: string | undefined, to: string | undefined) {
   if (!from || from === to) return amount;
   if (from === UNIT_MINUTES && to === UNIT_HOURS) return amount / 60;
   if (from === UNIT_HOURS && to === UNIT_MINUTES) return amount * 60;
@@ -39,7 +40,7 @@ export function convertAmount(amount, from, to) {
 }
 
 // "3h23m", "3시간 23분", "45m", "1.5h", "2" -> 시간(소수)
-export function parseAmount(str) {
+export function parseAmount(str: string) {
   const t = str.trim();
   let m = t.match(/^(\d+):(\d{1,2})\b/);
   if (m) return parseInt(m[1], 10) + parseInt(m[2], 10) / 60;
@@ -52,8 +53,8 @@ export function parseAmount(str) {
 }
 
 // 단축어가 쓰는 '미리 알림 기록' 파일: 날짜 + 미리 알림 이름
-export function parseLog(text) {
-  const out = [];
+export function parseLog(text: string) {
+  const out: { ds: string; title: string }[] = [];
   for (const line of text.split("\n")) {
     const m = line.match(LOG_RE);
     if (!m || !m[2]) continue;
@@ -62,14 +63,14 @@ export function parseLog(text) {
   return out;
 }
 
-export function parseSkips(text) {
-  const set = new Set();
+export function parseSkips(text: string) {
+  const set = new Set<string>();
   for (const line of text.split("\n")) { const m = line.match(SKIP_RE); if (m) set.add(m[1]); }
   return set;
 }
 
-export function parseDates(text) {
-  const set = new Set();
+export function parseDates(text: string) {
+  const set = new Set<string>();
   for (const line of text.split("\n")) {
     const m = line.match(DONE_RE);
     if (m) set.add(m[1]);
@@ -79,16 +80,16 @@ export function parseDates(text) {
 
 // "1h30m", "45m", "2시간", "1:30", "5" 처럼 양만 적힌 글인지
 const AMOUNT_ONLY_RE = /^(?:\d+:\d{1,2}|\d+(?:\.\d+)?\s*(?:h|hr|hrs|hours?|시간)\s*(?:\d+\s*(?:m|mins?|minutes?|분))?|\d+(?:\.\d+)?\s*(?:m|mins?|minutes?|분)|\d+(?:\.\d+)?)$/i;
-export function isAmountOnly(text) { return AMOUNT_ONLY_RE.test(String(text).trim()); }
+export function isAmountOnly(text: string) { return AMOUNT_ONLY_RE.test(String(text).trim()); }
 
 // 항목 습관의 날짜 줄 하나. 예) "- [x] 2026-11-18 스쿼트 30회, 플랭크"
-export function itemsLine(ds, items) {
+export function itemsLine(ds: string, items: string[]) {
   return `- [x] ${ds}` + (items.length ? ` ${items.join(", ")}` : "");
 }
 
 // 습관 파일의 "- [x] 2026-11-18 스쿼트, 플랭크" 줄에서 날짜별 항목을 읽는다. 양만 적힌 줄은 항목이 아니다
-export function parseItemLines(text) {
-  const map = new Map();
+export function parseItemLines(text: string) {
+  const map: ItemMap = new Map();
   for (const line of text.split("\n")) {
     const m = line.match(DONE_RE);
     if (!m) continue;
@@ -104,17 +105,17 @@ export function parseItemLines(text) {
 }
 
 // "스쿼트 30회" -> { name: "스쿼트", amount: "30회" }. 이름 뒤에 숫자로 시작하는 말이 오면 그것이 양
-export function splitItem(text) {
-  const m = String(text).trim().match(/^(.*?)(?:\s+(\d.*))?$/);
+export function splitItem(text: string) {
+  const m = String(text).trim().match(/^(.*?)(?:\s+(\d.*))?$/) ?? [];
   return { name: (m[1] || "").trim(), amount: (m[2] || "").trim() };
 }
 
 // 항목 표에서 이름을 많이 쓴 순으로 모으고, 이름마다 가장 최근에 적은 양을 찾는다.
 // since(YYYY-MM-DD)를 주면 그 날 이후에 한 번이라도 쓴 항목만 추천에 넣는다
-export function knownItems(items, since) {
-  const count = new Map(), last = new Map(), lastUsed = new Map();
-  for (const ds of [...(items || new Map()).keys()].sort()) {
-    for (const raw of items.get(ds)) {
+export function knownItems(items: ItemMap | null | undefined, since?: string) {
+  const count = new Map<string, number>(), last = new Map<string, string>(), lastUsed = new Map<string, string>();
+  for (const ds of [...(items ?? new Map<string, string[]>()).keys()].sort()) {
+    for (const raw of items?.get(ds) ?? []) {
       const { name, amount } = splitItem(raw);
       if (!name) continue;
       count.set(name, (count.get(name) || 0) + 1);
@@ -122,13 +123,13 @@ export function knownItems(items, since) {
       if (amount) last.set(name, amount);
     }
   }
-  const names = [...count.keys()].filter((n) => !since || lastUsed.get(n) >= since).sort((a, b) => count.get(b) - count.get(a));
+  const names = [...count.keys()].filter((n) => !since || (lastUsed.get(n) ?? "") >= since).sort((a, b) => (count.get(b) ?? 0) - (count.get(a) ?? 0));
   return { names, last };
 }
 
 // 항목 표 두 개를 합친다 (같은 날의 같은 항목은 한 번만)
-export function mergeItems(a, b) {
-  const out = new Map();
+export function mergeItems(a: ItemMap | null | undefined, b: ItemMap | null | undefined) {
+  const out: ItemMap = new Map();
   for (const src of [a, b]) {
     for (const [ds, list] of src || []) {
       const cur = out.get(ds) || [];
@@ -139,8 +140,8 @@ export function mergeItems(a, b) {
   return out;
 }
 
-export function parseBlock(source) {
-  const opts = {};
+export function parseBlock(source: string) {
+  const opts: BlockOptions = {};
   for (const raw of source.split("\n")) {
     const m = raw.match(/^\s*([a-zA-Z가-힣]+)\s*:\s*(.+?)\s*$/);
     if (!m) continue;

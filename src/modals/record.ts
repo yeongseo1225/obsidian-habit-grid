@@ -1,4 +1,7 @@
 import { normalizePath, Notice, Modal } from "obsidian";
+import type { App } from "obsidian";
+import type { HabitGridPlugin } from "../plugin";
+import type { Habit } from "../types";
 import { DAY_NAMES, tr, unitLabel } from "../i18n";
 import { addDays, fmt, toDate } from "../dates";
 import { fmtDur, fmtNum, splitHM } from "../format";
@@ -7,7 +10,9 @@ import { UNIT_HOURS } from "../constants";
 
 // 날짜를 골라 여러 습관을 한 번에 기록하는 창
 export class RecordModal extends Modal {
-  constructor(app, plugin, date) {
+  plugin: HabitGridPlugin;
+  date: Date;
+  constructor(app: App, plugin: HabitGridPlugin, date: Date) {
     super(app);
     this.plugin = plugin;
     this.date = new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -26,7 +31,7 @@ export class RecordModal extends Modal {
 
     // 날짜 고르기
     const dates = contentEl.createDiv({ cls: "hg-rdates" });
-    const quick = [[tr("오늘"), 0], [tr("어제"), -1], [tr("그제"), -2]];
+    const quick: [string, number][] = [[tr("오늘"), 0], [tr("어제"), -1], [tr("그제"), -2]];
     for (const [label, off] of quick) {
       const d = addDays(today, off);
       const b = dates.createEl("button", { text: label, cls: fmt(d) === ds ? "mod-cta" : "" });
@@ -41,7 +46,7 @@ export class RecordModal extends Modal {
     if (!habits.length) { contentEl.createDiv({ cls: "hg-empty", text: tr("아직 습관이 없어요.") }); return; }
 
     // 습관 목록
-    const changes = new Map();
+    const changes = new Map<Habit, boolean | number>();
     const list = contentEl.createDiv({ cls: "hg-rlist" });
     for (const h of habits) {
       const row = list.createDiv({ cls: "hg-rrow" });
@@ -83,8 +88,8 @@ export class RecordModal extends Modal {
     const ok = btns.createEl("button", { cls: "mod-cta", text: tr("저장") });
     const save = async () => {
       for (const [h, val] of changes) {
-        if (h.kind === "check") { if (val !== h.set.has(ds)) await this.plugin.recordCheck(h, ds, val); }
-        else if (Math.abs(val - (h.entries.get(ds) || 0)) > 0.001) await this.plugin.recordValue(h, ds, val);
+        if (h.kind === "check") { if (typeof val === "boolean" && val !== h.set.has(ds)) await this.plugin.recordCheck(h, ds, val); }
+        else if (typeof val === "number" && Math.abs(val - (h.entries.get(ds) || 0)) > 0.001) await this.plugin.recordValue(h, ds, val);
       }
       new Notice(tr("{0}월 {1}일 기록을 저장했어요", this.date.getMonth() + 1, this.date.getDate()));
       this.close();

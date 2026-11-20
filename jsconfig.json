@@ -1,9 +1,0 @@
-{
-  "compilerOptions": {
-    "module": "ESNext",
-    "target": "ES2021",
-    "moduleResolution": "bundler",
-    "lib": ["ES2021", "DOM"]
-  },
-  "include": ["src/**/*.js"]
-}

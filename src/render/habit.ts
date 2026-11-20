@@ -1,3 +1,4 @@
+import type { CardOpts } from "../types";
 import { DAY_NAMES, tr } from "../i18n";
 import { addDays, fmt, toDate, weekStartOf } from "../dates";
 import { computeStats, computeWeeklyStats, freqOfWeek, weekCounts } from "../stats";
@@ -7,29 +8,31 @@ import { renderMeasured } from "./measured";
 import { renderWeekTop } from "./weekTop";
 import { modeTabs, renderPeriodView } from "./periodView";
 
-export function renderHabit(parent, name, set, opts) {
+export function renderHabit(parent: HTMLElement, name: string, set: Set<string>, opts: CardOpts): HTMLElement {
   if (opts.period && !opts.measure) return renderChallenge(parent, name, set, opts);
-  if (opts.measure) return renderMeasured(parent, name, opts.entries || new Map(), opts);
+  if (opts.measure) return renderMeasured(parent, name, opts.entries || new Map<string, number>(), opts);
   const today = opts.today || new Date();
   const weekStart = opts.weekStart ?? 1;
   const WEEK_MS = 7 * 86400000;
   const firstRecord = set.size ? [...set].sort()[0] : null;
   const year = opts.range === "year" ? (opts.year || today.getFullYear()) : null;
-  let weeks, start;
+  let weeks: number, start: Date;
   if (year) {
     start = weekStartOf(new Date(year, 0, 1), weekStart);
-    weeks = Math.round((weekStartOf(new Date(year, 11, 31), weekStart) - start) / WEEK_MS) + 1;
+    weeks = Math.round((weekStartOf(new Date(year, 11, 31), weekStart).getTime() - start.getTime()) / WEEK_MS) + 1;
   } else {
     weeks = Math.max(4, opts.weeks || 20);
     if (opts.range === "all" && firstRecord) {
-      const span = Math.round((weekStartOf(today, weekStart) - weekStartOf(toDate(firstRecord), weekStart)) / WEEK_MS) + 1;
+      const span = Math.round((weekStartOf(today, weekStart).getTime() - weekStartOf(toDate(firstRecord), weekStart).getTime()) / WEEK_MS) + 1;
       weeks = Math.max(weeks, span);
     }
     start = addDays(weekStartOf(today, weekStart), -(weeks - 1) * 7);
   }
-  const freqOf = (ws) => freqOfWeek(opts.freqs, ws);
+  const freqOf = (ws: Date) => freqOfWeek(opts.freqs, ws);
   const goal = freqOf(weekStartOf(today, weekStart));
-  const st = goal ? computeWeeklyStats(set, today, freqOf, weekStart) : computeStats(set, today);
+  const wst = goal ? computeWeeklyStats(set, today, freqOf, weekStart) : null;
+  const dst = goal ? null : computeStats(set, today);
+  const st = wst ?? dst!;
   const counts = weekCounts(set, weekStart);
 
   const card = parent.createDiv({ cls: "hg-card" });
@@ -42,49 +45,49 @@ export function renderHabit(parent, name, set, opts) {
   makeColorDot(dot, opts);
   title.createSpan({ cls: "hg-name", text: name });
   const chip = head.createSpan({
-    cls: "hg-goal" + (goal && st.weekDone ? " is-done" : "") + (opts.onGoals ? " is-clickable" : ""),
-    text: goal ? tr("{0}월 · 주 {1}회", today.getMonth() + 1, goal) + (st.weekDone ? " ✓" : "") : tr("매일"),
+    cls: "hg-goal" + (goal && wst?.weekDone ? " is-done" : "") + (opts.onGoals ? " is-clickable" : ""),
+    text: goal ? tr("{0}월 · 주 {1}회", today.getMonth() + 1, goal) + (wst?.weekDone ? " ✓" : "") : tr("매일"),
   });
   if (opts.onGoals) {
     chip.setAttr("aria-label", tr("달별 목표 정하기"));
-    chip.addEventListener("click", () => opts.onGoals(today.getFullYear()));
+    chip.addEventListener("click", () => { void opts.onGoals?.(today.getFullYear()); });
     stopEditorGrab(chip);
   }
   addMoreButton(head, opts);
 
   const stats = card.createDiv({ cls: "hg-stats" });
-  const stat = (value, unit, label, accent) => {
+  const stat = (value: number | string, unit: string, label: string, accent?: boolean) => {
     const box = stats.createDiv({ cls: "hg-stat" + (accent ? " is-accent" : "") });
     const v = box.createDiv({ cls: "hg-stat-value" });
     v.createSpan({ text: String(value) });
     v.createSpan({ cls: "hg-stat-unit", text: unit });
     box.createDiv({ cls: "hg-stat-label", text: label });
   };
-  if (goal) {
-    stat(st.current, tr("주"), tr("연속 달성"), st.current > 0);
-    stat(st.longest, tr("주"), tr("최장 달성"));
-    stat(st.thisCount, `/${goal}`, tr("이번 주"), st.weekDone);
-    stat(st.total, tr("회"), tr("전체"));
-  } else {
-    stat(st.current, tr("일"), tr("연속"), st.current > 0);
-    stat(st.longest, tr("일"), tr("최장 연속"));
-    stat(st.monthDone, `/${st.monthDays}`, tr("이번 달"));
-    stat(st.total, tr("회"), tr("전체"));
+  if (wst) {
+    stat(wst.current, tr("주"), tr("연속 달성"), wst.current > 0);
+    stat(wst.longest, tr("주"), tr("최장 달성"));
+    stat(wst.thisCount, `/${goal}`, tr("이번 주"), wst.weekDone);
+    stat(wst.total, tr("회"), tr("전체"));
+  } else if (dst) {
+    stat(dst.current, tr("일"), tr("연속"), dst.current > 0);
+    stat(dst.longest, tr("일"), tr("최장 연속"));
+    stat(dst.monthDone, `/${dst.monthDays}`, tr("이번 달"));
+    stat(dst.total, tr("회"), tr("전체"));
   }
 
   renderWeekTop(card, {
     ...opts, kind: "check", today, weekStart, freqOf,
-    value: (ds) => (set.has(ds) ? 1 : 0),
-    hit: (ds) => set.has(ds),
-    onTap: opts.onToggle ? (ds) => opts.onToggle(ds, !set.has(ds)) : null,
+    value: (ds: string) => (set.has(ds) ? 1 : 0),
+    hit: (ds: string) => set.has(ds),
+    onTap: opts.onToggle ? (ds: string) => opts.onToggle?.(ds, !set.has(ds)) : null,
   });
 
   if (year && opts.mode === "month") {
     renderPeriodView(card, {
       ...opts, kind: "check", today, weekStart, freqOf,
-      value: (ds) => (set.has(ds) ? 1 : 0),
-      hit: (ds) => set.has(ds),
-      onCell: opts.onSelect ? (ds) => opts.onSelect(ds) : opts.onToggle ? (ds) => opts.onToggle(ds, !set.has(ds)) : null,
+      value: (ds: string) => (set.has(ds) ? 1 : 0),
+      hit: (ds: string) => set.has(ds),
+      onCell: opts.onSelect ? (ds: string) => opts.onSelect?.(ds) : opts.onToggle ? (ds: string) => opts.onToggle?.(ds, !set.has(ds)) : null,
     });
     return card;
   }
@@ -93,12 +96,12 @@ export function renderHabit(parent, name, set, opts) {
   if (year) {
     const bar = card.createDiv({ cls: "hg-yearbar" });
     const nav = bar.createDiv({ cls: "hg-yearnav" });
-    const btn = (label, aria, target, enabled) => {
-      const b = nav.createEl ? nav.createEl("button", { cls: "hg-yearbtn", text: label }) : nav.createDiv({ cls: "hg-yearbtn", text: label });
+    const btn = (label: string, aria: string, target: number, enabled: boolean) => {
+      const b = nav.createEl("button", { cls: "hg-yearbtn", text: label });
       b.setAttr("aria-label", aria);
       stopEditorGrab(b);
       if (!enabled) b.addClass("is-disabled");
-      else if (opts.onYear) b.addEventListener("click", () => opts.onYear(target));
+      else if (opts.onYear) b.addEventListener("click", () => { void opts.onYear?.(target); });
     };
     if (!opts.yearFixed) btn("‹", tr("이전 해"), year - 1, true);
     nav.createSpan({ cls: "hg-year", text: `${year}` });
@@ -106,7 +109,7 @@ export function renderHabit(parent, name, set, opts) {
       const isNow = year >= today.getFullYear();
       btn("›", tr("다음 해"), year + 1, !isNow);
       const back = nav.createSpan({ cls: "hg-yearbtn hg-thisyear" + (isNow ? " is-ghost" : ""), text: tr("올해") });
-      if (!isNow) back.addEventListener("click", () => opts.onYear && opts.onYear(today.getFullYear()));
+      if (!isNow) back.addEventListener("click", () => { void opts.onYear?.(today.getFullYear()); });
       stopEditorGrab(back);
     }
     const prefix = `${year}-`;
@@ -156,7 +159,7 @@ export function renderHabit(parent, name, set, opts) {
       cell.setAttr("aria-label", tr("{0}월 {1}일 ({2}) · {3}{4}", date.getMonth() + 1, date.getDate(), DAY_NAMES[date.getDay()], on ? tr("완료") : weekHit ? tr("이번 주 목표 달성") : tr("기록 없음"), opts.itemsOf && opts.itemsOf(ds).length ? " · " + opts.itemsOf(ds).join(", ") : ""));
       if (opts.onToggle) {
         cell.addClass("is-clickable");
-        cell.addEventListener("click", () => opts.onToggle(ds, !on));
+        cell.addEventListener("click", () => { void opts.onToggle?.(ds, !on); });
       }
     }
   }
@@ -165,11 +168,10 @@ export function renderHabit(parent, name, set, opts) {
   stopEditorGrab(scroll);
 
   window.requestAnimationFrame(() => {
-    scroll.toggleClass ? scroll.toggleClass("is-overflow", scroll.scrollWidth > scroll.clientWidth + 1)
-      : scroll.classList.toggle("is-overflow", scroll.scrollWidth > scroll.clientWidth + 1);
+    scroll.toggleClass("is-overflow", scroll.scrollWidth > scroll.clientWidth + 1);
     if (!year || year === today.getFullYear()) {
       const t = scroll.querySelector(".is-today");
-      scroll.scrollLeft = t ? t.parentElement.offsetLeft - scroll.clientWidth + 40 : scroll.scrollWidth;
+      scroll.scrollLeft = t?.instanceOf(HTMLElement) && t.parentElement ? t.parentElement.offsetLeft - scroll.clientWidth + 40 : scroll.scrollWidth;
     } else scroll.scrollLeft = 0;
   });
   return card;

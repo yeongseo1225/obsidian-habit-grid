@@ -1,18 +1,25 @@
+import type { DateStr } from "./types";
 import { DONE_RE, LOG_RE, SKIP_RE } from "./constants";
 import { writeQty } from "./format";
 import { convertAmount, itemsLine, parseEntries, parseItemLines, parseTitle } from "./parse";
 
+export interface PlanDay { amount: number; items: string[] }
+export interface PlanHabit { name: string; unit: string | undefined; days: Map<DateStr, PlanDay> }
+export interface UpsertOpts { unit?: string; isItems?: boolean; amountUnit?: string }
+
 // 로그에서 새로 들어온 줄(날짜 + 미리 알림 제목)을 습관별·날짜별 기록으로 정리한다.
 // prefixes: 항목 기록이 켜진 습관 이름들 (그 이름으로 시작하는 제목은 그 습관의 항목)
-export function planImport(entries, prefixes) {
-  const plan = new Map();
-  const habit = (name) => {
-    if (!plan.has(name)) plan.set(name, { name, unit: undefined, days: new Map() });
-    return plan.get(name);
+export function planImport(entries: { ds: DateStr; title: string }[], prefixes: string[]): Map<string, PlanHabit> {
+  const plan = new Map<string, PlanHabit>();
+  const habit = (name: string): PlanHabit => {
+    let h = plan.get(name);
+    if (!h) { h = { name, unit: undefined, days: new Map() }; plan.set(name, h); }
+    return h;
   };
-  const day = (h, ds) => {
-    if (!h.days.has(ds)) h.days.set(ds, { amount: 0, items: [] });
-    return h.days.get(ds);
+  const day = (h: PlanHabit, ds: string): PlanDay => {
+    let d = h.days.get(ds);
+    if (!d) { d = { amount: 0, items: [] }; h.days.set(ds, d); }
+    return d;
   };
   const sorted = [...prefixes].sort((a, b) => b.length - a.length);
   for (const { ds, title } of entries) {
@@ -21,7 +28,7 @@ export function planImport(entries, prefixes) {
       const rest = title.slice(p.length).replace(/^[\s·]+/, "");
       const d = day(habit(p), ds);
       // "운동 1h"처럼 이름 뒤에 양만 오면 항목이 아니라서, 그 날을 한 날로만 센다
-      const amountOnly = rest && (parseTitle(`${p} ${rest}`) || {}).base === p;
+      const amountOnly = rest && parseTitle(`${p} ${rest}`)?.base === p;
       if (rest && !amountOnly && !d.items.includes(rest)) d.items.push(rest);
       continue;
     }
@@ -38,11 +45,11 @@ export function planImport(entries, prefixes) {
 
 // 습관 파일 글에 날짜별 기록을 합친다. 이미 있는 날은 건드리지 않고, 사용자가 지운 날('- [ ] 날짜')은 다시 넣지 않는다.
 // opts: { unit, isItems, amountUnit }  amountUnit은 plan의 단위(파일 단위로 바꿀 때 쓴다)
-export function upsertDays(text, days, opts) {
+export function upsertDays(text: string, days: Map<DateStr, PlanDay>, opts: UpsertOpts) {
   const lines = text.split("\n");
   while (lines.length && lines[lines.length - 1].trim() === "") lines.pop();
   for (const [ds, d] of days) {
-    const idx = lines.findIndex((l) => { const m = l.match(DONE_RE) || l.match(SKIP_RE); return m && m[1] === ds; });
+    const idx = lines.findIndex((l) => { const m = l.match(DONE_RE) || l.match(SKIP_RE); return !!m && m[1] === ds; });
     if (idx >= 0 && !DONE_RE.test(lines[idx])) continue;
     if (opts.isItems) {
       if (idx < 0) lines.push(itemsLine(ds, d.items));
@@ -62,13 +69,13 @@ export function upsertDays(text, days, opts) {
 }
 
 // 제목을 파일 이름으로 쓸 수 있게 다듬는다
-export function safeFileName(name) {
+export function safeFileName(name: string) {
   return name.replace(/[\\/:*?"<>|#^[\]]/g, " ").replace(/\s+/g, " ").trim().replace(/^\.+/, "").slice(0, 100);
 }
 
 // 습관 파일 글에서 그 날짜 줄을 바꾼다. line이 없으면(기록을 지움) 이미 기록이 있던 날에 한해 '- [ ] 날짜'를 남겨서,
 // 미리 알림 줄이 또 들어와도 지운 날이 되살아나지 않게 한다. 지금 쓰는 줄을 다시 쓰면 표시는 기록으로 바뀐다
-export function rewriteDay(text, ds, line) {
+export function rewriteDay(text: string, ds: string, line: string | null) {
   let had = false;
   const lines = text.split("\n").filter((l) => {
     const m = l.match(DONE_RE) || l.match(SKIP_RE);
@@ -83,10 +90,10 @@ export function rewriteDay(text, ds, line) {
 
 // 로그 글에서 같은 날짜·같은 제목의 중복 줄을 지운다 (처음 줄만 남긴다. 다른 형식의 줄은 그대로 둔다).
 // cursor: 이미 습관 파일로 옮긴 줄 수(parseLog 기준). 옮긴 줄 중에서 지운 만큼 줄여서 돌려준다
-export function dedupeLog(text, cursor) {
-  const seen = new Set();
+export function dedupeLog(text: string, cursor: number) {
+  const seen = new Set<string>();
   let idx = 0, removed = 0, dec = 0;
-  const out = [];
+  const out: string[] = [];
   for (const line of text.split("\n")) {
     const m = line.match(LOG_RE);
     if (!m || !m[2]) { out.push(line); continue; }

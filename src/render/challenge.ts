@@ -1,3 +1,4 @@
+import type { CardOpts } from "../types";
 import { DAY_NAMES, tr } from "../i18n";
 import { addDays, fmt, toDate, weekStartOf } from "../dates";
 import { computeStats, freqOfWeek, isSchedDay, weekCounts } from "../stats";
@@ -5,23 +6,23 @@ import { addMoreButton, enableHorizontalScroll, makeColorDot, stopEditorGrab } f
 import { renderWeekTop } from "./weekTop";
 
 // 기간이 정해진 습관(예: 66일): 실제 날짜가 보이는 카드
-export function renderChallenge(parent, name, set, opts) {
+export function renderChallenge(parent: HTMLElement, name: string, set: Set<string>, opts: CardOpts): HTMLElement {
   const today = opts.today || new Date();
   const weekStart = opts.weekStart ?? 1;
   const todayStr = fmt(today);
-  const { days, start: startStr } = opts.period;
+  const { days, start: startStr } = opts.period!;
   const startD = toDate(startStr);
   const endD = addDays(startD, days - 1);
   const endStr = fmt(endD);
-  const dayNo = Math.max(0, Math.min(days, Math.round((toDate(todayStr) - startD) / 86400000) + 1));
+  const dayNo = Math.max(0, Math.min(days, Math.round((toDate(todayStr).getTime() - startD.getTime()) / 86400000) + 1));
   const finished = todayStr > endStr;
   const notStarted = todayStr < startStr;
-  const left = Math.round((endD - toDate(todayStr)) / 86400000);
+  const left = Math.round((endD.getTime() - toDate(todayStr).getTime()) / 86400000);
   let done = 0;
   for (let i = 0; i < days; i++) { const ds = fmt(addDays(startD, i)); if (ds <= todayStr && set.has(ds)) done++; }
   const elapsed = Math.max(1, dayNo);
   const st = computeStats(set, today);
-  const md = (d) => `${d.getMonth() + 1}/${d.getDate()} ${DAY_NAMES[d.getDay()]}`;
+  const md = (d: Date) => `${d.getMonth() + 1}/${d.getDate()} ${DAY_NAMES[d.getDay()]}`;
 
   const card = parent.createDiv({ cls: "hg-card hg-challenge" });
   if (opts.color) card.style.setProperty("--hg-on", opts.color);
@@ -37,13 +38,13 @@ export function renderChallenge(parent, name, set, opts) {
   });
   if (opts.onPeriod) {
     chalChip.setAttr("aria-label", tr("기간 바꾸기"));
-    chalChip.addEventListener("click", (evt) => opts.onPeriod(evt));
+    chalChip.addEventListener("click", (evt) => { void opts.onPeriod?.(evt); });
     stopEditorGrab(chalChip);
   }
   addMoreButton(head, opts);
 
   const stats = card.createDiv({ cls: "hg-stats" });
-  const stat = (value, unit, label, accent) => {
+  const stat = (value: number | string, unit: string, label: string, accent?: boolean) => {
     const box = stats.createDiv({ cls: "hg-stat" + (accent ? " is-accent" : "") });
     const v = box.createDiv({ cls: "hg-stat-value" });
     v.createSpan({ text: String(value) });
@@ -68,19 +69,19 @@ export function renderChallenge(parent, name, set, opts) {
     const ban = card.createDiv({ cls: "hg-chal-banner" });
     ban.createDiv({ cls: "hg-chal-banner-t", text: tr("{0}일 끝! {1}일 했어요 ({2}%)", days, done, Math.round((done / days) * 100)) });
     const row = ban.createDiv({ cls: "hg-chal-banner-btns" });
-    const b = (label, fn) => { const x = row.createEl("button", { text: label }); x.addEventListener("click", fn); stopEditorGrab(x); };
+    const b = (label: string, fn: () => void) => { const x = row.createEl("button", { text: label }); x.addEventListener("click", fn); stopEditorGrab(x); };
     if (opts.onExtend) {
-      b(tr("+30일 더 하기"), () => opts.onExtend(30));
-      b(tr("기간 없이 계속"), () => opts.onExtend(0));
+      b(tr("+30일 더 하기"), () => { void opts.onExtend?.(30); });
+      b(tr("기간 없이 계속"), () => { void opts.onExtend?.(0); });
     }
-    if (opts.onArchive) b(tr("보관함으로"), () => opts.onArchive());
+    if (opts.onArchive) b(tr("보관함으로"), () => { void opts.onArchive?.(); });
   }
 
   renderWeekTop(card, {
     ...opts, kind: "check", today, weekStart, freqOf: () => 0, minDate: startStr,
-    value: (ds) => (set.has(ds) ? 1 : 0),
-    hit: (ds) => set.has(ds),
-    onTap: opts.onToggle ? (ds) => opts.onToggle(ds, !set.has(ds)) : null,
+    value: (ds: string) => (set.has(ds) ? 1 : 0),
+    hit: (ds: string) => set.has(ds),
+    onTap: opts.onToggle ? (ds: string) => opts.onToggle?.(ds, !set.has(ds)) : null,
   });
 
   // 기간 전체 격자: 기존 카드와 같은 주 단위 열. 아직 안 온 날도 회색 칸으로 보임
@@ -90,7 +91,7 @@ export function renderChallenge(parent, name, set, opts) {
   labels.createDiv({ cls: "hg-month" });
   for (let i = 0; i < 7; i++) labels.createDiv({ cls: "hg-daylabel", text: i % 2 === 0 ? DAY_NAMES[(weekStart + i) % 7] : "" });
   const first = weekStartOf(startD, weekStart);
-  const nWeeks = Math.round((weekStartOf(endD, weekStart) - first) / (7 * 86400000)) + 1;
+  const nWeeks = Math.round((weekStartOf(endD, weekStart).getTime() - first.getTime()) / (7 * 86400000)) + 1;
   const counts = weekCounts(set, weekStart);
   let prevMonth = -1;
   for (let w = 0; w < nWeeks; w++) {
@@ -112,11 +113,11 @@ export function renderChallenge(parent, name, set, opts) {
       if (ds > todayStr) cell.addClass(weekHit ? "is-rest" : "is-planned");
       else if (on) cell.addClass("is-on");
       else if (weekHit) cell.addClass("is-rest");
-      const n = Math.round((date - startD) / 86400000) + 1;
+      const n = Math.round((date.getTime() - startD.getTime()) / 86400000) + 1;
       cell.setAttr("aria-label", tr("{0}일째 · {1}월 {2}일 ({3}) · {4}", n, date.getMonth() + 1, date.getDate(), DAY_NAMES[date.getDay()], on ? tr("완료") : weekHit ? tr("이번 주 목표 달성") : ds > todayStr ? tr("예정") : tr("기록 없음")));
       if (opts.onToggle && ds <= todayStr) {
         cell.addClass("is-clickable");
-        cell.addEventListener("click", () => opts.onToggle(ds, !on));
+        cell.addEventListener("click", () => { void opts.onToggle?.(ds, !on); });
       }
     }
   }
@@ -125,7 +126,7 @@ export function renderChallenge(parent, name, set, opts) {
   window.requestAnimationFrame(() => {
     scroll.classList.toggle("is-overflow", scroll.scrollWidth > scroll.clientWidth + 1);
     const t = scroll.querySelector(".is-today");
-    scroll.scrollLeft = t ? t.parentElement.offsetLeft - scroll.clientWidth + 40 : 0;
+    scroll.scrollLeft = t?.instanceOf(HTMLElement) && t.parentElement ? t.parentElement.offsetLeft - scroll.clientWidth + 40 : 0;
   });
   return card;
 }

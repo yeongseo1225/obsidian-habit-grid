@@ -1,3 +1,5 @@
+import type { Prefs } from "./types";
+
 // Units stored in habit files. Hours, minutes and pages are kept as these Korean words
 // internally and translated when shown.
 export const UNIT_HOURS = "시간";
@@ -7,7 +9,7 @@ export const UNIT_PAGES = "쪽";
 // Defaults
 export const DEFAULT_LOG_NAME = "Reminders log";
 
-export const DEFAULT_SETTINGS = {
+export const DEFAULT_SETTINGS: Prefs = {
   folder: "habit-grid",
   lang: "auto",       // 화면 언어: "auto"(옵시디언 언어 따라감) | "ko" | "en"
   keyStyle: "auto",   // 습관 파일에 적는 속성 이름: "auto"(화면 언어 따라감) | "ko" | "en"

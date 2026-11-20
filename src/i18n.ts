@@ -13,12 +13,14 @@ export const KO_DAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 export const EN_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export const EN = {
+export type TrArg = string | number;
+type EnEntry = string | ((a: number, b: TrArg) => string);
+export const EN: Record<string, EnEntry> = {
   "{0}월 {1}일 ({2})": "{0}/{1} ({2})",
   "이전 날": "Previous day",
   "다음 날": "Next day",
   "이 날 할 습관이 없어요": "Nothing scheduled for this day",
-  "{0}월 · {1}": (m, d) => `${MON[m - 1]} · ${d}`,
+  "{0}월 · {1}": (m: number, d: TrArg) => `${MON[m - 1]} · ${d}`,
   "주 횟수": "Times per week",
   "요일 지정": "Specific days",
   "고른 요일 수만큼 하면 그 주는 달성이에요. 쉬는 날에 해도 기록은 남아요.": "Hit as many days as you pick to complete the week. Logging on other days still counts as a record.",
@@ -41,12 +43,12 @@ export const EN = {
   "+30일 더 하기": "Add 30 more days",
   "기간 없이 계속": "Keep going, no end date",
   "보관함으로": "Archive",
-  "{0}월": (m) => MON[m - 1],
+  "{0}월": (m: number) => MON[m - 1],
   "예정": "Upcoming",
   "완료": "Done",
   "기록 없음": "Not logged",
   "{0}일째 · {1}월 {2}일 ({3}) · {4}": "Day {0} · {1}/{2} ({3}) · {4}",
-  "{0}월 · 주 {1}회": (m, n) => `${MON[m - 1]} · ${n}x a week`,
+  "{0}월 · 주 {1}회": (m: number, n: TrArg) => `${MON[m - 1]} · ${n}x a week`,
   "매일": "Daily",
   "달별 목표 정하기": "Set monthly goals",
   "주": "wk",
@@ -63,7 +65,7 @@ export const EN = {
   "{0}년 {1}회": "{0} · {1} times",
   "이번 주 목표 달성": "Weekly goal reached",
   "{0}월 {1}일 ({2}) · {3}{4}": "{0}/{1} ({2}) · {3}{4}",
-  "{0}월 · 하루 {1}": (m, g) => `${MON[m - 1]} · ${g}/day`,
+  "{0}월 · 하루 {1}": (m: number, g: TrArg) => `${MON[m - 1]} · ${g}/day`,
   " · 주 {0}회": " · {0}x a week",
   "목표 정하기": "Set goal",
   "오늘": "Today",
@@ -101,7 +103,7 @@ export const EN = {
   "{0}/{1}회": "{0}/{1}",
   "연도": "Year",
   "이전 달": "Previous month",
-  "{0}년 {1}월": (y, m) => `${MON[m - 1]} ${y}`,
+  "{0}년 {1}월": (y: number, m: TrArg) => `${MON[Number(m) - 1]} ${y}`,
   "다음 달": "Next month",
   "합계 {0} · 달성 {1}/{2}일": "Total {0} · {1} of {2} days met",
   " · {0}가지": " · {0} items",
@@ -346,21 +348,21 @@ export const EN = {
   "단축어가 덧붙이는 기록 파일의 이름(확장자 없이)이에요.": "Name of the log file your shortcut appends to, without the extension.",
 };
 
-export function tr(k, ...a) {
-  let s = LANG === "en" && EN[k] != null ? EN[k] : k;
-  if (typeof s === "function") return s(...a);
-  return a.length ? s.replace(/\{(\d+)\}/g, (_, i) => (a[i] != null ? a[i] : "")) : s;
+export function tr(k: string, ...a: TrArg[]): string {
+  const s: EnEntry = LANG === "en" && EN[k] != null ? EN[k] : k;
+  if (typeof s === "function") return s(Number(a[0]), a[1] ?? "");
+  return a.length ? s.replace(/\{(\d+)\}/g, (_: string, i: string) => { const v = a[Number(i)]; return v != null ? String(v) : ""; }) : s;
 }
 
-export function setLang(l) {
+export function setLang(l: string) {
   LANG = l === "en" ? "en" : "ko";
   DAY_NAMES.splice(0, 7, ...(LANG === "en" ? EN_DAYS : KO_DAYS));
 }
 
-export function resolveLang(pref) {
+export function resolveLang(pref: string) {
   if (pref === "ko" || pref === "en") return pref;
   try { return String(moment.locale() || navigator.language || "").toLowerCase().startsWith("ko") ? "ko" : "en"; } catch { return "en"; }
 }
 
 // 시간·분·쪽은 저장된 단위 값은 그대로 두고, 화면에 보일 때만 번역해요
-export function unitLabel(u) { return u === UNIT_HOURS || u === UNIT_MINUTES || u === UNIT_PAGES ? tr(u) : (u || ""); }
+export function unitLabel(u: string) { return u === UNIT_HOURS || u === UNIT_MINUTES || u === UNIT_PAGES ? tr(u) : (u || ""); }

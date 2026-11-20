@@ -9,13 +9,13 @@ const files = [];
   for (const f of readdirSync(dir)) {
     const p = path.join(dir, f);
     if (statSync(p).isDirectory()) walk(p);
-    else if (p.endsWith(".js") && !p.endsWith(path.join("src", "i18n.js"))) files.push(p);
+    else if ((p.endsWith(".ts") || p.endsWith(".js")) && !p.endsWith(path.join("src", "i18n.ts"))) files.push(p);
   }
 })(src);
 
 test("every Korean tr() text has an English translation", () => {
-  const i18n = readFileSync(path.join(src, "i18n.js"), "utf8");
-  const table = i18n.slice(i18n.indexOf("export const EN = {"));
+  const i18n = readFileSync(path.join(src, "i18n.ts"), "utf8");
+  const table = i18n.slice(i18n.indexOf("export const EN"));
   const keys = new Set([...table.matchAll(/^ {2}"((?:[^"\\]|\\.)*)":/gm)].map((m) => m[1]));
   const missing = [];
   for (const f of files) {

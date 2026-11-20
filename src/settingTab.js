@@ -6,7 +6,7 @@ export class HabitGridSettingTab extends PluginSettingTab {
   constructor(app, plugin) { super(app, plugin); this.plugin = plugin; }
   display() {
     const { containerEl } = this;
-    const s = this.plugin.settings;
+    const s = this.plugin.prefs;
     const save = () => this.plugin.saveSettings();
     containerEl.empty();
 
@@ -58,9 +58,10 @@ export class HabitGridSettingTab extends PluginSettingTab {
       if (this.installCmd) {
         const box = containerEl.createDiv({ cls: "hg-cmdbox" });
         box.createEl("p", { cls: "setting-item-description", text: tr("터미널에 붙여 넣어 실행하고, 미리 알림 접근 허용 창이 뜨면 허용하세요.") });
-        const dir = `${this.plugin.settings.folder}/mac-sync`;
+        const dir = `${this.plugin.prefs.folder}/mac-sync`;
         box.createEl("p", { cls: "setting-item-description", text: tr("만든 파일: {0}", `${dir}/habit-log-sync.sh, ${dir}/install-mac-sync.sh`) });
         box.createEl("code", { text: this.installCmd });
+        box.createEl("p", { cls: "setting-item-description", text: tr("명령을 누르면 전체가 선택돼요. Cmd+C로 복사하세요.") });
         explain(box, [
           tr("스크립트를 ~/.habit-grid-sync/ 폴더에 복사해요."),
           tr("로그인할 때와 5분마다 실행되는 백그라운드 작업을 등록해요 (~/Library/LaunchAgents/md.habitgrid.sync.plist)."),
@@ -71,7 +72,7 @@ export class HabitGridSettingTab extends PluginSettingTab {
           const app = this.plugin.app;
           if (typeof app.showInFolder === "function") app.showInFolder(`${dir}/install-mac-sync.sh`);
           else new Notice(tr("Finder에서 볼트의 {0} 폴더를 열어 보세요", dir));
-        })).addButton((b) => b.setButtonText(tr("명령 복사")).onClick(async () => { await navigator.clipboard.writeText(this.installCmd); new Notice(tr("복사했어요")); }));
+        }));
       }
     }
     new Setting(containerEl).setName(tr("Mac 동기화 사용")).setDesc(tr("스크립트를 설치했다면 켜 주세요. 꺼져 있으면 Mac 동기화 스크립트가 아무것도 가져오지 않아요. 스크립트는 실행될 때마다 이 설정을 확인해요."))
@@ -98,12 +99,12 @@ export class HabitGridSettingTab extends PluginSettingTab {
       new Setting(containerEl).setName(tr("Mac 동기화 지우기")).setDesc(tr("플러그인을 지우기 전에 터미널에서 먼저 실행하세요. 플러그인만 지우면 Mac의 백그라운드 작업이 남아요."));
       const rm = containerEl.createDiv({ cls: "hg-cmdbox" });
       rm.createEl("code", { text: MAC_UNINSTALL_CMD });
+      rm.createEl("p", { cls: "setting-item-description", text: tr("명령을 누르면 전체가 선택돼요. Cmd+C로 복사하세요.") });
       explain(rm, [
         tr("백그라운드 작업을 멈춰요 (launchctl bootout)."),
         tr("자동 실행 설정(~/Library/LaunchAgents/md.habitgrid.sync.plist)과 복사한 스크립트 폴더(~/.habit-grid-sync)를 지워요."),
         tr("볼트 안의 습관 기록과 설정은 지우지 않아요."),
       ]);
-      new Setting(rm).addButton((b) => b.setButtonText(tr("지우는 명령 복사")).onClick(async () => { await navigator.clipboard.writeText(MAC_UNINSTALL_CMD); new Notice(tr("복사했어요")); }));
     }
 
     containerEl.createEl("p", { cls: "setting-item-description", text: tr("설정을 바꾼 뒤에는 노트를 다시 열면 반영돼요.") });

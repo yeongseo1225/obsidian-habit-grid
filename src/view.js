@@ -24,7 +24,7 @@ export class HabitView extends MarkdownRenderChild {
     this.halfOffset = 0;
   }
 
-  get folderPath() { return normalizePath(this.opts.folder || this.plugin.settings.folder); }
+  get folderPath() { return normalizePath(this.opts.folder || this.plugin.prefs.folder); }
 
   onload() {
     void this.render();
@@ -46,7 +46,7 @@ export class HabitView extends MarkdownRenderChild {
 
   // 상세·읽기 전용 상세에서 쓰는 전체 카드 (예전 카드 그대로)
   fullCard(wrap, h, colorOf, readonly, noMore) {
-    const { settings } = this.plugin;
+    const settings = this.plugin.prefs;
     const key = h.key;
     // 노트에 year: 2025 또는 year: this(올해)라고 적으면 그 해로 고정하고 해 넘기기 버튼은 숨겨요
     const fixedYear = this.opts.year === "this" ? new Date().getFullYear() : this.opts.year || 0;
@@ -110,7 +110,7 @@ export class HabitView extends MarkdownRenderChild {
 
   // 오늘 줄(일간·주간)을 그릴 때 쓰는 값과 동작
   todayOpts(colorOf, today, mode, toggle) {
-    const { settings } = this.plugin;
+    const settings = this.plugin.prefs;
     const todayStr = fmt(today);
     return {
       colorOf,
@@ -127,10 +127,10 @@ export class HabitView extends MarkdownRenderChild {
     };
   }
 
-  settingsMode() { return this.plugin.settings.todayMode === "week" ? "week" : "day"; }
+  settingsMode() { return this.plugin.prefs.todayMode === "week" ? "week" : "day"; }
 
   async render() {
-    const { settings } = this.plugin;
+    const settings = this.plugin.prefs;
     const el = this.containerEl;
     const wrap = createDiv({ cls: "hg-wrap" + (this.opts.habits ? "" : " hg-v24") });
     const loaded = await this.plugin.loadHabits(this.folderPath, this.opts.habits);
@@ -202,7 +202,7 @@ export class HabitView extends MarkdownRenderChild {
 
   // 요약 카드(히트맵)에 넘기는 값과 동작. 카드를 누르면 상세로 가요
   compactOpts(h, colorOf, today, mode, rangeStart, rangeEnd, rangeText) {
-    const { settings } = this.plugin;
+    const settings = this.plugin.prefs;
     const isCurrent = today >= rangeStart && today <= rangeEnd;
     return {
       color: colorOf(h), today, weekStart: settings.weekStart, mode, rangeStart, rangeEnd, rangeText,
@@ -231,7 +231,7 @@ export class HabitView extends MarkdownRenderChild {
   }
 
   renderMain(wrap, habits, archived, colorOf, today) {
-    const { settings } = this.plugin;
+    const settings = this.plugin.prefs;
     const mode = settings.gridMode === "half" ? "half" : "year";
 
     // 가장 오래된 기록 (그 앞으로는 못 넘기게)

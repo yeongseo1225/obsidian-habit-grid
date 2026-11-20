@@ -235,7 +235,7 @@ This is an advanced option: you paste one command into Terminal, once. If you wo
 
 ### Set up in 3 steps (macOS only)
 
-1. In Obsidian, open **Settings → Habit Grid → Mac sync**, click **Create install files**, then click **Copy command**.
+1. In Obsidian, open **Settings → Habit Grid → Mac sync**, click **Create install files**, then click the command shown below it to select it all and copy it with Cmd+C.
 2. Open Terminal (press ⌘ Space, type `Terminal`, press Return), paste the command with ⌘ V, and press Return. Allow access to Reminders if macOS asks.
 3. Back in the settings, turn **Use Mac sync** on. It is off by default, so nothing runs until you do.
 
@@ -258,7 +258,7 @@ The script only reads Reminders and appends lines to the log file. Lines already
 
 ### Remove it
 
-Do this **before you uninstall the plugin**: in **Settings → Habit Grid → Mac sync**, click **Copy remove command**, paste it into Terminal, and press Return. (Uninstalling the plugin alone leaves the background job on your Mac; it does nothing without the plugin, but it keeps waking every 5 minutes.)
+Do this **before you uninstall the plugin**: in **Settings → Habit Grid → Mac sync**, click the remove command shown there to select it all, copy it with Cmd+C, paste it into Terminal, and press Return. (Uninstalling the plugin alone leaves the background job on your Mac; it does nothing without the plugin, but it keeps waking every 5 minutes.)
 
 If you already uninstalled the plugin, paste these two lines into Terminal instead:
 
@@ -612,7 +612,7 @@ Mac이 있다면 단축어 대신 작은 스크립트가 완료한 미리 알림
 
 ### 3단계로 설치 (macOS 전용)
 
-1. 옵시디언 **설정 → Habit Grid → Mac 동기화**에서 **설치 파일 만들기**를 누르고 **명령 복사**를 눌러요.
+1. 옵시디언 **설정 → Habit Grid → Mac 동기화**에서 **설치 파일 만들기**를 누른 뒤, 아래에 나온 명령을 눌러 전체를 선택하고 Cmd+C로 복사해요.
 2. 터미널을 열어요(`⌘ Space`를 누르고 `터미널`을 입력해 Return). `⌘ V`로 명령을 붙여 넣고 Return을 눌러요. macOS가 미리 알림 접근을 물어보면 허용하세요.
 3. 설정으로 돌아와 **Mac 동기화 사용**을 켜요. 기본은 꺼짐이라 켜기 전에는 아무것도 하지 않아요.
 
@@ -635,7 +635,7 @@ Mac이 있다면 단축어 대신 작은 스크립트가 완료한 미리 알림
 
 ### 지우기
 
-**플러그인을 지우기 전에** 먼저 하세요. **설정 → Habit Grid → Mac 동기화**에서 **지우는 명령 복사**를 누르고 터미널에 붙여 넣어 Return을 눌러요. (플러그인만 지우면 Mac의 백그라운드 작업이 남아요. 플러그인이 없으면 아무것도 하지 않지만 5분마다 계속 깨어나요.)
+**플러그인을 지우기 전에** 먼저 하세요. **설정 → Habit Grid → Mac 동기화**에서 거기에 나온 지우는 명령을 눌러 전체를 선택하고 Cmd+C로 복사한 뒤 터미널에 붙여 넣어 Return을 눌러요. (플러그인만 지우면 Mac의 백그라운드 작업이 남아요. 플러그인이 없으면 아무것도 하지 않지만 5분마다 계속 깨어나요.)
 
 이미 플러그인을 지웠다면 아래 두 줄을 터미널에 붙여 넣으세요.
 

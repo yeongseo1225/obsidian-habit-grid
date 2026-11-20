@@ -21,8 +21,8 @@ export class HabitGridPlugin extends Plugin {
     const saved = (await this.loadData()) || {};
     // 지금 쓰는 설정만 읽는다 (예전 버전에서 남은 키는 버린다)
     const known = [...Object.keys(DEFAULT_SETTINGS), "habitOrder", "modes", "logCursor"];
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, Object.fromEntries(Object.entries(saved).filter(([k]) => known.includes(k))));
-    setLang(resolveLang(this.settings.lang));
+    this.prefs = Object.assign({}, DEFAULT_SETTINGS, Object.fromEntries(Object.entries(saved).filter(([k]) => known.includes(k))));
+    setLang(resolveLang(this.prefs.lang));
     this.registerMarkdownCodeBlockProcessor("habit", (source, el, ctx) => {
       ctx.addChild(new HabitView(this, el, source));
     });
@@ -40,7 +40,7 @@ export class HabitGridPlugin extends Plugin {
     this.addRibbonIcon("calendar-check", tr("습관 기록하기"), () => this.openRecorder());
 
     this.app.workspace.onLayoutReady(() => {
-      if (!this.settings.initialized) void this.setup(false);
+      if (!this.prefs.initialized) void this.setup(false);
     });
   }
 
@@ -49,7 +49,7 @@ export class HabitGridPlugin extends Plugin {
   }
 
   get dashboardPath() {
-    return normalizePath(`${this.settings.folder}/${this.settings.dashboardName}.md`);
+    return normalizePath(`${this.prefs.folder}/${this.prefs.dashboardName}.md`);
   }
 
   isDashboard(file) {
@@ -61,19 +61,19 @@ export class HabitGridPlugin extends Plugin {
   // 습관 폴더와 대시보드가 없으면 만든다
   async setup(notify) {
     const { vault } = this.app;
-    const folder = normalizePath(this.settings.folder);
+    const folder = normalizePath(this.prefs.folder);
     try {
       if (!vault.getAbstractFileByPath(folder)) await vault.createFolder(folder);
       if (!vault.getAbstractFileByPath(this.dashboardPath)) await vault.create(this.dashboardPath, DASHBOARD_TEMPLATE);
       // 단축어가 기록을 덧붙일 폴더와 빈 기록 파일 (이미 있으면 그대로 둔다)
-      const syncPath = normalizePath(`${folder}/${this.settings.syncDir || "sync"}`);
+      const syncPath = normalizePath(`${folder}/${this.prefs.syncDir || "sync"}`);
       if (!vault.getAbstractFileByPath(syncPath)) await vault.createFolder(syncPath);
       const hasLog = (() => {
         const dir = vault.getAbstractFileByPath(syncPath);
         return dir instanceof TFolder && dir.children.some((c) => c instanceof TFile && c.extension === "md" && this.isLog(c));
       })();
-      if (!hasLog) await vault.create(normalizePath(`${syncPath}/${this.settings.logName}.md`), "");
-      this.settings.initialized = true;
+      if (!hasLog) await vault.create(normalizePath(`${syncPath}/${this.prefs.logName}.md`), "");
+      this.prefs.initialized = true;
       await this.saveSettings();
       if (notify) new Notice(tr("'{0}' 폴더와 대시보드를 준비했어요", folder));
     } catch (e) {
@@ -90,11 +90,11 @@ export class HabitGridPlugin extends Plugin {
 
   isLog(file) {
     const name = file.basename.normalize("NFC");
-    return name === this.settings.logName.normalize("NFC");
+    return name === this.prefs.logName.normalize("NFC");
   }
 
   // Property names to write in habit files: "ko" or "en"
-  keyStyle() { return resolveKeyStyle(this.settings.keyStyle); }
+  keyStyle() { return resolveKeyStyle(this.prefs.keyStyle); }
 
   // Habit 폴더의 습관들을 읽어 온다.
   //  - 습관 파일(공부.md 등): 플러그인만 고친다 (색·목표·직접 기록·제외한 날)
@@ -109,7 +109,7 @@ export class HabitGridPlugin extends Plugin {
     const sub = (name) => folder.children.find((c) => c instanceof TFolder && nfc(c.name) === nfc(name));
     const mdIn = (fd) => (Array.isArray(fd) ? fd : fd ? [fd] : []).flatMap((d) => d.children.filter((f) => f instanceof TFile && f.extension === "md"));
     const subs = (...names) => names.map(sub).filter(Boolean);
-    const hDirs = subs(this.settings.habitsDir || "list", this.settings.archiveDir || "archive"), sDirs = subs(this.settings.syncDir || "sync");
+    const hDirs = subs(this.prefs.habitsDir || "list", this.prefs.archiveDir || "archive"), sDirs = subs(this.prefs.syncDir || "sync");
     const logFiles = mdIn(sDirs).filter((f) => this.isLog(f));
     const logFile = logFiles[0];
     const files = mdIn(hDirs).filter((f) => !this.isDashboard(f) && !this.isLog(f));
@@ -133,7 +133,7 @@ export class HabitGridPlugin extends Plugin {
       };
       const seenLog = new Set();
       // 이미 습관 파일로 옮긴 줄은 건너뛰고, 아직 못 옮긴 줄만 읽는다
-      const cursors = this.settings.logCursor || {};
+      const cursors = this.prefs.logCursor || {};
       const pending = [];
       for (const f of logFiles) {
         const all = parseLog(await app.vault.cachedRead(f));
@@ -166,7 +166,7 @@ export class HabitGridPlugin extends Plugin {
 
     let list = [...groups.values()];
     if (only) list = only.map((h) => groups.get(nfc(h))).filter(Boolean);
-    const order = (this.settings.habitOrder || []).map(nfc);
+    const order = (this.prefs.habitOrder || []).map(nfc);
     const rank = (n) => { const i = order.indexOf(nfc(n)); return i < 0 ? 1e6 : i; };
     list.sort((a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name, "ko"));
 
@@ -230,12 +230,12 @@ export class HabitGridPlugin extends Plugin {
   async tidyLog() {
     const { vault } = this.app;
     await this.importLog();
-    const folder = vault.getAbstractFileByPath(normalizePath(this.settings.folder));
+    const folder = vault.getAbstractFileByPath(normalizePath(this.prefs.folder));
     if (!(folder instanceof TFolder)) return 0;
     const nfc = (x) => x.normalize("NFC");
-    const dir = folder.children.find((c) => c instanceof TFolder && nfc(c.name) === nfc(this.settings.syncDir || "sync"));
+    const dir = folder.children.find((c) => c instanceof TFolder && nfc(c.name) === nfc(this.prefs.syncDir || "sync"));
     const logs = dir ? dir.children.filter((f) => f instanceof TFile && f.extension === "md" && this.isLog(f)) : [];
-    const cursors = Object.assign({}, this.settings.logCursor);
+    const cursors = Object.assign({}, this.prefs.logCursor);
     let total = 0;
     for (const lf of logs) {
       let removed = 0, cursor = cursors[lf.path] || 0;
@@ -246,7 +246,7 @@ export class HabitGridPlugin extends Plugin {
       });
       if (removed) { cursors[lf.path] = cursor; total += removed; }
     }
-    if (total) { this.settings.logCursor = cursors; await this.saveSettings(); }
+    if (total) { this.prefs.logCursor = cursors; await this.saveSettings(); }
     return total;
   }
 
@@ -254,8 +254,8 @@ export class HabitGridPlugin extends Plugin {
   // 파일을 만들기만 하고 실행은 사용자가 한다
   async createMacSyncFiles() {
     const { vault } = this.app;
-    const dir = normalizePath(`${this.settings.folder}/mac-sync`);
-    if (!vault.getAbstractFileByPath(normalizePath(this.settings.folder))) await vault.createFolder(normalizePath(this.settings.folder));
+    const dir = normalizePath(`${this.prefs.folder}/mac-sync`);
+    if (!vault.getAbstractFileByPath(normalizePath(this.prefs.folder))) await vault.createFolder(normalizePath(this.prefs.folder));
     if (!vault.getAbstractFileByPath(dir)) await vault.createFolder(dir);
     for (const [name, text] of Object.entries(MAC_SYNC_FILES)) {
       const path = normalizePath(`${dir}/${name}`);
@@ -278,14 +278,14 @@ export class HabitGridPlugin extends Plugin {
   async doImport() {
     const { vault, fileManager, metadataCache } = this.app;
     if (typeof vault.create !== "function" || !fileManager) return;
-    const folder = vault.getAbstractFileByPath(normalizePath(this.settings.folder));
+    const folder = vault.getAbstractFileByPath(normalizePath(this.prefs.folder));
     if (!(folder instanceof TFolder)) return;
     const nfc = (x) => x.normalize("NFC");
     const sub = (name) => folder.children.find((c) => c instanceof TFolder && nfc(c.name) === nfc(name));
     const mdIn = (fd) => (fd ? fd.children.filter((f) => f instanceof TFile && f.extension === "md") : []);
-    const logFiles = mdIn(sub(this.settings.syncDir || "sync")).filter((f) => this.isLog(f));
+    const logFiles = mdIn(sub(this.prefs.syncDir || "sync")).filter((f) => this.isLog(f));
     if (!logFiles.length) return;
-    const cursors = Object.assign({}, this.settings.logCursor);
+    const cursors = Object.assign({}, this.prefs.logCursor);
     const todo = [];
     for (const lf of logFiles) {
       const entries = parseLog(await vault.read(lf));
@@ -295,12 +295,12 @@ export class HabitGridPlugin extends Plugin {
     if (todo.every((t) => !t.fresh.length && cursors[t.lf.path] === t.entries.length)) return;
 
     const files = new Map();
-    for (const f of [...mdIn(sub(this.settings.habitsDir || "list")), ...mdIn(sub(this.settings.archiveDir || "archive"))]) {
+    for (const f of [...mdIn(sub(this.prefs.habitsDir || "list")), ...mdIn(sub(this.prefs.archiveDir || "archive"))]) {
       if (!this.isDashboard(f) && !this.isLog(f)) files.set(nfc(f.basename), f);
     }
     const prefixes = [...files].filter(([, f]) => fmGet(metadataCache.getFileCache(f)?.frontmatter, "items")).map(([n]) => n);
     const plan = planImport(todo.flatMap((t) => t.fresh), prefixes);
-    const reserved = [nfc(this.settings.logName), nfc(this.settings.dashboardName)];
+    const reserved = [nfc(this.prefs.logName), nfc(this.prefs.dashboardName)];
     for (const h of plan.values()) {
       const safe = safeFileName(h.name);
       if (!safe || reserved.includes(nfc(safe))) continue;
@@ -323,7 +323,7 @@ export class HabitGridPlugin extends Plugin {
       await vault.process(file, (text) => upsertDays(text, h.days, { unit: isItems ? undefined : unit, isItems, amountUnit: h.unit }));
     }
     for (const t of todo) cursors[t.lf.path] = t.entries.length;
-    this.settings.logCursor = cursors;
+    this.prefs.logCursor = cursors;
     await this.saveSettings();
   }
 
@@ -419,14 +419,14 @@ export class HabitGridPlugin extends Plugin {
   }
   async moveHabit(h, delta) {
     const nfc = (x) => x.normalize("NFC");
-    const all = (await this.loadHabits(normalizePath(this.settings.folder))) || [];
+    const all = (await this.loadHabits(normalizePath(this.prefs.folder))) || [];
     const names = all.filter((x) => !x.archived).map((x) => nfc(x.name));
     const i = names.indexOf(nfc(h.name));
     const j = i + delta;
     if (i < 0 || j < 0 || j >= names.length) { new Notice(delta < 0 ? tr("이미 맨 위예요") : tr("이미 맨 아래예요")); return; }
     [names[i], names[j]] = [names[j], names[i]];
-    const rest = (this.settings.habitOrder || []).filter((n) => !names.includes(nfc(n)));
-    this.settings.habitOrder = [...names, ...rest];
+    const rest = (this.prefs.habitOrder || []).filter((n) => !names.includes(nfc(n)));
+    this.prefs.habitOrder = [...names, ...rest];
     await this.saveSettings();
     this.app.workspace.trigger("habit-grid:refresh");
   }
@@ -533,8 +533,8 @@ export class HabitGridPlugin extends Plugin {
   async moveHabitFile(file, toArchive) {
     try {
       const { vault, fileManager } = this.app;
-      const dirName = toArchive ? (this.settings.archiveDir || "archive") : (this.settings.habitsDir || "list");
-      const dir = normalizePath(`${this.settings.folder}/${dirName}`);
+      const dirName = toArchive ? (this.prefs.archiveDir || "archive") : (this.prefs.habitsDir || "list");
+      const dir = normalizePath(`${this.prefs.folder}/${dirName}`);
       if (file.parent && file.parent.path === dir) return;
       if (!vault.getAbstractFileByPath(dir)) await vault.createFolder(dir);
       const dest = normalizePath(`${dir}/${file.name}`);
@@ -547,11 +547,11 @@ export class HabitGridPlugin extends Plugin {
   }
 
   habitFilePath(name) {
-    return normalizePath(`${this.settings.folder}/${this.settings.habitsDir || "list"}/${name}.md`);
+    return normalizePath(`${this.prefs.folder}/${this.prefs.habitsDir || "list"}/${name}.md`);
   }
   async ensureHabitDir() {
     const { vault } = this.app;
-    for (const p of [normalizePath(this.settings.folder), normalizePath(`${this.settings.folder}/${this.settings.habitsDir || "list"}`)]) {
+    for (const p of [normalizePath(this.prefs.folder), normalizePath(`${this.prefs.folder}/${this.prefs.habitsDir || "list"}`)]) {
       if (!vault.getAbstractFileByPath(p)) await vault.createFolder(p);
     }
   }
@@ -630,7 +630,7 @@ export class HabitGridPlugin extends Plugin {
 
   openGoals(h, year) {
     new GoalsModal(this.app, {
-      name: h.name, unit: h.unit, year, measure: h.kind === "measure", color: h.color || this.settings.color || "",
+      name: h.name, unit: h.unit, year, measure: h.kind === "measure", color: h.color || this.prefs.color || "",
       explicit: h.kind === "measure" ? h.explicit : {}, inferred: h.kind === "measure" ? h.inferred : {}, freqs: h.freqsRaw, days: h.days,
       onSave: async (work, fwork, dwork) => {
         const file = await this.mainFileOf(h.target, h.kind === "measure" ? h.unit : null);
@@ -691,5 +691,5 @@ export class HabitGridPlugin extends Plugin {
     }).open();
   }
 
-  async saveSettings() { await this.saveData(this.settings); }
+  async saveSettings() { await this.saveData(this.prefs); }
 }

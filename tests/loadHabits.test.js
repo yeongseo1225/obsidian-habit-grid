@@ -33,7 +33,7 @@ function makeVault(tree) {
 function plugin(tree) {
   const p = new HabitGridPlugin();
   p.app = makeVault(tree);
-  p.settings = { ...DEFAULT_SETTINGS };
+  p.prefs = { ...DEFAULT_SETTINGS };
   return p;
 }
 

@@ -19,7 +19,7 @@ export class RecordModal extends Modal {
   }
   async draw() {
     const { contentEl } = this;
-    const habits = ((await this.plugin.loadHabits(normalizePath(this.plugin.settings.folder))) || []).filter((h) => !h.archived);
+    const habits = ((await this.plugin.loadHabits(normalizePath(this.plugin.prefs.folder))) || []).filter((h) => !h.archived);
     const ds = fmt(this.date);
     const today = new Date();
     contentEl.empty();

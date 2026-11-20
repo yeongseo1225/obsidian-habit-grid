@@ -16,7 +16,7 @@ import { DEFAULT_SETTINGS } from "../src/constants";
 test("createMacSyncFiles writes both files into <folder>/mac-sync and returns the command", async () => {
   const made = new Map(), folders = new Set();
   const p = new HabitGridPlugin();
-  p.settings = { ...DEFAULT_SETTINGS };
+  p.prefs = { ...DEFAULT_SETTINGS };
   p.app = { vault: {
     getAbstractFileByPath: (path) => (folders.has(path) || made.has(path) ? {} : null),
     createFolder: async (path) => { folders.add(path); },

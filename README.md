@@ -35,6 +35,8 @@ The plugin only reads and writes Markdown files in your vault. It makes no netwo
 - **Goals** – a daily goal per month for amount habits, plus goal-week statistics.
 
   ![Amount habit with a daily goal](./images/amount-habit.png)
+
+  ![Monthly goals dialog](./images/monthly-goals.png)
 - **Edit by clicking** – click a cell to add or remove a record, or fill in past days from the log dialog.
 - **Today row** – the top of the dashboard shows what to do today. Switch between *Day* (the last 14 days in a sideways-scrolling strip) and *Week* (one row per habit, one column per weekday; tap a cell to log that day, and page back through earlier weeks). Each row ends with done/goal for the week, using the times per week or weekdays you chose (every day if you set none); once the goal is met the remaining days switch to a light tint of the habit color. The choice is remembered. Use the `▾` button to fold the row down to its header; the state is remembered too.
 - **Archive** – finished habits move to an archive folder; records are kept and can be restored.
@@ -156,6 +158,8 @@ An item habit is a habit with things you did under it, like Workout → squats, 
 - **Delete a day**: *Delete this day's record* in the dialog.
 
 Items are stored on the day's line in the habit file, so you can also edit them by hand.
+
+![Item habit detail](./images/item-habit.png)
 
 ![Item dialog](./images/item-dialog.png)
 

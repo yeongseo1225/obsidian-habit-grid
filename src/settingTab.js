@@ -45,15 +45,21 @@ export class HabitGridSettingTab extends PluginSettingTab {
     new Setting(containerEl).setName(tr("Mac 동기화")).setHeading();
     containerEl.createEl("p", { cls: "setting-item-description", text: tr("Mac에서 동기화 스크립트를 쓸 때만 필요해요. 단축어를 쓰거나 Mac이 없다면 이 구역은 신경 쓰지 않아도 돼요.") });
     if (Platform.isMacOS) {
-      new Setting(containerEl).setName(tr("Mac에 설치")).setDesc(tr("설치 파일을 볼트에 만들고, 터미널에 붙여 넣을 명령을 보여 줘요. 실행은 직접 해요. 설치 뒤에 아래 '사용'을 켜세요."))
+      new Setting(containerEl).setName(tr("Mac에 설치")).setDesc(tr("설치 파일을 볼트에 만들고, 터미널에 붙여 넣을 명령을 보여 줘요. 실행은 직접 해요. 옵시디언 파일 목록에는 .sh 파일이 보이지 않으니 Finder에서 확인하세요. 설치 뒤에 아래 '사용'을 켜세요."))
         .addButton((b) => b.setButtonText(tr("설치 파일 만들기")).onClick(async () => {
           try { this.installCmd = await this.plugin.createMacSyncFiles(); this.display(); } catch (e) { console.error("habit-grid mac files", e); new Notice(tr("설치 파일을 만들지 못했어요")); }
         }));
       if (this.installCmd) {
         const box = containerEl.createDiv({ cls: "hg-cmdbox" });
         box.createEl("p", { cls: "setting-item-description", text: tr("터미널에 붙여 넣어 실행하고, 미리 알림 접근 허용 창이 뜨면 허용하세요.") });
+        const dir = `${this.plugin.settings.folder}/mac-sync`;
+        box.createEl("p", { cls: "setting-item-description", text: tr("만든 파일: {0}", `${dir}/habit-log-sync.sh, ${dir}/install-mac-sync.sh`) });
         box.createEl("code", { text: this.installCmd });
-        new Setting(box).addButton((b) => b.setButtonText(tr("명령 복사")).onClick(async () => { await navigator.clipboard.writeText(this.installCmd); new Notice(tr("복사했어요")); }));
+        new Setting(box).addButton((b) => b.setButtonText(tr("Finder에서 보기")).onClick(() => {
+          const app = this.plugin.app;
+          if (typeof app.showInFolder === "function") app.showInFolder(`${dir}/install-mac-sync.sh`);
+          else new Notice(tr("Finder에서 볼트의 {0} 폴더를 열어 보세요", dir));
+        })).addButton((b) => b.setButtonText(tr("명령 복사")).onClick(async () => { await navigator.clipboard.writeText(this.installCmd); new Notice(tr("복사했어요")); }));
       }
     }
     new Setting(containerEl).setName(tr("Mac 동기화 사용")).setDesc(tr("스크립트를 설치했다면 켜 주세요. 꺼져 있으면 Mac 동기화 스크립트가 아무것도 가져오지 않아요. 스크립트는 실행될 때마다 이 설정을 확인해요."))

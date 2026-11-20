@@ -118,7 +118,7 @@ export class HabitGridPlugin extends Plugin {
     for (const f of files) group(nfc(f.basename)).main = f;
     // 항목 기록이 켜진 습관(items 속성)의 이름으로 시작하는 미리 알림 제목은 그 습관의 항목이 된다
     const filePrefixes = files.filter((f) => fmGet(app.metadataCache.getFileCache(f)?.frontmatter, "items")).map((f) => nfc(f.basename));
-    const prefixes = [...new Set([...(this.settings.groupPrefixes || []).map(nfc), ...filePrefixes])];
+    const prefixes = [...new Set(filePrefixes)];
     if (logFile) {
       const splitPrefix = (title) => {
         for (const p of prefixes) {
@@ -339,11 +339,6 @@ export class HabitGridPlugin extends Plugin {
     await this.app.fileManager.processFrontMatter(file, (fm) => {
       if (turnOn) fmSet(fm, "items", true, this.keyStyle()); else fmDel(fm, "items");
     });
-    const nfc = (x) => x.normalize("NFC");
-    if (!turnOn && (this.settings.groupPrefixes || []).some((p) => nfc(p) === nfc(h.name))) {
-      this.settings.groupPrefixes = this.settings.groupPrefixes.filter((p) => nfc(p) !== nfc(h.name));
-      await this.saveSettings();
-    }
     new Notice(turnOn ? tr("'{0}'에 항목 기록을 켰어요", h.name) : tr("'{0}'의 항목 기록을 껐어요", h.name));
   }
 

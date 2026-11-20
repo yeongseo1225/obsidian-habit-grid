@@ -1,11 +1,11 @@
 import { Plugin, TFile, TFolder, normalizePath, Notice, Menu } from "obsidian";
-import { DASHBOARD_TEMPLATE, DEFAULT_GROUP_PREFIX, DEFAULT_SETTINGS, DONE_RE, PRESET_COLORS, SKIP_RE, UNIT_HOURS, WD_ORDER } from "./constants";
+import { DASHBOARD_TEMPLATE, DEFAULT_SETTINGS, DONE_RE, PRESET_COLORS, SKIP_RE, UNIT_HOURS, WD_ORDER } from "./constants";
 import { resolveLang, setLang, tr, unitLabel } from "./i18n";
 import { fmDel, fmGet, fmKey, fmSet, fmSetUnit, normalizeUnit, resolveKeyStyle, unitForKey } from "./frontmatter";
 import { addDays, fmt, monthKey } from "./dates";
 import { habitStart } from "./stats";
 import { writeQty } from "./format";
-import { convertAmount, knownItems, mergeItems, parseDates, parseEntries, parseItemLines, splitItem, parseLog, parseSkips, parseTitle } from "./parse";
+import { convertAmount, itemsLine, knownItems, mergeItems, parseDates, parseEntries, parseItemLines, splitItem, parseLog, parseSkips, parseTitle } from "./parse";
 import { HabitView } from "./view";
 import { ConfirmModal, DateModal, NumberModal } from "./modals/simple";
 import { GoalsModal } from "./modals/goals";
@@ -116,7 +116,9 @@ export class HabitGridPlugin extends Plugin {
       return groups.get(name);
     };
     for (const f of files) group(nfc(f.basename)).main = f;
-    const prefixes = (this.settings.groupPrefixes || [DEFAULT_GROUP_PREFIX]).map(nfc);
+    // 항목 기록이 켜진 습관(items 속성)의 이름으로 시작하는 미리 알림 제목은 그 습관의 항목이 된다
+    const filePrefixes = files.filter((f) => fmGet(app.metadataCache.getFileCache(f)?.frontmatter, "items")).map((f) => nfc(f.basename));
+    const prefixes = [...new Set([...(this.settings.groupPrefixes || []).map(nfc), ...filePrefixes])];
     if (logFile) {
       const splitPrefix = (title) => {
         for (const p of prefixes) {
@@ -133,6 +135,13 @@ export class HabitGridPlugin extends Plugin {
         const gp = splitPrefix(title);
         if (gp) {
           const g = group(gp.prefix);
+          // "Workout 1h"처럼 이름 뒤에 양만 오면 항목이 아니라 그 습관의 시간·양 기록이다
+          const amt = gp.rest ? parseTitle(`${gp.prefix} ${gp.rest}`) : null;
+          if (amt && amt.base === gp.prefix) {
+            const prev = g.log.get(ds);
+            g.log.set(ds, { amount: Math.max(prev ? prev.amount : 0, amt.amount), unit: amt.unit });
+            continue;
+          }
           if (!g.log.has(ds)) g.log.set(ds, { amount: 0, unit: undefined });
           if (gp.rest) {
             g.items = g.items || new Map();
@@ -250,6 +259,8 @@ export class HabitGridPlugin extends Plugin {
       this.addPeriodItems(menu, h);
       menu.addSeparator();
     }
+    menu.addItem((i) => i.setTitle(h.isItems ? tr("항목 기록 끄기") : tr("항목 기록 켜기")).setIcon("list-checks").onClick(() => this.toggleItems(h)));
+    if (h.isItems && h.kind === "check") menu.addItem((i) => i.setTitle(tr("시간도 기록하기")).setIcon("clock").onClick(() => this.addTimeToItems(h)));
     menu.addItem((i) => i.setTitle(tr("위로 옮기기")).setIcon("arrow-up").onClick(() => this.moveHabit(h, -1)));
     menu.addItem((i) => i.setTitle(tr("아래로 옮기기")).setIcon("arrow-down").onClick(() => this.moveHabit(h, 1)));
     menu.addSeparator();
@@ -314,6 +325,28 @@ export class HabitGridPlugin extends Plugin {
     await this.saveSettings();
     this.app.workspace.trigger("habit-grid:refresh");
   }
+  // 항목 습관에 시간 기록도 붙인다 (습관 파일에 단위를 적는다)
+  async addTimeToItems(h) {
+    const file = await this.mainFileOf(h.target, null);
+    await this.app.fileManager.processFrontMatter(file, (fm) => { fmSetUnit(fm, UNIT_HOURS, this.keyStyle()); });
+    new Notice(tr("'{0}'에 시간 기록을 붙였어요. 칸을 누르면 시간과 항목을 함께 적어요", h.name));
+  }
+
+  // 습관의 항목 기록을 켜거나 끈다. 켜면 같은 이름으로 시작하는 미리 알림도 항목으로 모인다
+  async toggleItems(h) {
+    const file = await this.mainFileOf(h.target, null);
+    const turnOn = !h.isItems;
+    await this.app.fileManager.processFrontMatter(file, (fm) => {
+      if (turnOn) fmSet(fm, "items", true, this.keyStyle()); else fmDel(fm, "items");
+    });
+    const nfc = (x) => x.normalize("NFC");
+    if (!turnOn && (this.settings.groupPrefixes || []).some((p) => nfc(p) === nfc(h.name))) {
+      this.settings.groupPrefixes = this.settings.groupPrefixes.filter((p) => nfc(p) !== nfc(h.name));
+      await this.saveSettings();
+    }
+    new Notice(turnOn ? tr("'{0}'에 항목 기록을 켰어요", h.name) : tr("'{0}'의 항목 기록을 껐어요", h.name));
+  }
+
   // 항목이 있는 습관: 그 날 한 항목을 고른다. 하나도 안 골라도 그 날은 기록돼요
   openItems(h, ds) {
     // 추천은 최근 두 달 안에 쓴 항목만, 사용자가 뺀 항목은 제외
@@ -327,7 +360,9 @@ export class HabitGridPlugin extends Plugin {
       locked: (h.itemsLog && h.itemsLog.get(ds)) || [],
       selected: ((h.itemsFile && h.itemsFile.get(ds)) || []).map(splitItem),
       hasRecord: h.set.has(ds),
-      onSubmit: (items) => this.recordItems(h, ds, items),
+      unit: h.kind === "measure" ? h.unit : null,
+      amount: h.kind === "measure" ? h.entries.get(ds) || 0 : 0,
+      onSubmit: (items, amount) => this.recordItems(h, ds, items, amount),
       onClear: () => this.recordCheck(h, ds, false),
       onHide: (name, done) => this.hideItem(h, name, done),
     }).open();
@@ -351,8 +386,9 @@ export class HabitGridPlugin extends Plugin {
     }).open();
   }
 
-  async recordItems(h, ds, items) {
-    await this.writeDay(h, ds, items.length ? `- [x] ${ds} ${items.join(", ")}` : `- [x] ${ds}`);
+  async recordItems(h, ds, items, amount) {
+    const amountText = h.kind === "measure" && amount > 0 ? writeQty(amount, h.unit) : "";
+    await this.writeDay(h, ds, itemsLine(ds, items, amountText));
     // 다시 기록한 항목은 추천 목록에 돌아온다
     const used = new Set(items.map((t) => splitItem(t).name));
     if ((h.hiddenItems || []).some((n) => used.has(n))) {
@@ -561,13 +597,9 @@ export class HabitGridPlugin extends Plugin {
       else if (freq > 0) fm.push(`${fmKey("weeklyTimes", style)}:`, `  "${key}": ${freq}`);
       if (period > 0) fm.push(`${fmKey("duration", style)}: ${period}`);
       fm.push(`${fmKey("start", style)}: ${start || fmt(new Date())}`);
+      // 항목 기록: 미리 알림 제목이 '이름 + 내용'이면 내용이 이 습관의 항목으로 모인다
+      if (kind === "items") fm.push(`${fmKey("items", style)}: true`);
       await this.app.vault.create(path, fm.length ? `---\n${fm.join("\n")}\n---\n` : "");
-      if (kind === "items") {
-        // 미리 알림 제목이 '이름 + 내용'이면 내용이 항목으로 모이도록, 이름을 묶음 이름으로 등록
-        const nfc = (x) => x.normalize("NFC");
-        const list = this.settings.groupPrefixes || [];
-        if (!list.map(nfc).includes(nfc(name))) { this.settings.groupPrefixes = [...list, name]; await this.saveSettings(); }
-      }
       new Notice(kind === "measure" ? tr("'{0}' 습관을 만들었어요. 대시보드에서 칸을 눌러 기록하세요", name) : tr("'{0}' 습관을 만들었어요", name));
       this.app.workspace.trigger("habit-grid:refresh");
     }).open();

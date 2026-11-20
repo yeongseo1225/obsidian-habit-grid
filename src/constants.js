@@ -5,7 +5,6 @@ export const UNIT_MINUTES = "분";
 export const UNIT_PAGES = "쪽";
 
 // Defaults
-export const DEFAULT_GROUP_PREFIX = "운동";
 export const DEFAULT_LOG_NAME = "Reminders log";
 
 export const DEFAULT_SETTINGS = {
@@ -16,7 +15,7 @@ export const DEFAULT_SETTINGS = {
   weekStart: 1, // 0 = 일요일, 1 = 월요일
   todayMode: "day",  // 맨 위 줄 보기: "day"(일간) | "week"(주간)
   gridMode: "year", // 메인 화면 격자: "year" = 1년씩, "half" = 6개월씩
-  groupPrefixes: [DEFAULT_GROUP_PREFIX],
+  groupPrefixes: [],  // 예전 설정: 미리 알림 제목 앞부분으로 묶을 습관 이름. 지금은 습관 파일의 items 속성을 쓴다
   clickToToggle: true,
   dashboardName: "Habits Dashboard",
   logName: DEFAULT_LOG_NAME,

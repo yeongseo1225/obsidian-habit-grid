@@ -62,15 +62,19 @@ export function weekCellsOf(h, days, todayStr, weekStart) {
     if (ds > todayStr) return { ds, state: "future" };
     if (!startedBy(h, ds, todayStr)) return { ds, state: "off" };
     const due = dueOn(h, date, weekStart, recOf(h, ds));
-    let state = "none", text = "", n = 0;
+    let state = "none", text = "";
+    const n = h.isItems && h.items ? (h.items.get(ds) || []).length : 0;
     if (h.kind === "check") {
       if (h.set.has(ds)) state = "on";
-      if (h.isItems && h.items) n = (h.items.get(ds) || []).length;
     } else {
       const v = h.entries.get(ds) || 0;
       if (v > 0) {
         state = doneOf(h, ds) ? "on" : "partial";
         text = cellAmount(h, v);
+      } else if (n > 0) {
+        // 시간은 안 적고 항목만 적은 날도 한 날로 센다
+        state = "on";
+        text = `✓ ${n}`;
       }
     }
     return { ds, state, text, due, n };
@@ -154,7 +158,7 @@ function renderWeekBar(box, habits, today, opts) {
         cell.setAttr("aria-label", `${h.name} · ${c.ds}`);
         if (open) {
           cell.addEventListener("click", () => {
-            if (h.kind !== "check") opts.onValue(h, c.ds);
+            if (h.kind !== "check") { if (h.isItems && opts.onItems) opts.onItems(h, c.ds); else opts.onValue(h, c.ds); }
             else if (h.isItems && c.state === "on" && opts.onItems) opts.onItems(h, c.ds);
             else opts.onCheck(h, c.ds);
           });
@@ -219,11 +223,14 @@ export function renderTodayBar(parent, habits, today, opts) {
       } else {
         const v = h.entries.get(ds) || 0;
         const g = goalForMonth(h.monthGoals, ds.slice(0, 7));
-        const on = v > 0 && (!g || v >= g);
+        const n = h.isItems && h.items ? (h.items.get(ds) || []).length : 0;
+        const itemsOnly = v === 0 && n > 0;
+        const on = itemsOnly || (v > 0 && (!g || v >= g));
         const b = item.createDiv({ cls: "hg-tbtn is-measure" + (on ? " is-on" : v > 0 ? " is-partial" : "") });
         b.createSpan({ text: h.name });
-        b.createSpan({ cls: "hg-tval", text: h.unit === UNIT_HOURS ? `${fmtDurShort(v)}${g ? " / " + fmtDurShort(g) : ""}` : `${fmtNum(v)}${g ? "/" + fmtNum(g) : ""}${unitLabel(h.unit)}` });
-        b.addEventListener("click", () => opts.onValue(h, ds));
+        if (itemsOnly) b.createSpan({ cls: "hg-tval", text: `✓ ${n}` });
+        else b.createSpan({ cls: "hg-tval", text: h.unit === UNIT_HOURS ? `${fmtDurShort(v)}${g ? " / " + fmtDurShort(g) : ""}` : `${fmtNum(v)}${g ? "/" + fmtNum(g) : ""}${unitLabel(h.unit)}` });
+        b.addEventListener("click", () => (h.isItems && opts.onItems ? opts.onItems(h, ds) : opts.onValue(h, ds)));
         stopEditorGrab(b);
       }
     }

@@ -1,18 +1,40 @@
 import { Modal } from "obsidian";
 import { splitItem } from "../parse";
+import { splitHM } from "../format";
+import { UNIT_HOURS } from "../constants";
 import { tr } from "../i18n";
 
 // 그 날 한 항목을 고르는 창. 항목마다 횟수나 양을 적을 수 있고, 하나도 안 골라도 그 날은 기록돼요
 export class ItemsModal extends Modal {
-  constructor(app, { title, known, lastAmount, locked, selected, hasRecord, onSubmit, onClear, onHide }) {
+  constructor(app, { title, known, lastAmount, locked, selected, hasRecord, unit, amount, onSubmit, onClear, onHide }) {
     super(app);
-    Object.assign(this, { title, known, lastAmount, locked, selected, hasRecord, onSubmit, onClear, onHide });
+    Object.assign(this, { title, known, lastAmount, locked, selected, hasRecord, unit, amount, onSubmit, onClear, onHide });
   }
   onOpen() {
     const { contentEl } = this;
     contentEl.addClass("hg-nh");
     this.titleEl.setText(this.title);
     contentEl.createEl("p", { cls: "hg-modal-desc", text: tr("이 날 한 것을 골라요. 고르지 않아도 기록돼요.") });
+    // 시간·양을 함께 적는 습관이면 맨 위에 양 칸을 둔다
+    let readAmount = null;
+    if (this.unit) {
+      const arow = contentEl.createDiv({ cls: "hg-modal-row" });
+      arow.createSpan({ cls: "hg-modal-unit", text: tr("이날 한 양") });
+      if (this.unit === UNIT_HOURS) {
+        const [H, M] = splitHM(this.amount || 0);
+        const hIn = arow.createEl("input", { type: "number", cls: "hg-modal-input", attr: { min: "0", step: "1", inputmode: "numeric" } });
+        arow.createSpan({ cls: "hg-modal-unit", text: tr("시간") });
+        const mIn = arow.createEl("input", { type: "number", cls: "hg-modal-input", attr: { min: "0", max: "59", step: "5", inputmode: "numeric" } });
+        arow.createSpan({ cls: "hg-modal-unit", text: tr("분") });
+        if (this.amount) { hIn.value = String(H); mIn.value = String(M); }
+        readAmount = () => (parseInt(hIn.value, 10) || 0) + (parseInt(mIn.value, 10) || 0) / 60;
+      } else {
+        const nIn = arow.createEl("input", { type: "number", cls: "hg-modal-input", attr: { min: "0", step: "0.5", inputmode: "decimal" } });
+        arow.createSpan({ cls: "hg-modal-unit", text: this.unit });
+        if (this.amount) nIn.value = String(this.amount);
+        readAmount = () => parseFloat(nIn.value) || 0;
+      }
+    }
     // 미리 알림에서 온 항목은 지울 수 없어서 따로 보여 주고, 같은 이름은 고르는 목록에서 뺀다
     const lockedNames = new Set(this.locked.map((t) => splitItem(t).name));
     const on = new Map(this.selected.map((s) => [s.name, s.amount]));
@@ -63,7 +85,7 @@ export class ItemsModal extends Modal {
         return amount ? `${n} ${amount}` : n;
       });
       this.close();
-      this.onSubmit(items);
+      this.onSubmit(items, readAmount ? readAmount() : 0);
     };
     // 한글을 입력하는 중(조합 중)에 누른 Enter는 글자를 확정하는 키라서 무시한다
     input.addEventListener("keydown", (e) => {

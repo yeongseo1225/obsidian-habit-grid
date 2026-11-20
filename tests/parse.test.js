@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { convertAmount, knownItems, mergeItems, parseAmount, parseBlock, parseItemLines, splitItem, parseDates, parseEntries, parseLog, parseSkips, parseTitle } from "../src/parse";
+import { convertAmount, itemsLine, knownItems, mergeItems, parseAmount, parseBlock, parseItemLines, splitItem, parseDates, parseEntries, parseLog, parseSkips, parseTitle } from "../src/parse";
 
 test("parseTitle reads name, amount and unit from a reminder title", () => {
   assert.deepEqual(parseTitle("공부 2시간"), { base: "공부", amount: 2, unit: "시간" });
@@ -95,4 +95,13 @@ test("parseBlock reads the view option", () => {
   assert.equal(parseBlock("view: today\nhabit: 공부, 운동").view, "today");
   assert.deepEqual(parseBlock("view: today\nhabit: 공부, 운동").habits, ["공부", "운동"]);
   assert.equal(parseBlock("view: nonsense").view, undefined);
+});
+
+test("amounts written with items: itemsLine and parseItemLines agree", () => {
+  assert.equal(itemsLine("2026-11-18", ["스쿼트", "플랭크"], ""), "- [x] 2026-11-18 스쿼트, 플랭크");
+  assert.equal(itemsLine("2026-11-18", ["스쿼트"], "1h30m"), "- [x] 2026-11-18 1h30m | 스쿼트");
+  assert.equal(itemsLine("2026-11-18", [], "1h30m"), "- [x] 2026-11-18 1h30m");
+  const text = ["- [x] 2026-11-18 1h30m | 스쿼트, 플랭크", "- [x] 2026-11-19 45m", "- [x] 2026-11-20 5"].join("\n");
+  assert.deepEqual([...parseItemLines(text)], [["2026-11-18", ["스쿼트", "플랭크"]]]);
+  assert.equal(parseEntries("- [x] 2026-11-18 1h30m | 스쿼트").get("2026-11-18"), 1.5);
 });

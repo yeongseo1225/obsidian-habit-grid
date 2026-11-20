@@ -93,7 +93,7 @@ test("loadHabits merges English hour and minute titles into one habit", async ()
 
 test("loadHabits merges items from reminders and from the habit file", async () => {
   const p = plugin({
-    list: { "운동.md": ["- [x] 2026-11-18 플랭크, 런지\n- [x] 2026-11-19\n- [ ] 2026-11-17\n"] },
+    list: { "운동.md": ["- [x] 2026-11-18 플랭크, 런지\n- [x] 2026-11-19\n- [ ] 2026-11-17\n", { items: true }] },
     sync: { "Reminders log.md": ["- [x] 2026-11-18 운동 스쿼트\n- [x] 2026-11-17 운동 푸시업\n"] },
   });
   const [h] = await p.loadHabits("Habits");
@@ -107,14 +107,70 @@ test("loadHabits merges items from reminders and from the habit file", async () 
 });
 
 test("an items habit with no records still has an empty items list", async () => {
-  const p = plugin({ list: { "운동.md": ["\n"] } });
+  const p = plugin({ list: { "운동.md": ["\n", { 항목: true }] } });
   const [h] = await p.loadHabits("Habits");
   assert.equal(h.isItems, true);
   assert.equal(h.items.size, 0);
 });
 
 test("loadHabits reads the hidden item suggestions", async () => {
-  const p = plugin({ list: { "운동.md": ["- [x] 2026-11-18 스쿼트\n", { hiddenItems: ["런지"] }] } });
+  const p = plugin({ list: { "운동.md": ["- [x] 2026-11-18 스쿼트\n", { items: true, hiddenItems: ["런지"] }] } });
   const [h] = await p.loadHabits("Habits");
   assert.deepEqual(h.hiddenItems, ["런지"]);
+});
+
+test("reminder titles become items only for habits with item logging on", async () => {
+  const p = plugin({
+    list: { "Workout.md": ["\n", { items: true }], "Read.md": ["\n"] },
+    sync: { "Reminders log.md": ["- [x] 2026-11-18 Workout Squats\n- [x] 2026-11-18 Workout Plank 1 min\n- [x] 2026-11-19 Read Book\n"] },
+  });
+  const out = await p.loadHabits("Habits");
+  const by = Object.fromEntries(out.map((h) => [h.name, h]));
+  assert.deepEqual(by.Workout.items.get("2026-11-18"), ["Squats", "Plank 1 min"]);
+  assert.equal(by.Workout.isItems, true);
+  assert.equal(by.Read.isItems, false);
+  assert.ok(by["Read Book"], "an ordinary title stays its own habit");
+});
+
+test("English reminder titles work as habits, amounts and items", async () => {
+  const p = plugin({
+    list: { "Workout.md": ["\n", { items: true }] },
+    sync: { "Reminders log.md": [[
+      "- [x] 2026-11-16 Meditate",
+      "- [x] 2026-11-17 Meditate",
+      "- [x] 2026-11-16 Study 2h",
+      "- [x] 2026-11-17 Study 1h 30m",
+      "- [x] 2026-11-18 Study 45 min",
+      "- [x] 2026-11-16 Read 20 pages",
+      "- [x] 2026-11-17 Run 5km",
+      "- [x] 2026-11-18 Workout Squats",
+      "- [x] 2026-11-18 Workout Pull-ups 3x8",
+      "- [x] 2026-11-18 Meditate",
+      "- [x] 2026-11-18 Meditate",
+    ].join("\n") + "\n"] },
+  });
+  const out = await p.loadHabits("Habits");
+  const by = Object.fromEntries(out.map((h) => [h.name, h]));
+  assert.deepEqual(Object.keys(by).sort(), ["Meditate", "Read", "Run", "Study", "Workout"]);
+  assert.deepEqual([...by.Meditate.set].sort(), ["2026-11-16", "2026-11-17", "2026-11-18"]);
+  assert.equal(by.Study.unit, "시간");
+  assert.deepEqual([...by.Study.entries], [["2026-11-16", 2], ["2026-11-17", 1.5], ["2026-11-18", 0.75]]);
+  assert.equal(by.Read.unit, "쪽");
+  assert.equal(by.Read.entries.get("2026-11-16"), 20);
+  assert.equal(by.Run.unit, "km");
+  assert.deepEqual(by.Workout.items.get("2026-11-18"), ["Squats", "Pull-ups 3x8"]);
+});
+
+test("an items habit can also carry time: titles like Workout 1h are amounts, not items", async () => {
+  const p = plugin({
+    list: { "Workout.md": ["- [x] 2026-11-19 45m | Plank\n", { items: true, unit: "hours" }] },
+    sync: { "Reminders log.md": ["- [x] 2026-11-18 Workout Squats\n- [x] 2026-11-18 Workout 1h\n"] },
+  });
+  const [h] = await p.loadHabits("Habits");
+  assert.equal(h.kind, "measure");
+  assert.equal(h.isItems, true);
+  assert.equal(h.entries.get("2026-11-18"), 1);
+  assert.equal(h.entries.get("2026-11-19"), 0.75);
+  assert.deepEqual(h.items.get("2026-11-18"), ["Squats"]);
+  assert.deepEqual(h.items.get("2026-11-19"), ["Plank"]);
 });

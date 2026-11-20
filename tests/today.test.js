@@ -92,3 +92,10 @@ test("week cells count the items of an items habit", () => {
   assert.equal(cells[2].n, 2);
   assert.equal(cells[3].n, 0);
 });
+
+test("a measured items habit counts a day with items but no time", () => {
+  const h = measure([["2026-11-19", 1]], { isItems: true, items: new Map([["2026-11-18", ["Squats", "Plank"]]]) });
+  const cells = weekCellsOf(h, days, todayStr, 1);
+  assert.deepEqual([cells[2].state, cells[2].text], ["on", "✓ 2"]);
+  assert.deepEqual([cells[3].state, cells[3].text], ["partial", "1h"]);
+});

@@ -84,5 +84,6 @@ export function habitStart(h) {
   if (h.period && h.period.start) return h.period.start;
   if (h.startDate) return h.startDate;
   const all = h.kind === "check" ? [...h.set] : [...h.entries].filter(([, v]) => v > 0).map(([d]) => d);
+  if (h.items) for (const [d, list] of h.items) if (list.length) all.push(d);
   return all.reduce((a, d) => (!a || d < a ? d : a), "");
 }

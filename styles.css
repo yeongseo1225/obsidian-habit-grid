@@ -1476,9 +1476,7 @@
 .hg-wkname.is-short { text-align: center; padding-right: 0; }
 .hg-wkcell {
   width: 100%;
-  max-width: 32px;
-  aspect-ratio: 1;
-  margin: 0 auto;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -14,7 +14,7 @@ Track habits in plain Markdown files and see them as a GitHub-style contribution
 - **Three habit types**
   - *Simple check* – done or not done.
   - *Log amounts* – hours, minutes, pages, km, or any unit you type (e.g. "Study 2h").
-  - *Log items* – one habit with named items underneath (e.g. Workout → squats, plank). Tap a day to check it; tap a checked day to pick what you did or add new items. Picking nothing still counts, and each item can carry an amount such as `30 reps`. Items are stored on the day's line, `- [x] 2026-11-20 squats 30 reps, plank`, and items from Reminders are shown too.
+  - *Log items* – one habit with named items underneath (e.g. Workout → squats, plank). See [Item habits](#item-habits).
 - **Challenges** – give a habit a duration (30 / 66 / 100 days or custom) and it becomes a challenge card with progress, streak, and a "complete" banner. No duration means a regular card.
 - **Repeat rules** – "N times a week" or "specific days" (Mon, Wed, Fri…). Rules can differ per month; a month you leave empty keeps the previous month's rule.
 - **Goals** – a daily goal per month for amount habits, plus goal-week statistics.
@@ -44,6 +44,7 @@ On first start the plugin creates the `habit-grid` folder and a `Habits Dashboar
 | Command | What it does |
 | --- | --- |
 | Open habits dashboard | Opens the dashboard note (ribbon icon too) |
+| Insert day and week view | Inserts a `habit` block with `view: today` at the cursor |
 | Create habits folder and dashboard | Creates the folder and note if missing |
 | Create new habit | Opens the new-habit dialog |
 | Log a habit (pick a date) | Opens the log dialog (ribbon icon too) |
@@ -77,9 +78,9 @@ Every property has a Korean name and an English name. Both are always read; the 
 | `duration` | `기간` | Challenge length in days |
 | `start` | `시작` | Start date, `YYYY-MM-DD`. Set when you create a habit; the week view shows the habit from this date, and a challenge counts from it. Without it, the first record is the start |
 | `archived` | `보관` | `true` when archived |
+| `items` | `항목` | `true` turns on item logging for the habit (see [Item habits](#item-habits)) |
 | `hiddenItems` | `숨긴항목` | Items removed from the suggestions of an items habit (past records are untouched) |
 | `color` | `색` | Card color, e.g. `"#3b82f6"` |
-| `goal` | `목표` | Older single goal value (still read) |
 
 Example:
 
@@ -103,15 +104,39 @@ The plugin writes these properties itself when you use its menus.
 One record per line:
 
 ```
-- [x] 2026-11-19 목 스트레칭
+- [x] 2026-11-19 Stretching
 ```
 
 That is a checked task, a date (`YYYY-MM-DD`), and the Reminders title. Rules:
 
-- The title can carry an amount, e.g. `공부 2시간` or `Study 2h`.
-- The title can be a group name plus an item, e.g. `운동 스쿼트` (group `운동`, item `스쿼트`). Group names are configured through the habit type "Log items".
 - Identical lines (same date and same title) are counted once.
 - Unchecked lines `- [ ] YYYY-MM-DD` in a habit file mark an imported day as removed.
+- In a habit file, a line may add an amount and/or items after the date: `- [x] 2026-11-20 1h30m | squats 30 reps, plank`. The amount comes first, items after a `|`; without an amount, just list the items.
+
+#### What a Reminders title becomes
+
+| Reminder title | Result |
+| --- | --- |
+| `Meditate` | A simple check habit named *Meditate* |
+| `Study 2h`, `Study 1h 30m`, `Study 45 min` | Hours logged for the habit *Study* (`h`, `hr`, `hours`, `m`, `min`, `minutes` and the Korean `시간`, `분` work) |
+| `Read 20 pages` | 20 pages for *Read* (`pages`, `쪽`, `페이지`) |
+| `Run 5km` | 5 km for *Run* |
+| `Workout Squats 30` | The item *Squats 30* of the item habit *Workout* |
+| `Workout 1h` | One hour for the item habit *Workout* (an amount after the name is time, not an item) |
+
+Titles are matched with the habit name from the start of the title, and the match is case sensitive.
+
+## Item habits
+
+An item habit is a habit with things you did under it, like Workout → squats, plank.
+
+- **Turn it on** by creating a habit with the type *Log items*, by choosing **Turn on item logging** in a habit's `⋯` menu, or by adding `items: true` to the habit file. Reminder titles that start with that habit's name (`Workout Squats`) then become its items. Without this, `Workout Squats` is just another habit.
+- **Log it**: tap a day to check it. Tap a checked day to pick what you did or add new items. Picking nothing still counts. Each item can carry an amount such as `30 reps`, and the amount field suggests the last one you used.
+- **Suggestions** show items used in the last two months. The `×` next to a suggestion removes it from the list after you confirm; past records stay, and logging the item again brings it back.
+- **Time too**: choose **Log time too** in the `⋯` menu (or add a unit such as `unit: hours`) and the dialog also asks how long. A day with only items still counts.
+- **Delete a day**: *Delete this day's record* in the dialog.
+
+Items are stored on the day's line in the habit file, so you can also edit them by hand.
 
 ## iPhone Shortcuts integration (Reminders)
 
@@ -126,7 +151,7 @@ Build the shortcut with these actions, in order:
 5. After the loop: **Combine Text** – the repeat results, separated by **New Lines**.
 6. **Append to File** – the combined text, to `habit-grid/sync/Reminders log.md` in your vault (create the file first if needed).
 
-Run it by hand or with a personal automation. Because the shortcut looks back seven days, the same line can be appended more than once; duplicates are counted once. Titles like `Study 2h` or `Workout squats` become amounts and items as described above.
+Run it by hand or with a personal automation. Because the shortcut looks back seven days, the same line can be appended more than once; duplicates are counted once. See *What a Reminders title becomes* above for how titles are read.
 
 The plugin recognizes the log file by name. The default is `Reminders log`; you can set another name in settings. On first setup the plugin creates `habit-grid/sync/` and an empty `Reminders log.md` for the shortcut to append to.
 
@@ -175,7 +200,9 @@ Changes apply when a note is reopened.
 
 ## Limitations
 
-- Reminder titles with an amount are parsed for the units `시간`, `분`, `회`, `쪽`, `페이지`, `km` and `h` (for example `Study 2h`). Other English unit words such as "min" in a reminder title are not parsed yet.
+- Reminder titles are parsed for the units `h`/`hours`, `m`/`min`/`minutes`, `pages`, `km` and the Korean `시간`, `분`, `회`, `쪽`, `페이지`. Other units are not recognized in a title; use an amount habit's file instead.
+- Item names cannot contain commas, and items from Reminders can't be removed in the item dialog.
+- The item dialog opens from the day and week views, not from the year grid cards.
 - Amount habits cannot have a challenge duration yet.
 - Only the Reminders → Markdown direction is supported; editing a reminder does not change old records.
 - Days are counted in the device's local time zone.
@@ -210,6 +237,9 @@ Habit Grid는 마크다운 파일에 적은 습관 기록을 GitHub 잔디 같�
 - 기간(30/66/100일 등)을 정하면 챌린지 카드, 없으면 일반 카드.
 - 반복 방식: 주 N회 또는 요일 지정. 달마다 따로 정할 수 있고 비워 둔 달은 앞 달 값을 이어 써요.
 - 하루 목표(월별), 달성 주 통계, 칸을 눌러 기록 고치기, 오늘 줄(일간: 최근 14일 · 주간: 습관별 요일 표, 선택은 기억해요), 보관함.
+- 항목 습관: 습관 파일에 `items: true`(한국어 `항목: true`)를 적거나 `⋯` 메뉴의 "항목 기록 켜기"를 누르면 돼요. 체크한 날을 다시 누르면 한 항목과 횟수를 적을 수 있고, 시간도 함께 적을 수 있어요.
+- 노트 어디에나 `view: today`(또는 `day`, `week`)를 적은 `habit` 코드 블록으로 일간·주간 기록을 넣을 수 있어요.
+- 습관 파일에 `start`(`시작`)로 시작일을 적어요. 새 습관 창에서 정하고, `⋯` 메뉴의 "시작일 바꾸기"로 바꿀 수 있어요.
 
 ## 폴더와 파일
 

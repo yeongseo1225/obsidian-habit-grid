@@ -144,6 +144,7 @@ export const EN = {
   "아직 기록된 습관이 없어요.": "No habits recorded yet.",
   "{0}으로 돌아가기": "Back to {0}",
   "{0}년": "{0}",
+  "최근 {0}주": "Last {0} weeks",
   "이전 6개월": "Previous 6 months",
   "다음 6개월": "Next 6 months",
   "보관함": "Archive",

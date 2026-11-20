@@ -2,7 +2,7 @@
 
 Turn habit records into a GitHub-style contribution grid inside your notes, with a week view, streaks, goals, and challenges.
 
-> 한국어 설명은 [아래](#한국어)에 있어요.
+> A Korean version of this document is [below](#한국어).
 
 **Quick setup for Apple Reminders:** [iPhone Shortcut](#iphone-shortcuts-integration-reminders) · [Mac sync](#optional-sync-from-a-mac). Pick **one** of the two (see below).
 
@@ -278,7 +278,7 @@ Replace `day` with `week` or `today` for the other views. Add `habit: Study, Wor
 
 ### One habit's year in your own notes
 
-Name a habit and a year to show its year grid on a note:
+Name a habit and a year to show its year grid on a note, like the cards on the dashboard. Tap the card to open the full details:
 
 ````
 ```habit
@@ -287,13 +287,15 @@ year: this
 ```
 ````
 
+![One habit's year grid embedded in a note](./images/note-embed-habit.png)
+
 | `year:` | Shows |
 | --- | --- |
 | `this` | The current year. It moves on by itself when the year changes, so you never edit the note |
 | `2025` | That year, always |
-| *(left out)* | The current year, with buttons to page between years |
+| *(left out)* | The current year (or the last `weeks:` weeks, if you set it) |
 
-With `year:` set, the year buttons are hidden.
+The full details view has its own buttons to page between years.
 
 ## Disclosures
 
@@ -318,8 +320,6 @@ With `year:` set, the year buttons are hidden.
 | Mac sync | Settings for the optional Mac script: use it (off by default), the lists to read, days to read, interval, Sync now, and install and remove commands. See [Mac sync](#optional-sync-from-a-mac) |
 
 Changes apply when a note is reopened.
-
-![Settings](./images/settings.png)
 
 ## Limitations
 
@@ -629,7 +629,7 @@ view: day
 
 ### 노트에 습관 하나의 한 해 넣기
 
-습관 이름과 연도를 적으면 그 습관의 연간 격자를 노트에 보여줘요.
+습관 이름과 연도를 적으면 대시보드 카드처럼 그 습관의 연간 격자를 노트에 보여줘요. 카드를 누르면 자세히 볼 수 있어요.
 
 ````
 ```habit
@@ -638,13 +638,15 @@ year: this
 ```
 ````
 
+![노트에 넣은 습관 하나의 연간 격자](./images/note-embed-habit.png)
+
 | `year:` | 보여주는 것 |
 | --- | --- |
 | `this` (또는 `올해`) | 올해. 해가 바뀌면 저절로 넘어가서 노트를 고칠 필요가 없어요 |
 | `2025` | 그 해로 고정 |
-| (생략) | 올해, 그리고 해를 넘기는 버튼 |
+| (생략) | 올해 (`weeks:`를 적었다면 최근 그 주 수만큼) |
 
-`year:`를 적으면 해 넘기기 버튼은 숨겨요.
+해를 넘기는 버튼은 자세히 보기 화면에 있어요.
 
 ## 공개 사항
 
@@ -669,8 +671,6 @@ year: this
 | Mac 동기화 | 선택 사항인 Mac 스크립트 설정: 사용 여부(기본 꺼짐), 읽을 목록, 가져올 기간, 간격, 지금 동기화, 설치와 지우는 명령. [Mac 동기화](#선택-mac에서-자동으로-가져오기)를 보세요 |
 
 설정을 바꾼 뒤에는 노트를 다시 열면 반영돼요.
-
-![설정](./images/settings.png)
 
 ## 알려진 제한
 

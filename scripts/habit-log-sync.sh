@@ -48,12 +48,16 @@ on run argv
   set out to ""
   tell application "Reminders"
     if not (exists list listName) then error "List not found: " & listName
-    set done to (reminders of list listName whose completed is true and completion date is greater than cutoff)
-    repeat with r in done
-      set d to completion date of r
+    set L to list listName
+    set found to (reminders of L whose completed is true and completion date is greater than cutoff)
+    if (count of found) is 0 then return ""
+    -- read names and dates in bulk: much faster than reading each reminder one by one
+    set ns to name of (reminders of L whose completed is true and completion date is greater than cutoff)
+    set dts to completion date of (reminders of L whose completed is true and completion date is greater than cutoff)
+    repeat with i from 1 to count of ns
+      set d to item i of dts
       set ds to ((year of d) as string) & "-" & my pad((month of d) as integer) & "-" & my pad(day of d)
-      set t to name of r
-      set out to out & ds & tab & t & linefeed
+      set out to out & ds & tab & (item i of ns) & linefeed
     end repeat
   end tell
   return out
@@ -62,6 +66,8 @@ APPLESCRIPT
 }
 
 added=0
+# existing lines without trailing spaces, so "- [x] 2026-11-19 Walk " matches "- [x] 2026-11-19 Walk"
+existing=$(sed -E 's/[[:space:]]+$//' "$LOG")
 IFS=',' read -ra NAMES <<< "$LISTS"
 for raw in "${NAMES[@]}"; do
   name=$(echo "$raw" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
@@ -74,7 +80,9 @@ for raw in "${NAMES[@]}"; do
     [ -z "$day" ] || [ -z "$title" ] && continue
     title=$(echo "$title" | tr '\r\n' '  ')
     line="- [x] $day $title"
-    if ! grep -Fxq -- "$line" "$LOG"; then
+    line=$(echo "$line" | sed -E 's/[[:space:]]+$//')
+    if ! printf '%s\n' "$existing" | grep -Fxq -- "$line"; then
+      existing="$existing"$'\n'"$line"
       # make sure the file ends with a newline before appending
       [ -s "$LOG" ] && [ -n "$(tail -c1 "$LOG")" ] && echo >> "$LOG"
       echo "$line" >> "$LOG"

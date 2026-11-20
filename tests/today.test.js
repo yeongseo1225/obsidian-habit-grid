@@ -28,15 +28,22 @@ test("weekCellsOf flags days that are not scheduled", () => {
   assert.deepEqual(cells.slice(0, 5).map((c) => c.due), [true, false, true, false, true]);
 });
 
-test("days before a habit's first record are off", () => {
+test("habits without an end date can be logged for any past day", () => {
   const cells = weekCellsOf(check(["2026-11-18"]), days, todayStr, 1);
-  assert.deepEqual(cells.slice(0, 3).map((c) => c.state), ["off", "off", "on"]);
+  assert.deepEqual(cells.slice(0, 3).map((c) => c.state), ["none", "none", "on"]);
 });
 
-test("weekHasHabit hides habits that have not started or whose challenge ended", () => {
-  assert.equal(weekHasHabit(check(["2026-11-18"]), monday, todayStr), true);
-  assert.equal(weekHasHabit(check(["2026-12-01"]), addDays(monday, -14), todayStr), false);
+test("days before a challenge starts are off", () => {
+  const cells = weekCellsOf(check([], { period: { days: 30, start: "2026-11-18" } }), days, todayStr, 1);
+  assert.deepEqual(cells.slice(0, 4).map((c) => c.state), ["off", "off", "none", "none"]);
+});
+
+test("weekHasHabit keeps open-ended habits in past weeks and hides challenges outside their period", () => {
+  assert.equal(weekHasHabit(check(["2026-11-18"]), monday), true);
+  assert.equal(weekHasHabit(check(["2026-11-18"]), addDays(monday, -14)), true);
+  const later = check([], { period: { days: 30, start: "2026-11-25" } });
+  assert.equal(weekHasHabit(later, monday), false);
   const ended = check(["2026-09-02"], { period: { days: 10, start: "2026-09-01" } });
-  assert.equal(weekHasHabit(ended, monday, todayStr), false);
-  assert.equal(weekHasHabit(ended, weekStartOf(new Date(2026, 8, 3), 1), todayStr), true);
+  assert.equal(weekHasHabit(ended, monday), false);
+  assert.equal(weekHasHabit(ended, weekStartOf(new Date(2026, 8, 3), 1)), true);
 });

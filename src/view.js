@@ -229,6 +229,8 @@ export class HabitView extends MarkdownRenderChild {
     if (habits.length) renderTodayBar(wrap, habits, today, {
       colorOf,
       weekStart: settings.weekStart,
+      mode: settings.todayMode === "week" ? "week" : "day",
+      onMode: (m) => { settings.todayMode = m; void this.plugin.saveSettings(); void this.render(); },
       onCheck: (h, ds) => this.plugin.recordCheck(h, ds, !h.set.has(ds)),
       onAdd: (h, delta) => this.plugin.recordValue(h, todayStr, Math.round(((h.entries.get(todayStr) || 0) + delta) * 100) / 100),
       onValue: (h, ds) => this.plugin.askValue(h.target, ds, h.entries.get(ds) || 0, h.unit, goalForMonth(h.monthGoals, ds.slice(0, 7))),

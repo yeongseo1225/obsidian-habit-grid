@@ -103,3 +103,10 @@ test("itemsLine writes the date and the items; amount-only lines are not items",
   const text = ["- [x] 2026-11-18 스쿼트 30회, 플랭크", "- [x] 2026-11-19 45m", "- [x] 2026-11-20 5"].join("\n");
   assert.deepEqual([...parseItemLines(text)], [["2026-11-18", ["스쿼트 30회", "플랭크"]]]);
 });
+
+test("parseBlock reads a fixed year or this year", () => {
+  assert.equal(parseBlock("habit: Study\nyear: 2025").year, 2025);
+  assert.equal(parseBlock("year: this").year, "this");
+  assert.equal(parseBlock("연도: 올해").year, "this");
+  assert.equal(parseBlock("year: soon").year, undefined);
+});

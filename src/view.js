@@ -48,12 +48,15 @@ export class HabitView extends MarkdownRenderChild {
   fullCard(wrap, h, colorOf, readonly, noMore) {
     const { settings } = this.plugin;
     const key = h.key;
+    // 노트에 year: 2025 또는 year: this(올해)라고 적으면 그 해로 고정하고 해 넘기기 버튼은 숨겨요
+    const fixedYear = this.opts.year === "this" ? new Date().getFullYear() : this.opts.year || 0;
     const common = {
       color: colorOf(h),
       onColor: (evt) => this.plugin.openColorMenu(evt, h.target, h.unit, h.color),
       weeks: this.opts.weeks || 20,
-      range: this.opts.weeks ? "recent" : "year",
-      year: this.years[key],
+      range: this.opts.weeks && !fixedYear ? "recent" : "year",
+      year: fixedYear || this.years[key],
+      yearFixed: !!fixedYear,
       onYear: (y) => { this.years[key] = y; void this.render(); },
       mode: ((settings.modes || {})[h.name] === "month") ? "month" : "year",
       onMode: (m) => { settings.modes = Object.assign({}, settings.modes, { [h.name]: m }); this.plugin.saveSettings(); void this.render(); },

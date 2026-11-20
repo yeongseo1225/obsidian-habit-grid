@@ -100,9 +100,9 @@ export function renderHabit(parent, name, set, opts) {
       if (!enabled) b.addClass("is-disabled");
       else if (opts.onYear) b.addEventListener("click", () => opts.onYear(target));
     };
-    btn("‹", tr("이전 해"), year - 1, true);
+    if (!opts.yearFixed) btn("‹", tr("이전 해"), year - 1, true);
     nav.createSpan({ cls: "hg-year", text: `${year}` });
-    {
+    if (!opts.yearFixed) {
       const isNow = year >= today.getFullYear();
       btn("›", tr("다음 해"), year + 1, !isNow);
       const back = nav.createSpan({ cls: "hg-yearbtn hg-thisyear" + (isNow ? " is-ghost" : ""), text: tr("올해") });

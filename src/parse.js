@@ -147,6 +147,7 @@ export function parseBlock(source) {
     const key = m[1].toLowerCase(), val = m[2];
     if (key === "habit" || key === "습관") opts.habits = val.split(",").map((s) => s.trim()).filter(Boolean);
     else if (key === "weeks" || key === "주") opts.weeks = parseInt(val, 10);
+    else if (key === "year" || key === "연도") { const v = val.toLowerCase(); if (v === "this" || v === "올해") opts.year = "this"; else if (/^\d{4}$/.test(v)) opts.year = parseInt(v, 10); }
     else if (key === "color" || key === "색") opts.color = val;
     else if (key === "folder" || key === "폴더") opts.folder = val;
     else if (key === "goal" || key === "목표") opts.goal = parseInt(val, 10);

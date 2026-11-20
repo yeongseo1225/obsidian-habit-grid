@@ -1486,8 +1486,10 @@
 .hg-gt-reset { margin-top: 12px; font-size: 0.8em; }
 .hg-goals-modal .hg-nh-chip.is-on { background: var(--hg-on); border-color: var(--hg-on); color: #fff; }
 
-/* 이전·다음 버튼: 배경 없는 화살표 아이콘, 올리면 옅은 배경 */
-.hg-yearbtn { width: 26px; height: 26px; border-radius: 8px; background: transparent; box-shadow: none; color: var(--text-muted); }
-.hg-yearbtn:hover { background: color-mix(in srgb, var(--text-normal) 8%, transparent); color: var(--text-normal); }
+/* 이전·다음 버튼: 배경 없는 화살표 아이콘, 올리면 옅은 배경 (옵시디언 기본 버튼 배경을 덮으려고 button.을 붙인다) */
+.hg-yearbtn:not(.hg-thisyear) { width: 26px; height: 26px; border-radius: 8px; color: var(--text-muted); }
+button.hg-yearbtn { background: transparent; box-shadow: none; padding: 0; }
+button.hg-yearbtn:hover { background: color-mix(in srgb, var(--text-normal) 8%, transparent); color: var(--text-normal); }
 .hg-yearbtn.is-disabled, .hg-yearbtn.is-ghost { opacity: 0.25; cursor: default; pointer-events: none; }
 .hg-yearbtn svg { width: 18px; height: 18px; stroke-width: 2; }
+.hg-thisyear { white-space: nowrap; }

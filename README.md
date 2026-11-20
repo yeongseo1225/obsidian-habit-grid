@@ -16,9 +16,9 @@ You don't need Reminders, though. Everything is stored in plain Markdown files, 
 
 The plugin only reads and writes Markdown files in your vault. It makes no network requests and sends no data anywhere. It is not affiliated with Apple.
 
-<!-- SCREENSHOT: dashboard overview (several habit cards) -->
-<!-- SCREENSHOT: challenge card (30/66/100 days) -->
-<!-- SCREENSHOT: amount habit with monthly goals -->
+![Dashboard with today's habits and a year grid per habit](./images/dashboard.png)
+
+![Week view with weekly goal progress](./images/week-view.png)
 
 ## Features
 
@@ -29,8 +29,12 @@ The plugin only reads and writes Markdown files in your vault. It makes no netwo
   - *Log amounts* – hours, minutes, pages, km, or any unit you type (e.g. "Study 2h").
   - *Log items* – one habit with named items underneath (e.g. Workout → squats, plank). See [Item habits](#item-habits).
 - **Challenges** – give a habit a duration (30 / 66 / 100 days or custom) and it becomes a challenge card with progress, streak, and a "complete" banner. No duration means a regular card.
+
+  ![Challenge card](./images/challenge-card.png)
 - **Repeat rules** – "N times a week" or "specific days" (Mon, Wed, Fri…). Rules can differ per month; a month you leave empty keeps the previous month's rule.
 - **Goals** – a daily goal per month for amount habits, plus goal-week statistics.
+
+  ![Amount habit with a daily goal](./images/amount-habit.png)
 - **Edit by clicking** – click a cell to add or remove a record, or fill in past days from the log dialog.
 - **Today row** – the top of the dashboard shows what to do today. Switch between *Day* (the last 14 days in a sideways-scrolling strip) and *Week* (one row per habit, one column per weekday; tap a cell to log that day, and page back through earlier weeks). Each row ends with done/goal for the week, using the times per week or weekdays you chose (every day if you set none); once the goal is met the remaining days switch to a light tint of the habit color. The choice is remembered.
 - **Archive** – finished habits move to an archive folder; records are kept and can be restored.
@@ -50,7 +54,9 @@ The plugin only reads and writes Markdown files in your vault. It makes no netwo
 2. Copy them into `<your vault>/.obsidian/plugins/habit-grid/`.
 3. Reload the app and enable **Habit Grid** under **Settings → Community plugins**.
 
-On first start the plugin creates the `habit-grid` folder and a `Habits Dashboard` note. You can also run **Create habits folder and dashboard** from the command palette.
+On first start the plugin creates the `habit-grid` folder, a `Habits Dashboard` note, and `sync/Reminders log.md`. The `list/` and `archive/` folders appear when you create or archive your first habit. You can also run **Create habits folder and dashboard** from the command palette.
+
+![New habit dialog](./images/new-habit.png)
 
 ## Commands
 
@@ -151,6 +157,8 @@ An item habit is a habit with things you did under it, like Workout → squats, 
 
 Items are stored on the day's line in the habit file, so you can also edit them by hand.
 
+![Item dialog](./images/item-dialog.png)
+
 ## iPhone Shortcuts integration (Reminders)
 
 Habit logs can be collected from the Reminders app by an iOS Shortcut. It appends completed reminders from a list named **Habit** to `sync/Reminders log.md`.
@@ -195,6 +203,8 @@ view: today
 
 Add `habit: Study, Workout` to show only some habits. The command **Insert day and week view** puts the `view: today` block at the cursor. Tapping works as on the dashboard, so you can log from the note.
 
+![Day and week view embedded in a note](./images/note-embed.png)
+
 ## Settings
 
 | Setting | Description |
@@ -210,6 +220,8 @@ Add `habit: Study, Workout` to show only some habits. The command **Insert day a
 | Click cells to add or remove records | Turn off to make the grid read-only |
 
 Changes apply when a note is reopened.
+
+![Settings](./images/settings.png)
 
 ## Limitations
 

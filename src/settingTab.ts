@@ -14,6 +14,15 @@ interface Row {
   extra?: (host: HTMLElement) => void;
 }
 
+// A read-only text box for a command: clicking selects only the command, so copying never picks up neighbouring rows.
+function cmdField(parent: HTMLElement, text: string) {
+  const ta = parent.createEl("textarea", { cls: "hg-cmdfield", attr: { readonly: "true", rows: "3", spellcheck: "false" } });
+  ta.value = text;
+  ta.addEventListener("focus", () => ta.select());
+  ta.addEventListener("click", () => ta.select());
+  return ta;
+}
+
 export class HabitGridSettingTab extends PluginSettingTab {
   plugin: HabitGridPlugin;
   installCmd?: string;
@@ -121,7 +130,7 @@ export class HabitGridSettingTab extends PluginSettingTab {
           const box = host.createDiv({ cls: "hg-cmdbox" });
           box.createEl("p", { cls: "setting-item-description", text: tr("터미널에 붙여 넣어 실행하고, 미리 알림 접근 허용 창이 뜨면 허용하세요.") });
           box.createEl("p", { cls: "setting-item-description", text: tr("만든 파일: {0}", `${dir}/habit-log-sync.sh, ${dir}/install-mac-sync.sh`) });
-          box.createEl("code", { text: this.installCmd });
+          cmdField(box, this.installCmd);
           box.createEl("p", { cls: "setting-item-description", text: tr("명령을 누르면 전체가 선택돼요. Cmd+C로 복사하세요.") });
           explain(box, [
             tr("스크립트를 ~/.habit-grid-sync/ 폴더에 복사해요."),
@@ -163,7 +172,7 @@ export class HabitGridSettingTab extends PluginSettingTab {
         extra: (host: HTMLElement) => {
           if (!mac) return;
           const rm = host.createDiv({ cls: "hg-cmdbox" });
-          rm.createEl("code", { text: MAC_UNINSTALL_CMD });
+          cmdField(rm, MAC_UNINSTALL_CMD);
           rm.createEl("p", { cls: "setting-item-description", text: tr("명령을 누르면 전체가 선택돼요. Cmd+C로 복사하세요.") });
           explain(rm, [
             tr("백그라운드 작업을 멈춰요 (launchctl bootout)."),

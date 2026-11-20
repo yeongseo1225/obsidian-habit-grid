@@ -1499,5 +1499,6 @@ button.hg-yearbtn:hover { background: color-mix(in srgb, var(--text-normal) 8%, 
 .hg-modal-label { margin: 10px 0 4px; font-size: 0.85em; color: var(--text-muted); }
 .hg-modal-note { margin-top: 10px; font-size: 0.9em; color: var(--text-muted); min-height: 1.4em; }
 .hg-cmdbox { margin: 0 0 12px; padding: 10px 12px; border-radius: 8px; background: var(--background-secondary); }
+.hg-cmdbox .hg-cmdfield { display: block; box-sizing: border-box; width: 100%; margin: 6px 0; padding: 8px 10px; resize: none; font-family: var(--font-monospace); font-size: 0.85em; word-break: break-all; background: var(--background-primary); color: var(--text-normal); border: 1px solid var(--background-modifier-border); border-radius: 6px; }
 .hg-cmdbox code { display: block; margin: 6px 0; font-size: 0.85em; word-break: break-all; user-select: all; }
 .hg-cmdlist { margin: 4px 0 8px 18px; font-size: 0.85em; color: var(--text-muted); }

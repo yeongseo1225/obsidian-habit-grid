@@ -16,7 +16,10 @@ import { HabitGridSettingTab } from "./settingTab";
 
 export class HabitGridPlugin extends Plugin {
   async onload() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const saved = (await this.loadData()) || {};
+    // 지금 쓰는 설정만 읽는다 (예전 버전에서 남은 키는 버린다)
+    const known = [...Object.keys(DEFAULT_SETTINGS), "habitOrder", "modes"];
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, Object.fromEntries(Object.entries(saved).filter(([k]) => known.includes(k))));
     setLang(resolveLang(this.settings.lang));
     this.registerMarkdownCodeBlockProcessor("habit", (source, el, ctx) => {
       ctx.addChild(new HabitView(this, el, source));
@@ -36,12 +39,10 @@ export class HabitGridPlugin extends Plugin {
 
     this.app.workspace.onLayoutReady(() => {
       if (!this.settings.initialized) void this.setup(false);
-      this.tidyTimer = window.setTimeout(() => this.tidyArchive(), 2000);
     });
   }
 
   onunload() {
-    window.clearTimeout(this.tidyTimer);
     activeDocument.querySelectorAll(".hg-pop").forEach((n) => n.remove());
   }
 
@@ -422,20 +423,6 @@ export class HabitGridPlugin extends Plugin {
       await fileManager.renameFile(file, dest);
     } catch (e) { console.error("habit-grid archive move", e); }
   }
-  // 예전에 보관만 해 두고 폴더로 옮기지 않은 습관 파일을 archive 폴더로 정리한다
-  async tidyArchive() {
-    const folder = this.app.vault.getAbstractFileByPath(normalizePath(this.settings.folder));
-    if (!(folder instanceof TFolder)) return;
-    const archName = this.settings.archiveDir || "archive";
-    const list = folder.children.find((c) => c instanceof TFolder && c.name.normalize("NFC") === (this.settings.habitsDir || "list").normalize("NFC"));
-    if (!list) return;
-    for (const f of [...list.children]) {
-      if (!(f instanceof TFile) || f.extension !== "md" || this.isLog(f) || this.isDashboard(f)) continue;
-      const fm = this.app.metadataCache.getFileCache(f)?.frontmatter;
-      if (fm && fmGet(fm, "archived") && list.name !== archName) await this.moveHabitFile(f, true);
-    }
-  }
-
   openRecorder(date) {
     new RecordModal(this.app, this, date || new Date()).open();
   }

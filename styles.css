@@ -1,3 +1,8 @@
+/* Button reset shared by the plugin's custom buttons */
+.hg-yearbtn, .hg-archbtn, .hg-abtn2, .hg-backbtn, .hg-circbtn, .hg-nh-chip, .hg-items-x, .hg-gt {
+  appearance: none; display: inline-block; margin: 0; padding: 0; border: 0; background: none;
+  box-shadow: none; font: inherit; color: inherit; text-align: inherit; text-decoration: none;
+}
 .hg-wrap {
   display: flex;
   flex-direction: column;
@@ -263,7 +268,6 @@
 }
 
 .hg-yearbtn {
-  all: unset;
   width: 24px;
   height: 24px;
   border-radius: 6px;
@@ -1206,7 +1210,7 @@
 .hg-topbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .hg-year-wide { min-width: 0; padding: 0 6px; white-space: nowrap; }
 .hg-archbtn {
-  all: unset; box-sizing: border-box; cursor: pointer; white-space: nowrap;
+  box-sizing: border-box; cursor: pointer; white-space: nowrap;
   display: inline-flex; align-items: center; gap: 6px;
   border: 1px solid var(--background-modifier-border); background: var(--background-secondary);
   border-radius: 999px; padding: 4px 6px 4px 12px; font-size: 0.8em; font-weight: 600;
@@ -1249,7 +1253,7 @@
 .hg-astrip i { flex: 1; height: 10px; border-radius: 3px; background: color-mix(in srgb, var(--hg-on) var(--p, 0%), var(--hg-off)); }
 .hg-aaxis { display: flex; justify-content: space-between; margin-top: 3px; font-size: 9px; color: var(--text-faint); }
 .hg-aact { display: flex; justify-content: flex-end; margin-top: 10px; }
-.hg-abtn2 { all: unset; box-sizing: border-box; cursor: pointer; white-space: nowrap; font-size: 0.8em; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--background-modifier-border); background: var(--background-secondary); }
+.hg-abtn2 { box-sizing: border-box; cursor: pointer; white-space: nowrap; font-size: 0.8em; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--background-modifier-border); background: var(--background-secondary); }
 .hg-abtn2:hover { background: var(--background-modifier-hover); }
 .hg-abtn2.is-primary { background: var(--text-normal); color: var(--background-primary); border-color: transparent; }
 .hg-archbanner { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--background-modifier-border); background: var(--background-secondary); }
@@ -1273,7 +1277,7 @@
 .hg-bb-left { display: flex; justify-content: flex-start; }
 .hg-bb-right { display: flex; justify-content: flex-end; min-height: 36px; }
 .hg-backbtn {
-  all: unset; box-sizing: border-box; cursor: pointer; white-space: nowrap;
+  box-sizing: border-box; cursor: pointer; white-space: nowrap;
   height: 36px; padding: 0 16px; display: inline-flex; align-items: center;
   border-radius: 999px; border: 1px solid var(--background-modifier-border);
   background: var(--background-secondary); font-size: 0.85em; font-weight: 600; color: var(--text-normal);
@@ -1282,7 +1286,7 @@
 .hg-bartitle { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.05em; min-width: 0; }
 .hg-bartitle .hg-dot { flex: none; }
 .hg-circbtn {
-  all: unset; box-sizing: border-box; cursor: pointer; width: 36px; height: 36px; border-radius: 50%;
+  box-sizing: border-box; cursor: pointer; width: 36px; height: 36px; border-radius: 50%;
   display: inline-flex; align-items: center; justify-content: center; font-size: 1.15em; letter-spacing: 1px;
   border: 1px solid var(--background-modifier-border); background: var(--background-primary);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); color: var(--text-muted);
@@ -1311,7 +1315,7 @@
 .hg-nh-ksub { font-size: 0.8em; color: var(--text-muted); padding-left: 26px; cursor: pointer; }
 .hg-nh-extra { padding-left: 26px; display: flex; flex-direction: column; gap: 8px; margin-top: 2px; }
 .hg-nh-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.hg-nh-chip { all: unset; box-sizing: border-box; cursor: pointer; white-space: nowrap; padding: 6px 13px; border-radius: 999px; font-size: 0.85em; font-weight: 600; border: 1px solid var(--background-modifier-border); background: var(--background-primary); color: var(--text-normal); }
+.hg-nh-chip { box-sizing: border-box; cursor: pointer; white-space: nowrap; padding: 6px 13px; border-radius: 999px; font-size: 0.85em; font-weight: 600; border: 1px solid var(--background-modifier-border); background: var(--background-primary); color: var(--text-normal); }
 .hg-nh-chip:hover { background: var(--background-secondary); }
 .hg-nh-chip.is-on { background: var(--text-normal); color: var(--background-primary); border-color: var(--text-normal); }
 .hg-nh-chip.is-disabled { opacity: 0.35; cursor: default; pointer-events: none; }
@@ -1386,12 +1390,12 @@
 /* 오늘 줄: 일간 | 주간 전환과 주간 보기 */
 .hg-todayright { display: inline-flex; align-items: center; gap: 10px; }
 .hg-wkgrid {
+  --hg-on: var(--interactive-accent);
   display: grid;
   grid-template-columns: minmax(72px, 1.9fr) repeat(7, minmax(0, 1fr)) 46px;
   gap: 6px 4px;
   align-items: center;
 }
-.hg-wkrow { display: contents; --hg-on: var(--interactive-accent); }
 .hg-wkday { text-align: center; line-height: 1.15; color: var(--text-muted); font-size: 0.75em; }
 .hg-wkday.is-today { color: var(--text-normal); font-weight: 650; }
 .hg-wkdate { font-variant-numeric: tabular-nums; }
@@ -1444,7 +1448,7 @@
 .hg-items-pick { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
 .hg-items-row { display: flex; align-items: center; gap: 8px; }
 .hg-items-amt { width: 130px; }
-.hg-items-x { all: unset; box-sizing: border-box; cursor: pointer; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--text-faint); font-size: 14px; }
+.hg-items-x { box-sizing: border-box; cursor: pointer; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--text-faint); font-size: 14px; }
 .hg-items-x:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
 
 /* 오늘 줄 접기 */
@@ -1466,7 +1470,7 @@
 .hg-goals-modal { --hg-on: var(--interactive-accent); }
 .hg-gt-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
 @media (max-width: 480px) { .hg-gt-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.hg-gt { all: unset; box-sizing: border-box; cursor: pointer; min-width: 0; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--background-modifier-border); background: var(--background-primary); }
+.hg-gt { box-sizing: border-box; cursor: pointer; min-width: 0; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--background-modifier-border); background: var(--background-primary); }
 .hg-gt:hover { background: var(--background-secondary); }
 .hg-gt-m { font-size: 0.75em; color: var(--text-muted); }
 .hg-gt.is-now .hg-gt-m { color: var(--text-normal); font-weight: 600; }

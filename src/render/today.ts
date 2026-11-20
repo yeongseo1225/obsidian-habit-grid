@@ -150,17 +150,17 @@ function renderWeekBar(box: HTMLElement, habits: Habit[], today: Date, opts: Tod
     grid.createDiv({ cls: "hg-wkcorner" });
     for (const { h, cells, target, achieved } of rows) {
       const complete = achieved >= target;
-      const row = grid.createDiv({ cls: "hg-wkrow" });
       const color = opts.colorOf(h);
-      if (color) row.style.setProperty("--hg-on", color);
+      // 줄마다 색을 따로 쓰려고 칸마다 변수를 넣는다 (줄 래퍼 없이 격자에 바로 붙는다)
+      const paint = <T extends HTMLElement>(el: T): T => { if (color) el.style.setProperty("--hg-on", color); return el; };
       // 긴 이름은 두 줄까지 보이고, 마우스를 올리면 전체 이름이 나온다
-      const nameEl = row.createDiv({ cls: "hg-wkname", text: h.name });
+      const nameEl = paint(grid.createDiv({ cls: "hg-wkname", text: h.name }));
       nameEl.setAttr("aria-label", h.name);
       for (const c of cells) {
         const open = c.state !== "future" && c.state !== "off";
-        const cell = row.createDiv({
+        const cell = paint(grid.createDiv({
           cls: `hg-wkcell is-${c.state}` + (open && !c.due ? " is-rest" : "") + (c.ds === todayStr ? " is-todaycell" : "") + (complete && c.state === "none" ? " is-dim" : ""),
-        });
+        }));
         if (c.text) cell.setText(c.text); else if (c.state === "on") cell.setText(c.n ? `✓ ${c.n}` : "✓");
         cell.setAttr("aria-label", `${h.name} · ${c.ds}`);
         if (open) {
@@ -172,7 +172,7 @@ function renderWeekBar(box: HTMLElement, habits: Habit[], today: Date, opts: Tod
           stopEditorGrab(cell);
         }
       }
-      const goal = row.createDiv({ cls: "hg-wkgoal" + (complete ? " is-done" : ""), text: `${achieved}/${target}` });
+      const goal = paint(grid.createDiv({ cls: "hg-wkgoal" + (complete ? " is-done" : ""), text: `${achieved}/${target}` }));
       if (complete) goal.setAttr("aria-label", tr("이번 주 목표 달성"));
     }
   };

@@ -19,9 +19,11 @@ export class HabitGridSettingTab extends PluginSettingTab {
   installCmd?: string;
   constructor(app: App, plugin: HabitGridPlugin) { super(app, plugin); this.plugin = plugin; }
 
+  // display() is deprecated in 1.13+ but still the only way to draw the tab on older versions (minAppVersion 1.4.4),
+  // so it is called through a cast.
   // Obsidian 1.13+ builds the tab from getSettingDefinitions() so the settings show up in the settings
   // search; older versions call display(). Both use the same rows().
-  rerender() { if (requireApiVersion("1.13.0")) this.update(); else this.display(); }
+  rerender() { if (requireApiVersion("1.13.0")) this.update(); else (this as { display(): void }).display(); }
 
   getSettingDefinitions(): SettingDefinitionItem[] {
     const out: SettingDefinitionItem[] = [];

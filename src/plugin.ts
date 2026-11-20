@@ -266,8 +266,9 @@ export class HabitGridPlugin extends Plugin {
     if (!vault.getAbstractFileByPath(dir)) await vault.createFolder(dir);
     for (const [name, text] of Object.entries(MAC_SYNC_FILES)) {
       const path = normalizePath(`${dir}/${name}`);
+      const body = text.replaceAll("@CONFIG_DIR@", vault.configDir);
       const existing = vault.getAbstractFileByPath(path);
-      if (existing instanceof TFile) await vault.modify(existing, text); else await vault.create(path, text);
+      if (existing instanceof TFile) await vault.modify(existing, body); else await vault.create(path, body);
     }
     const ad = vault.adapter as { getBasePath?: () => string };
     const base = typeof ad.getBasePath === "function" ? ad.getBasePath() : "/path/to/your/vault";

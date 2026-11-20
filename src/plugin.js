@@ -2,7 +2,7 @@ import { Plugin, TFile, TFolder, normalizePath, Notice, Menu } from "obsidian";
 import { DASHBOARD_TEMPLATE, DEFAULT_GROUP_PREFIX, DEFAULT_SETTINGS, DONE_RE, PRESET_COLORS, SKIP_RE, UNIT_HOURS, WD_ORDER } from "./constants";
 import { resolveLang, setLang, tr, unitLabel } from "./i18n";
 import { fmDel, fmGet, fmKey, fmSet, fmSetUnit, normalizeUnit, resolveKeyStyle, unitForKey } from "./frontmatter";
-import { fmt, monthKey } from "./dates";
+import { addDays, fmt, monthKey } from "./dates";
 import { habitStart } from "./stats";
 import { writeQty } from "./format";
 import { convertAmount, knownItems, mergeItems, parseDates, parseEntries, parseItemLines, splitItem, parseLog, parseSkips, parseTitle } from "./parse";
@@ -174,6 +174,7 @@ export class HabitGridPlugin extends Plugin {
         name: g.name, key: `${folderPath}/${g.name}`, fm, color: fmGet(fm, "color") || "", freqs, freqsRaw, days: daysRaw,
         target: g, file: g.main, logDates, items: isItems || items.size ? items : null, itemsLog: logItems, itemsFile: fileItems, isItems,
         archived: !!fmGet(fm, "archived"), startDate: ps,
+        hiddenItems: [].concat(fmGet(fm, "hiddenItems") || []).map(String),
       };
 
       if (!unitRaw && !logUnit) {
@@ -311,22 +312,52 @@ export class HabitGridPlugin extends Plugin {
   }
   // 항목이 있는 습관: 그 날 한 항목을 고른다. 하나도 안 골라도 그 날은 기록돼요
   openItems(h, ds) {
-    const { names, last } = knownItems(h.items);
+    // 추천은 최근 두 달 안에 쓴 항목만, 사용자가 뺀 항목은 제외
+    const { names, last } = knownItems(h.items, fmt(addDays(new Date(), -60)));
+    const hidden = new Set(h.hiddenItems || []);
     const [, m, d] = ds.split("-").map(Number);
     new ItemsModal(this.app, {
       title: tr("{0} · {1}월 {2}일", h.name, m, d),
-      known: names,
+      known: names.filter((n) => !hidden.has(n)),
       lastAmount: last,
       locked: (h.itemsLog && h.itemsLog.get(ds)) || [],
       selected: ((h.itemsFile && h.itemsFile.get(ds)) || []).map(splitItem),
       hasRecord: h.set.has(ds),
       onSubmit: (items) => this.recordItems(h, ds, items),
       onClear: () => this.recordCheck(h, ds, false),
+      onHide: (name, done) => this.hideItem(h, name, done),
+    }).open();
+  }
+
+  // 추천 목록에서 항목을 뺀다. 지난 기록은 그대로 두고, 실수로 지우지 않게 한 번 더 묻는다
+  hideItem(h, name, done) {
+    new ConfirmModal(this.app, {
+      title: tr("'{0}' 항목을 추천 목록에서 뺄까요?", name),
+      desc: [tr("지난 기록은 그대로 남아요. 다시 기록하면 목록에 돌아와요.")],
+      okText: tr("목록에서 빼기"),
+      onOk: async () => {
+        const file = await this.mainFileOf(h.target, null);
+        await this.app.fileManager.processFrontMatter(file, (fm) => {
+          const list = [].concat(fmGet(fm, "hiddenItems") || []).map(String);
+          if (!list.includes(name)) list.push(name);
+          fmSet(fm, "hiddenItems", list, this.keyStyle());
+        });
+        done();
+      },
     }).open();
   }
 
   async recordItems(h, ds, items) {
     await this.writeDay(h, ds, items.length ? `- [x] ${ds} ${items.join(", ")}` : `- [x] ${ds}`);
+    // 다시 기록한 항목은 추천 목록에 돌아온다
+    const used = new Set(items.map((t) => splitItem(t).name));
+    if ((h.hiddenItems || []).some((n) => used.has(n))) {
+      const file = await this.mainFileOf(h.target, null);
+      await this.app.fileManager.processFrontMatter(file, (fm) => {
+        const rest = [].concat(fmGet(fm, "hiddenItems") || []).map(String).filter((n) => !used.has(n));
+        if (rest.length) fmSet(fm, "hiddenItems", rest, this.keyStyle()); else fmDel(fm, "hiddenItems");
+      });
+    }
     const [, m, d] = ds.split("-").map(Number);
     new Notice(tr("{0}월 {1}일 기록을 저장했어요", m, d));
   }

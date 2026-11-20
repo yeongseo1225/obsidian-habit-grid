@@ -4,9 +4,9 @@ import { tr } from "../i18n";
 
 // 그 날 한 항목을 고르는 창. 항목마다 횟수나 양을 적을 수 있고, 하나도 안 골라도 그 날은 기록돼요
 export class ItemsModal extends Modal {
-  constructor(app, { title, known, lastAmount, locked, selected, hasRecord, onSubmit, onClear }) {
+  constructor(app, { title, known, lastAmount, locked, selected, hasRecord, onSubmit, onClear, onHide }) {
     super(app);
-    Object.assign(this, { title, known, lastAmount, locked, selected, hasRecord, onSubmit, onClear });
+    Object.assign(this, { title, known, lastAmount, locked, selected, hasRecord, onSubmit, onClear, onHide });
   }
   onOpen() {
     const { contentEl } = this;
@@ -32,6 +32,11 @@ export class ItemsModal extends Modal {
           if (on.has(name)) on.delete(name); else on.set(name, "");
           draw();
         });
+        if (!on.has(name) && this.onHide) {
+          const x = row.createEl("button", { cls: "hg-items-x", text: "×" });
+          x.setAttr("aria-label", tr("추천 목록에서 빼기"));
+          x.addEventListener("click", () => this.onHide(name, () => { names.splice(names.indexOf(name), 1); draw(); }));
+        }
         if (on.has(name)) {
           const amt = row.createEl("input", { type: "text", cls: "hg-modal-input hg-items-amt", attr: { placeholder: this.lastAmount.get(name) || tr("예: 30회") } });
           amt.value = on.get(name);
@@ -67,7 +72,7 @@ export class ItemsModal extends Modal {
       if (input.value.trim()) add(); else submit();
     });
     const btns = contentEl.createDiv({ cls: "hg-modal-btns" });
-    if (this.hasRecord) btns.createEl("button", { text: tr("지우기") }).addEventListener("click", () => { this.close(); this.onClear(); });
+    if (this.hasRecord) btns.createEl("button", { cls: "mod-warning", text: tr("이날 기록 지우기") }).addEventListener("click", () => { this.close(); this.onClear(); });
     btns.createEl("button", { text: tr("취소") }).addEventListener("click", () => this.close());
     btns.createEl("button", { cls: "mod-cta", text: tr("저장") }).addEventListener("click", submit);
     window.setTimeout(() => input.focus(), 50);

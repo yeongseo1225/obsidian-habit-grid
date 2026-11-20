@@ -1513,3 +1513,5 @@
 .hg-items-pick { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
 .hg-items-row { display: flex; align-items: center; gap: 8px; }
 .hg-items-amt { width: 130px; }
+.hg-items-x { all: unset; box-sizing: border-box; cursor: pointer; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--text-faint); font-size: 14px; }
+.hg-items-x:hover { background: var(--background-modifier-hover); color: var(--text-normal); }

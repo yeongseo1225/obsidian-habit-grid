@@ -98,18 +98,21 @@ export function splitItem(text) {
   return { name: (m[1] || "").trim(), amount: (m[2] || "").trim() };
 }
 
-// 항목 표에서 이름을 많이 쓴 순으로 모으고, 이름마다 가장 최근에 적은 양을 찾는다
-export function knownItems(items) {
-  const count = new Map(), last = new Map();
+// 항목 표에서 이름을 많이 쓴 순으로 모으고, 이름마다 가장 최근에 적은 양을 찾는다.
+// since(YYYY-MM-DD)를 주면 그 날 이후에 한 번이라도 쓴 항목만 추천에 넣는다
+export function knownItems(items, since) {
+  const count = new Map(), last = new Map(), lastUsed = new Map();
   for (const ds of [...(items || new Map()).keys()].sort()) {
     for (const raw of items.get(ds)) {
       const { name, amount } = splitItem(raw);
       if (!name) continue;
       count.set(name, (count.get(name) || 0) + 1);
+      lastUsed.set(name, ds);
       if (amount) last.set(name, amount);
     }
   }
-  return { names: [...count.keys()].sort((a, b) => count.get(b) - count.get(a)), last };
+  const names = [...count.keys()].filter((n) => !since || lastUsed.get(n) >= since).sort((a, b) => count.get(b) - count.get(a));
+  return { names, last };
 }
 
 // 항목 표 두 개를 합친다 (같은 날의 같은 항목은 한 번만)

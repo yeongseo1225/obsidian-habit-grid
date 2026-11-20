@@ -82,3 +82,9 @@ test("knownItems orders names by use and remembers the latest amount", () => {
   assert.equal(k.last.get("스쿼트"), "30회");
   assert.equal(k.last.has("플랭크"), false);
 });
+
+test("knownItems skips items not used since the given date", () => {
+  const items = new Map([["2026-08-01", ["벤치 60kg"]], ["2026-11-18", ["스쿼트 30회"]]]);
+  assert.deepEqual(knownItems(items, "2026-09-21").names, ["스쿼트"]);
+  assert.deepEqual(knownItems(items).names.sort(), ["벤치", "스쿼트"].sort());
+});

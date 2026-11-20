@@ -11,6 +11,7 @@ export const FM = {
   duration: ["기간", "duration"],
   start: ["시작", "start"],
   archived: ["보관", "archived"],
+  hiddenItems: ["숨긴항목", "hiddenItems"],
   color: ["색", "color"],
 };
 

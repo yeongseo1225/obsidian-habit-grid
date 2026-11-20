@@ -77,6 +77,7 @@ Every property has a Korean name and an English name. Both are always read; the 
 | `duration` | `기간` | Challenge length in days |
 | `start` | `시작` | Start date, `YYYY-MM-DD`. Set when you create a habit; the week view shows the habit from this date, and a challenge counts from it. Without it, the first record is the start |
 | `archived` | `보관` | `true` when archived |
+| `hiddenItems` | `숨긴항목` | Items removed from the suggestions of an items habit (past records are untouched) |
 | `color` | `색` | Card color, e.g. `"#3b82f6"` |
 | `goal` | `목표` | Older single goal value (still read) |
 

@@ -112,3 +112,9 @@ test("an items habit with no records still has an empty items list", async () =>
   assert.equal(h.isItems, true);
   assert.equal(h.items.size, 0);
 });
+
+test("loadHabits reads the hidden item suggestions", async () => {
+  const p = plugin({ list: { "운동.md": ["- [x] 2026-11-18 스쿼트\n", { hiddenItems: ["런지"] }] } });
+  const [h] = await p.loadHabits("Habits");
+  assert.deepEqual(h.hiddenItems, ["런지"]);
+});

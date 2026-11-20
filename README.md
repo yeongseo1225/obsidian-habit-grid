@@ -30,10 +30,12 @@ The plugin only reads and writes Markdown files in your vault. It makes no netwo
   - *Simple check* – done or not done.
   - *Log amounts* – hours, minutes, pages, km, or any unit you type (e.g. "Study 2h").
   - *Log items* – one habit with named items underneath (e.g. Workout → squats, plank). See [Item habits](#item-habits).
-- **Challenges** – give a habit a duration (30 / 66 / 100 days or custom) and it becomes a challenge card with progress, streak, and a "complete" banner. No duration means a regular card.
+- **Challenges** – give a habit a duration (30 / 66 / 100 days or custom) and it becomes a challenge card with progress, streak, and a "complete" banner. No duration means a regular card. Once a challenge reaches its weekly goal, the rest of that week is tinted like on regular cards.
 
   ![Challenge card](./images/challenge-card.png)
 - **Repeat rules** – "N times a week" or "specific days" (Mon, Wed, Fri…). Rules can differ per month; a month you leave empty keeps the previous month's rule.
+
+  ![Repeat rules: times per week or specific days, set per month](./images/repeat-rules.png)
 - **Goals** – a daily goal per month for amount habits, plus goal-week statistics.
 
   ![Amount habit with a daily goal](./images/amount-habit.png)
@@ -371,10 +373,12 @@ Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에�
   - *단순 체크* – 했는지 안 했는지만 기록해요.
   - *양 기록* – 시간, 분, 쪽, km, 또는 직접 적은 단위(예: "공부 2시간").
   - *항목 기록* – 한 습관 아래에 이름 붙은 항목을 남겨요(예: 운동 → 스쿼트, 플랭크). [항목 습관](#항목-습관)을 보세요.
-- **챌린지** – 습관에 기간(30 / 66 / 100일 또는 직접 입력)을 주면 진행도, 연속 기록, "완료" 배너가 있는 챌린지 카드가 돼요. 기간이 없으면 일반 카드예요.
+- **챌린지** – 습관에 기간(30 / 66 / 100일 또는 직접 입력)을 주면 진행도, 연속 기록, "완료" 배너가 있는 챌린지 카드가 돼요. 기간이 없으면 일반 카드예요. 챌린지도 주간 목표를 채우면 그 주의 남은 칸이 일반 카드처럼 연하게 표시돼요.
 
   ![챌린지 카드](./images/challenge-card.png)
 - **반복 규칙** – "주 N회" 또는 "요일 지정"(월, 수, 금…). 달마다 규칙을 다르게 정할 수 있고, 비워 둔 달은 앞 달의 규칙을 이어 써요.
+
+  ![반복 규칙: 주 횟수 또는 요일을 달마다 정하기](./images/repeat-rules.png)
 - **목표** – 양 습관의 월별 하루 목표와 목표 달성 주 통계.
 
   ![하루 목표가 있는 양 습관](./images/amount-habit.png)

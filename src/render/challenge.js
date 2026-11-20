@@ -1,6 +1,6 @@
 import { DAY_NAMES, tr } from "../i18n";
 import { addDays, fmt, toDate, weekStartOf } from "../dates";
-import { computeStats, isSchedDay } from "../stats";
+import { computeStats, freqOfWeek, isSchedDay, weekCounts } from "../stats";
 import { addMoreButton, enableHorizontalScroll, makeColorDot, stopEditorGrab } from "../ui";
 import { renderWeekTop } from "./weekTop";
 
@@ -91,10 +91,13 @@ export function renderChallenge(parent, name, set, opts) {
   for (let i = 0; i < 7; i++) labels.createDiv({ cls: "hg-daylabel", text: i % 2 === 0 ? DAY_NAMES[(weekStart + i) % 7] : "" });
   const first = weekStartOf(startD, weekStart);
   const nWeeks = Math.round((weekStartOf(endD, weekStart) - first) / (7 * 86400000)) + 1;
+  const counts = weekCounts(set, weekStart);
   let prevMonth = -1;
   for (let w = 0; w < nWeeks; w++) {
     const top = addDays(first, w * 7);
-    const col = grid.createDiv({ cls: "hg-col" });
+    const wf = freqOfWeek(opts.freqs, top);
+    const weekHit = wf > 0 && (counts.get(fmt(top)) || 0) >= wf;
+    const col = grid.createDiv({ cls: "hg-col" + (weekHit ? " is-week-done" : "") });
     const month = col.createDiv({ cls: "hg-month" });
     const mEnd = addDays(top, 6);
     if (mEnd.getMonth() !== prevMonth) { month.setText(tr("{0}월", mEnd.getMonth() + 1)); prevMonth = mEnd.getMonth(); }
@@ -106,10 +109,11 @@ export function renderChallenge(parent, name, set, opts) {
       if (ds < startStr || ds > endStr) { cell.addClass("is-outside"); continue; }
       if (ds === todayStr) cell.addClass("is-today");
       const on = set.has(ds);
-      if (ds > todayStr) cell.addClass("is-planned");
+      if (ds > todayStr) cell.addClass(weekHit ? "is-rest" : "is-planned");
       else if (on) cell.addClass("is-on");
+      else if (weekHit) cell.addClass("is-rest");
       const n = Math.round((date - startD) / 86400000) + 1;
-      cell.setAttr("aria-label", tr("{0}일째 · {1}월 {2}일 ({3}) · {4}", n, date.getMonth() + 1, date.getDate(), DAY_NAMES[date.getDay()], ds > todayStr ? tr("예정") : on ? tr("완료") : tr("기록 없음")));
+      cell.setAttr("aria-label", tr("{0}일째 · {1}월 {2}일 ({3}) · {4}", n, date.getMonth() + 1, date.getDate(), DAY_NAMES[date.getDay()], on ? tr("완료") : weekHit ? tr("이번 주 목표 달성") : ds > todayStr ? tr("예정") : tr("기록 없음")));
       if (opts.onToggle && ds <= todayStr) {
         cell.addClass("is-clickable");
         cell.addEventListener("click", () => opts.onToggle(ds, !on));

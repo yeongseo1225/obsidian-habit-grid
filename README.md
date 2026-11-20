@@ -8,7 +8,7 @@ Turn habit records into a GitHub-style contribution grid inside your notes, with
 
 ## Made for Apple Reminders, usable without it
 
-Habit Grid was built to **log habits with Apple Reminders and visualize them in your vault**. Complete a reminder on your iPhone, let an iOS Shortcut append it to a Markdown file, and the dashboard shows it. See [iPhone Shortcuts integration](#iphone-shortcuts-integration-reminders).
+Habit Grid was built to **log habits with Apple Reminders and visualize them in your vault**. Complete a reminder on your iPhone, let an iOS Shortcut append it to a Markdown file, and the dashboard shows it. See [iPhone Shortcuts integration](#iphone-shortcuts-integration-reminders) or, on a Mac, [Mac sync](#optional-sync-from-a-mac).
 
 You don't need Reminders, though. Everything is stored in plain Markdown files, so you can also:
 
@@ -190,7 +190,7 @@ Run it by hand or with a personal automation. Because the shortcut looks back se
 
 The plugin recognizes the log file by name. The default is `Reminders log`; you can set another name in settings. On first setup the plugin creates `habit-grid/sync/` and an empty `Reminders log.md` for the shortcut to append to.
 
-### Optional: sync from a Mac
+## Optional: sync from a Mac
 
 > **Use either this or the [iPhone Shortcut](#iphone-shortcuts-integration-reminders), not both.** Duplicate lines are counted once, but one method is simpler and easier to troubleshoot.
 
@@ -315,7 +315,7 @@ Habit Grid는 습관 기록을 GitHub 잔디 같은 격자로 보여주는 플�
 
 ## 애플 미리 알림을 위해 만들었지만, 없이도 쓸 수 있어요
 
-Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에서 시각화**하려고 만들었어요. iPhone에서 미리 알림을 완료하면 iOS 단축어가 그 기록을 마크다운 파일에 덧붙이고, 대시보드에 바로 보여요. [단축어 연동](#단축어-연동)을 보세요.
+Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에서 시각화**하려고 만들었어요. iPhone에서 미리 알림을 완료하면 iOS 단축어가 그 기록을 마크다운 파일에 덧붙이고, 대시보드에 바로 보여요. [단축어 연동](#단축어-연동)이나, Mac이 있다면 [Mac 동기화](#선택-mac에서-자동으로-가져오기)를 보세요.
 
 미리 알림이 없어도 괜찮아요. 모든 기록이 평범한 마크다운 파일이라서 이렇게도 쓸 수 있어요.
 
@@ -404,7 +404,7 @@ Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에�
 
 7일치를 다시 읽기 때문에 같은 줄이 여러 번 붙을 수 있지만, 중복은 한 번만 세요. 처음 설정할 때 `sync/` 폴더와 빈 `Reminders log.md`를 자동으로 만들어요.
 
-### 선택: Mac에서 자동으로 가져오기
+## 선택: Mac에서 자동으로 가져오기
 
 > **이 방법과 [iPhone 단축어](#단축어-연동) 중 하나만 쓰세요.** 둘 다 켜도 같은 줄은 한 번만 세지만, 한 가지만 쓰는 편이 단순하고 문제가 생겼을 때 찾기 쉬워요.
 

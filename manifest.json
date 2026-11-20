@@ -1,7 +1,7 @@
 {
   "id": "habit-grid",
   "name": "Habit Grid",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "minAppVersion": "1.4.4",
   "description": "Track habits with a GitHub-style heatmap grid, week view, streaks, goals, and challenges. Log from Apple Reminders or plain Markdown files.",
   "author": "habit-grid",

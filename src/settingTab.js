@@ -24,6 +24,9 @@ export class HabitGridSettingTab extends PluginSettingTab {
     new Setting(containerEl).setName(tr("미리 알림 기록 파일 이름")).setDesc(tr("단축어가 덧붙이는 기록 파일의 이름(확장자 없이)이에요."))
       .addText((t) => t.setPlaceholder(DEFAULT_SETTINGS.logName).setValue(s.logName).onChange(async (v) => { s.logName = v.trim() || DEFAULT_SETTINGS.logName; await save(); this.plugin.app.workspace.trigger("habit-grid:refresh"); }));
 
+    new Setting(containerEl).setName(tr("동기화할 미리 알림 목록")).setDesc(tr("Mac 동기화 스크립트가 읽을 미리 알림 목록 이름이에요. 쉼표로 여러 개를 적고, 미리 알림 앱의 이름과 똑같이 적어요."))
+      .addText((t) => t.setPlaceholder(DEFAULT_SETTINGS.syncLists).setValue(s.syncLists).onChange(async (v) => { s.syncLists = v.trim() || DEFAULT_SETTINGS.syncLists; await save(); }));
+
     new Setting(containerEl).setName(tr("대시보드 노트 이름")).setDesc(tr("습관 폴더 안에 만들어지고, 습관 목록에서는 빠져요"))
       .addText((t) => t.setPlaceholder(DEFAULT_SETTINGS.dashboardName).setValue(s.dashboardName).onChange(async (v) => { s.dashboardName = v.trim() || DEFAULT_SETTINGS.dashboardName; await save(); }))
       .addButton((b) => b.setButtonText(tr("지금 만들기")).onClick(() => this.plugin.setup(true)));

@@ -300,6 +300,8 @@ export const EN = {
   "습관 파일의 속성(frontmatter)을 새로 적을 때 쓰는 이름이에요. 이미 파일에 있는 속성은 지금 이름을 그대로 써요.": "Names used when the plugin writes properties (frontmatter) in habit files. Properties already in a file keep their current names.",
   "자동 (표시 언어 따라감)": "Auto (follow display language)",
   "미리 알림 기록 파일 이름": "Reminders log file name",
+  "동기화할 미리 알림 목록": "Reminder lists to sync",
+  "Mac 동기화 스크립트가 읽을 미리 알림 목록 이름이에요. 쉼표로 여러 개를 적고, 미리 알림 앱의 이름과 똑같이 적어요.": "Names of the Reminders lists the Mac sync script reads. Separate several with commas and match the names in the Reminders app exactly.",
   "단축어가 덧붙이는 기록 파일의 이름(확장자 없이)이에요.": "Name of the log file your shortcut appends to, without the extension.",
 };
 

@@ -19,6 +19,7 @@ export const DEFAULT_SETTINGS = {
   clickToToggle: true,
   dashboardName: "Habits Dashboard",
   logName: DEFAULT_LOG_NAME,
+  syncLists: "Habits", // Mac 동기화 스크립트가 읽을 미리 알림 목록 이름 (쉼표로 여러 개)
   habitsDir: "list",   // 습관 파일(공부.md 등)이 들어가는 하위 폴더
   archiveDir: "archive", // 보관한 습관 파일이 옮겨지는 하위 폴더
   syncDir: "sync",   // 단축어가 쓰는 미리 알림 기록이 들어가는 하위 폴더

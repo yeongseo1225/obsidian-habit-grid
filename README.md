@@ -121,8 +121,9 @@ That is a checked task, a date (`YYYY-MM-DD`), and the Reminders title. Rules:
 | `Study 2h`, `Study 1h 30m`, `Study 45 min` | Hours logged for the habit *Study* (`h`, `hr`, `hours`, `m`, `min`, `minutes` and the Korean `시간`, `분` work) |
 | `Read 20 pages` | 20 pages for *Read* (`pages`, `쪽`, `페이지`) |
 | `Run 5km` | 5 km for *Run* |
-| `Workout Squats 30` | The item *Squats 30* of the item habit *Workout* |
-| `Workout 1h` | One hour for the item habit *Workout* (an amount after the name is time, not an item) |
+| `Workout Squats 30 reps` | The item *Squats* with *30 reps*, under the item habit *Workout* |
+| `Workout 1h` | One hour for the item habit *Workout* (an amount right after the name is time, not an item) |
+| `운동 스쿼트 30회`, `운동 1h` | The same in Korean: the item *스쿼트* with *30회*, and one hour, for the item habit *운동* |
 
 Titles are matched with the habit name from the start of the title, and the match is case sensitive.
 

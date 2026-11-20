@@ -174,3 +174,14 @@ test("an items habit can also carry time: titles like Workout 1h are amounts, no
   assert.deepEqual(h.items.get("2026-11-18"), ["Squats"]);
   assert.deepEqual(h.items.get("2026-11-19"), ["Plank"]);
 });
+
+test("Korean workout examples: 운동 스쿼트 30회 is an item, 운동 1h is time", async () => {
+  const p = plugin({
+    list: { "운동.md": ["\n", { 항목: true }] },
+    sync: { "Reminders log.md": ["- [x] 2026-11-18 운동 스쿼트 30회\n- [x] 2026-11-18 운동 플랭크 1분\n- [x] 2026-11-19 운동 1h\n"] },
+  });
+  const [h] = await p.loadHabits("Habits");
+  assert.deepEqual(h.items.get("2026-11-18"), ["스쿼트 30회", "플랭크 1분"]);
+  assert.equal(h.kind, "measure");
+  assert.equal(h.entries.get("2026-11-19"), 1);
+});

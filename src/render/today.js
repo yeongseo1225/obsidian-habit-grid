@@ -62,6 +62,13 @@ export function weekCellsOf(h, days, todayStr, weekStart) {
   });
 }
 
+// 이름이 짧은지: 한글·한자는 두 칸, 나머지는 한 칸으로 세어 8칸 이하면 짧은 이름
+export function nameIsShort(name) {
+  let w = 0;
+  for (const ch of name) w += /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af\u4e00-\u9fff]/.test(ch) ? 2 : 1;
+  return w <= 8;
+}
+
 // 일간 | 주간 전환
 function todayTabs(parent, mode, onMode) {
   const tabs = parent.createDiv({ cls: "hg-tabs" });
@@ -115,7 +122,7 @@ function renderWeekBar(box, habits, today, opts) {
       const row = grid.createDiv({ cls: "hg-wkrow" });
       const color = opts.colorOf(h);
       if (color) row.style.setProperty("--hg-on", color);
-      row.createDiv({ cls: "hg-wkname", text: h.name });
+      row.createDiv({ cls: "hg-wkname" + (nameIsShort(h.name) ? " is-short" : ""), text: h.name });
       for (const c of cells) {
         const cell = row.createDiv({ cls: `hg-wkcell is-${c.state}` + (c.state !== "future" && c.state !== "off" && !c.due ? " is-rest" : "") });
         if (c.text) cell.setText(c.text); else if (c.state === "on") cell.setText("✓");

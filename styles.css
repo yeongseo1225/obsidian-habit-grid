@@ -1464,11 +1464,16 @@
 .hg-wkdate { font-variant-numeric: tabular-nums; }
 .hg-wkname {
   font-weight: 550;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.2;
   padding-right: 6px;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
+/* 이름이 짧으면 가운데, 길면 왼쪽 정렬 (두 줄까지) */
+.hg-wkname.is-short { text-align: center; padding-right: 0; }
 .hg-wkcell {
   height: 30px;
   display: flex;

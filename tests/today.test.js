@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { weekCellsOf, weekHasHabit } from "../src/render/today";
+import { nameIsShort, weekCellsOf, weekHasHabit } from "../src/render/today";
 import { addDays, fmt, weekStartOf } from "../src/dates";
 
 const today = new Date(2026, 10, 20); // Fri 2026-11-20
@@ -46,4 +46,12 @@ test("weekHasHabit keeps open-ended habits in past weeks and hides challenges ou
   const ended = check(["2026-09-02"], { period: { days: 10, start: "2026-09-01" } });
   assert.equal(weekHasHabit(ended, monday), false);
   assert.equal(weekHasHabit(ended, weekStartOf(new Date(2026, 8, 3), 1)), true);
+});
+
+test("nameIsShort counts Korean characters as two columns", () => {
+  assert.equal(nameIsShort("공부"), true);
+  assert.equal(nameIsShort("월수금"), true);
+  assert.equal(nameIsShort("Study"), true);
+  assert.equal(nameIsShort("아침 스트레칭"), false);
+  assert.equal(nameIsShort("Morning stretching"), false);
 });

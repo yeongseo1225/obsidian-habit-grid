@@ -28,9 +28,16 @@ test("weekCellsOf flags days that are not scheduled", () => {
   assert.deepEqual(cells.slice(0, 5).map((c) => c.due), [true, false, true, false, true]);
 });
 
-test("habits without an end date can be logged for any past day", () => {
+test("without a start date, the first record starts the habit", () => {
   const cells = weekCellsOf(check(["2026-11-18"]), days, todayStr, 1);
+  assert.deepEqual(cells.slice(0, 3).map((c) => c.state), ["off", "off", "on"]);
+});
+
+test("an explicit start date unlocks the days from that date", () => {
+  const cells = weekCellsOf(check(["2026-11-18"], { startDate: "2026-11-10" }), days, todayStr, 1);
   assert.deepEqual(cells.slice(0, 3).map((c) => c.state), ["none", "none", "on"]);
+  const later = weekCellsOf(check([], { startDate: "2026-11-18" }), days, todayStr, 1);
+  assert.deepEqual(later.slice(0, 4).map((c) => c.state), ["off", "off", "none", "none"]);
 });
 
 test("days before a challenge starts are off", () => {
@@ -38,14 +45,25 @@ test("days before a challenge starts are off", () => {
   assert.deepEqual(cells.slice(0, 4).map((c) => c.state), ["off", "off", "none", "none"]);
 });
 
-test("weekHasHabit keeps open-ended habits in past weeks and hides challenges outside their period", () => {
-  assert.equal(weekHasHabit(check(["2026-11-18"]), monday), true);
-  assert.equal(weekHasHabit(check(["2026-11-18"]), addDays(monday, -14)), true);
+test("weekHasHabit shows a habit from the week it started", () => {
+  const prevWeek = addDays(monday, -7);
+  assert.equal(weekHasHabit(check(["2026-11-18"]), monday, todayStr), true);
+  assert.equal(weekHasHabit(check(["2026-11-18"]), prevWeek, todayStr), false);
+  assert.equal(weekHasHabit(check(["2026-11-18"], { startDate: "2026-11-09" }), prevWeek, todayStr), true);
+  assert.equal(weekHasHabit(check([], { startDate: "2026-11-09" }), addDays(monday, -14), todayStr), false);
+});
+
+test("weekHasHabit shows a habit with no start and no records only this week", () => {
+  assert.equal(weekHasHabit(check([]), monday, todayStr), true);
+  assert.equal(weekHasHabit(check([]), addDays(monday, -7), todayStr), false);
+});
+
+test("weekHasHabit hides challenges outside their period", () => {
   const later = check([], { period: { days: 30, start: "2026-11-25" } });
-  assert.equal(weekHasHabit(later, monday), false);
+  assert.equal(weekHasHabit(later, monday, todayStr), false);
   const ended = check(["2026-09-02"], { period: { days: 10, start: "2026-09-01" } });
-  assert.equal(weekHasHabit(ended, monday), false);
-  assert.equal(weekHasHabit(ended, weekStartOf(new Date(2026, 8, 3), 1)), true);
+  assert.equal(weekHasHabit(ended, monday, todayStr), false);
+  assert.equal(weekHasHabit(ended, weekStartOf(new Date(2026, 8, 3), 1), todayStr), true);
 });
 
 test("nameIsShort counts Korean characters as two columns", () => {

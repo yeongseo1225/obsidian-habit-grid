@@ -40,7 +40,7 @@ function plugin(tree) {
 test("loadHabits reads habits from list/ and records from sync/", async () => {
   const p = plugin({
     list: {
-      "Study.md": ["- [x] 2026-11-18 1h30m\n", { unit: "hours", monthGoals: { "2026-11": 2 }, weeklyTimes: { "2026-11": 4 } }],
+      "Study.md": ["- [x] 2026-11-18 1h30m\n", { unit: "hours", monthGoals: { "2026-11": 2 }, weeklyTimes: { "2026-11": 4 }, start: "2026-11-10" }],
       "Read.md": ["- [x] 2026-11-19\n", { duration: 30, start: "2026-11-01", color: "#3b82f6" }],
     },
     sync: { "Reminders log.md": ["- [x] 2026-11-20 Read\n- [x] 2026-11-20 Study 2h\n- [x] 2026-11-20 Study 2h\n"] },
@@ -55,6 +55,8 @@ test("loadHabits reads habits from list/ and records from sync/", async () => {
   assert.equal(by.Study.entries.get("2026-11-20"), 2);
   assert.deepEqual(by.Study.explicit, { "2026-11": 2 });
   assert.deepEqual(by.Study.freqsRaw, { "2026-11": 4 });
+  assert.equal(by.Study.startDate, "2026-11-10");
+  assert.equal(by.Read.startDate, "2026-11-01");
 
   assert.equal(by.Read.kind, "check");
   assert.deepEqual([...by.Read.set].sort(), ["2026-11-19", "2026-11-20"]);

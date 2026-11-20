@@ -154,6 +154,8 @@ export class HabitGridPlugin extends Plugin {
       const fm = (g.main && app.metadataCache.getFileCache(g.main)?.frontmatter) || {};
       const unitRaw = normalizeUnit(fmGet(fm, "unit"));
       const skips = parseSkips(mainText);
+      const rawStart = fmGet(fm, "start") ? String(fmGet(fm, "start")).slice(0, 10) : "";
+      const ps = /^\d{4}-\d{2}-\d{2}$/.test(rawStart) ? rawStart : "";
       const logDates = new Set(g.log.keys());
       const logUnit = [...g.log.values()].map((v) => v.unit).find(Boolean);
       const freqsRaw = Object.assign({}, fmGet(fm, "weeklyTimes") || {});
@@ -164,16 +166,15 @@ export class HabitGridPlugin extends Plugin {
       const base = {
         name: g.name, key: `${folderPath}/${g.name}`, fm, color: fmGet(fm, "color") || "", freqs, freqsRaw, days: daysRaw,
         target: g, file: g.main, logDates, items: g.items || null,
-        archived: !!fmGet(fm, "archived"),
+        archived: !!fmGet(fm, "archived"), startDate: ps,
       };
 
       if (!unitRaw && !logUnit) {
         const set = new Set([...parseDates(mainText), ...logDates]);
         for (const ds of skips) set.delete(ds);
         const pd = parseInt(fmGet(fm, "duration") ?? 0, 10) || 0;
-        const ps = fmGet(fm, "start") ? String(fmGet(fm, "start")).slice(0, 10) : "";
         out.push({ ...base, kind: "check", set,
-          period: pd > 0 && /^\d{4}-\d{2}-\d{2}$/.test(ps) ? { days: pd, start: ps } : null });
+          period: pd > 0 && ps ? { days: pd, start: ps } : null });
         continue;
       }
 
@@ -469,7 +470,7 @@ export class HabitGridPlugin extends Plugin {
   }
 
   newHabit() {
-    new NewHabitModal(this.app, async ({ name, kind, unit, goal, freq, days, period }) => {
+    new NewHabitModal(this.app, async ({ name, kind, unit, goal, freq, days, period, start }) => {
       const path = this.habitFilePath(name);
       if (this.app.vault.getAbstractFileByPath(path)) { new Notice(tr("같은 이름의 습관이 이미 있어요")); return; }
       await this.ensureHabitDir();
@@ -482,7 +483,8 @@ export class HabitGridPlugin extends Plugin {
       }
       if (days && days.length) fm.push(`${fmKey("weekdays", style)}:`, `  "${key}": [${WD_ORDER.filter((d) => days.includes(d)).join(", ")}]`);
       else if (freq > 0) fm.push(`${fmKey("weeklyTimes", style)}:`, `  "${key}": ${freq}`);
-      if (period > 0) fm.push(`${fmKey("duration", style)}: ${period}`, `${fmKey("start", style)}: ${fmt(new Date())}`);
+      if (period > 0) fm.push(`${fmKey("duration", style)}: ${period}`);
+      fm.push(`${fmKey("start", style)}: ${start || fmt(new Date())}`);
       await this.app.vault.create(path, fm.length ? `---\n${fm.join("\n")}\n---\n` : "");
       if (kind === "items") {
         // 미리 알림 제목이 '이름 + 내용'이면 내용이 항목으로 모이도록, 이름을 묶음 이름으로 등록

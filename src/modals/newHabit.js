@@ -1,7 +1,7 @@
 import { Notice, Modal } from "obsidian";
 import { UNIT_HOURS, UNIT_MINUTES, UNIT_PAGES, WD_ORDER } from "../constants";
 import { DAY_NAMES, tr, unitLabel } from "../i18n";
-import { addDays } from "../dates";
+import { addDays, fmt, toDate } from "../dates";
 import { daysLabel, fmtNum } from "../format";
 
 // 새 습관 만들기 창
@@ -11,8 +11,9 @@ export class NewHabitModal extends Modal {
     const { contentEl } = this;
     contentEl.addClass("hg-nh");
     this.titleEl.setText(tr("새 습관"));
-    const S = { name: "", kind: "check", unit: UNIT_HOURS, customUnit: "", goalH: "", goalM: "", goalN: "", freq: 0, mode: "count", days: [], period: 0, customPeriod: false };
+    const S = { name: "", kind: "check", unit: UNIT_HOURS, customUnit: "", goalH: "", goalM: "", goalN: "", freq: 0, mode: "count", days: [], period: 0, customPeriod: false, start: "" };
     const today = new Date();
+    S.start = fmt(today);
     const md = (d) => `${d.getMonth() + 1}/${d.getDate()}`;
     const unitName = () => (S.unit === "직접" ? S.customUnit.trim() : S.unit);
     const goalValue = () => {
@@ -146,7 +147,14 @@ export class NewHabitModal extends Modal {
         r.createSpan({ text: tr("일") });
         window.setTimeout(() => i.focus(), 30);
       }
-      if (!noPeriod && S.period > 0) ps.createDiv({ cls: "hg-nh-note", text: tr("시작 오늘({0}) · 끝 {1} · 챌린지 카드로 보여요", md(today), md(addDays(today, S.period - 1))) });
+      const startD = toDate(S.start);
+      if (!noPeriod && S.period > 0) ps.createDiv({ cls: "hg-nh-note", text: tr("시작 {0} · 끝 {1} · 챌린지 카드로 보여요", md(startD), md(addDays(startD, S.period - 1))) });
+      // 시작일
+      const ss = body.createDiv({ cls: "hg-nh-sec" });
+      lab(ss, tr("시작일"), tr("이 날부터 기록해요"));
+      const sin = ss.createEl("input", { type: "date", cls: "hg-nh-input hg-nh-date" });
+      sin.value = S.start;
+      sin.addEventListener("change", () => { S.start = sin.value || fmt(today); draw(); });
       sum();
     };
 
@@ -158,6 +166,7 @@ export class NewHabitModal extends Modal {
         name: S.name, kind: S.kind,
         unit: S.kind === "measure" ? unitName() : "",
         goal: S.kind === "measure" ? goalValue() : 0,
+        start: S.start,
         freq: S.mode === "count" ? S.freq : 0, days: S.mode === "days" && S.days.length > 0 && S.days.length < 7 ? S.days : [], period: S.kind === "measure" ? 0 : (S.period > 0 ? S.period : 0),
       });
     });

@@ -23,18 +23,27 @@ export function doneOf(h, ds) {
 export function recOf(h, ds) {
   return h.kind === "check" ? h.set.has(ds) : (h.entries.get(ds) || 0) > 0;
 }
-// 그 날 기록할 수 있는 습관인지. 기간이 있는 챌린지는 시작일부터, 기간 없는 습관은 지난 날 언제든
-export function startedBy(h, ds, todayStr) {
-  if (ds >= todayStr) return true;
-  if (h.period && h.period.start) return h.period.start <= ds;
-  return true;
+// 습관이 시작된 날: 챌린지 시작일, 정해 둔 시작일, 없으면 첫 기록일 (아무것도 없으면 빈 문자열)
+export function habitStart(h) {
+  if (h.period && h.period.start) return h.period.start;
+  if (h.startDate) return h.startDate;
+  const all = h.kind === "check" ? [...h.set] : [...h.entries].filter(([, v]) => v > 0).map(([d]) => d);
+  return all.reduce((a, d) => (!a || d < a ? d : a), "");
 }
 
-// 주간 보기: 그 주에 보여 줄 습관인지
-export function weekHasHabit(h, ws) {
+// 그 날 이미 시작한 습관인지 (시작일 전이면 아직 아님)
+export function startedBy(h, ds, todayStr) {
+  if (ds >= todayStr) return true;
+  const start = habitStart(h);
+  return !!start && start <= ds;
+}
+
+// 주간 보기: 그 주에 보여 줄 습관인지. 시작한 주부터 보여요
+export function weekHasHabit(h, ws, todayStr) {
   const end = fmt(addDays(ws, 6));
+  const start = habitStart(h);
+  if (start ? start > end : end < todayStr) return false;
   if (h.period && h.period.start) {
-    if (h.period.start > end) return false;
     const periodEnd = fmt(addDays(toDate(h.period.start), h.period.days - 1));
     if (periodEnd < fmt(ws)) return false;
   }
@@ -105,7 +114,7 @@ function renderWeekBar(box, habits, today, opts) {
     const ws = addDays(thisWeek, -7 * offset);
     const we = addDays(ws, 6);
     const days = [0, 1, 2, 3, 4, 5, 6].map((i) => addDays(ws, i));
-    const rows = habits.filter((h) => weekHasHabit(h, ws)).map((h) => {
+    const rows = habits.filter((h) => weekHasHabit(h, ws, todayStr)).map((h) => {
       const cells = weekCellsOf(h, days, todayStr, weekStart);
       const target = weekTargetOf(h, ws);
       const achieved = cells.filter((c) => c.state === "on").length;

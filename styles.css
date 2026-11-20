@@ -1508,3 +1508,4 @@
   background: color-mix(in srgb, var(--text-normal) 8%, transparent);
 }
 .hg-wkgoal.is-done { background: var(--hg-on); color: #fff; font-weight: 600; }
+.hg-nh-date { width: auto; }

@@ -75,7 +75,7 @@ Every property has a Korean name and an English name. Both are always read; the 
 | `weeklyTimes` | `월별횟수` | Times per week, per month: `"2026-11": 3` |
 | `weekdays` | `월별요일` | Specific weekdays per month, `0` = Sunday … `6` = Saturday: `"2026-11": [1, 3, 5]` |
 | `duration` | `기간` | Challenge length in days |
-| `start` | `시작` | Challenge start date, `YYYY-MM-DD` |
+| `start` | `시작` | Start date, `YYYY-MM-DD`. Set when you create a habit; the week view shows the habit from this date, and a challenge counts from it. Without it, the first record is the start |
 | `archived` | `보관` | `true` when archived |
 | `color` | `색` | Card color, e.g. `"#3b82f6"` |
 | `goal` | `목표` | Older single goal value (still read) |

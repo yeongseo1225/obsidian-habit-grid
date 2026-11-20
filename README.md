@@ -183,27 +183,46 @@ The plugin recognizes the log file by name. The default is `Reminders log`; you 
 ```
 ````
 
-Optional lines inside the block: `habit: Study, Workout` (only these habits), `weeks: 20`, `color: #3b82f6`, `folder: habit-grid`.
+Optional lines inside the block: `habit: Study, Workout` (only these habits), `year: this` (see below), `weeks: 20`, `color: #3b82f6`, `folder: habit-grid`.
 
 ### Day and week view in your own notes
 
-Put the day or week records anywhere, for example on a home note:
+Put the day or week records anywhere, for example on a home note. Pick the code you want and paste it:
+
+| Code | Shows |
+| --- | --- |
+| `view: today` | Day and week together, with a *Day / Week* switch (the choice is remembered and shared with the dashboard) |
+| `view: day` | The day strip only |
+| `view: week` | The week table only |
 
 ````
 ```habit
-view: today
+view: day
 ```
 ````
 
-| `view:` | Shows |
-| --- | --- |
-| `today` | The day and week view with a *Day / Week* switch (the choice is remembered and shared with the dashboard) |
-| `day` | The day strip only |
-| `week` | The week table only |
-
-Add `habit: Study, Workout` to show only some habits. The command **Insert day and week view** puts the `view: today` block at the cursor. Tapping works as on the dashboard, so you can log from the note.
+Replace `day` with `week` or `today` for the other views. Add `habit: Study, Workout` to show only some habits. The command **Insert day and week view** puts the `view: today` block at the cursor. Tapping works as on the dashboard, so you can log from the note. Each view has a **Today** / **This week** button that jumps back after you page through earlier days or weeks.
 
 ![Day and week view embedded in a note](./images/note-embed.png)
+
+### One habit's year in your own notes
+
+Name a habit and a year to show its year grid on a note:
+
+````
+```habit
+habit: Study
+year: this
+```
+````
+
+| `year:` | Shows |
+| --- | --- |
+| `this` | The current year. It moves on by itself when the year changes, so you never edit the note |
+| `2025` | That year, always |
+| *(left out)* | The current year, with buttons to page between years |
+
+With `year:` set, the year buttons are hidden.
 
 ## Settings
 
@@ -340,14 +359,40 @@ Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에�
 
 ## 노트에 일간·주간 기록 넣기
 
-노트 어디에나 아래 코드 블록을 적으면 일간·주간 기록을 넣을 수 있어요.
+홈 노트 같은 곳에 원하는 코드를 붙여 넣어요.
+
+| 코드 | 보여주는 것 |
+| --- | --- |
+| `view: today` | 일간·주간을 한 번에, *일간 / 주간* 전환 버튼 포함 (고른 쪽은 기억하고 대시보드와 같이 써요) |
+| `view: day` | 일간만 |
+| `view: week` | 주간만 |
 
 ````
 ```habit
-view: today
+view: day
 ```
 ````
- `view: day` 또는 `view: week`는 한쪽만 보여주고, `habit: 공부, 운동`을 더하면 일부 습관만 보여줘요. 명령 "일간·주간 기록 코드 넣기"가 커서 위치에 넣어 줘요.
+
+`day`를 `week`나 `today`로 바꾸면 다른 보기가 돼요. `habit: 공부, 운동`을 더하면 일부 습관만 보여줘요. 명령 "일간·주간 기록 코드 넣기"가 커서 위치에 `view: today`를 넣어 줘요. 지난 날이나 주로 넘겨 본 뒤에는 **오늘** / **이번 주** 버튼으로 바로 돌아와요.
+
+## 노트에 습관 하나의 한 해 넣기
+
+습관 이름과 연도를 적으면 그 습관의 연간 격자를 보여줘요.
+
+````
+```habit
+습관: 공부
+연도: 올해
+```
+````
+
+| `연도:` | 보여주는 것 |
+| --- | --- |
+| `올해` (또는 `this`) | 올해. 해가 바뀌면 저절로 넘어가서 노트를 고칠 필요가 없어요 |
+| `2025` | 그 해로 고정 |
+| (생략) | 올해, 그리고 해를 넘기는 버튼 |
+
+`연도`를 적으면 해 넘기기 버튼은 숨겨요.
 
 ## 설정
 

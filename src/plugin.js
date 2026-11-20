@@ -6,6 +6,7 @@ import { addDays, fmt, monthKey } from "./dates";
 import { habitStart } from "./stats";
 import { writeQty } from "./format";
 import { convertAmount, itemsLine, knownItems, mergeItems, parseDates, parseEntries, parseItemLines, splitItem, parseLog, parseSkips, parseTitle } from "./parse";
+import { planImport, safeFileName, upsertDays } from "./importLog";
 import { HabitView } from "./view";
 import { ConfirmModal, DateModal, NumberModal } from "./modals/simple";
 import { GoalsModal } from "./modals/goals";
@@ -18,7 +19,7 @@ export class HabitGridPlugin extends Plugin {
   async onload() {
     const saved = (await this.loadData()) || {};
     // 지금 쓰는 설정만 읽는다 (예전 버전에서 남은 키는 버린다)
-    const known = [...Object.keys(DEFAULT_SETTINGS), "habitOrder", "modes"];
+    const known = [...Object.keys(DEFAULT_SETTINGS), "habitOrder", "modes", "logCursor"];
     this.settings = Object.assign({}, DEFAULT_SETTINGS, Object.fromEntries(Object.entries(saved).filter(([k]) => known.includes(k))));
     setLang(resolveLang(this.settings.lang));
     this.registerMarkdownCodeBlockProcessor("habit", (source, el, ctx) => {
@@ -98,6 +99,7 @@ export class HabitGridPlugin extends Plugin {
   //  - 습관 파일(공부.md 등): 플러그인만 고친다 (색·목표·직접 기록·제외한 날)
   //  - 미리 알림 기록.md: 단축어만 쓴다. 플러그인은 읽기만 한다
   async loadHabits(folderPath, only) {
+    await this.importLog();
     const { app } = this;
     const folder = app.vault.getAbstractFileByPath(folderPath);
     if (!(folder instanceof TFolder)) return null;
@@ -129,7 +131,15 @@ export class HabitGridPlugin extends Plugin {
         return null;
       };
       const seenLog = new Set();
-      for (const { ds, title } of parseLog((await Promise.all(logFiles.map((f) => app.vault.cachedRead(f)))).join("\n"))) {
+      // 이미 습관 파일로 옮긴 줄은 건너뛰고, 아직 못 옮긴 줄만 읽는다
+      const cursors = this.settings.logCursor || {};
+      const pending = [];
+      for (const f of logFiles) {
+        const all = parseLog(await app.vault.cachedRead(f));
+        const done = cursors[f.path] || 0;
+        pending.push(...all.slice(done > all.length ? 0 : done));
+      }
+      for (const { ds, title } of pending) {
         const lk = ds + "\u0001" + title;
         if (seenLog.has(lk)) continue;
         seenLog.add(lk);
@@ -212,6 +222,66 @@ export class HabitGridPlugin extends Plugin {
         explicit, inferred, monthGoals: Object.assign({}, inferred, explicit) });
     }
     return out;
+  }
+
+  // 로그(받은편지함)에 새로 덧붙은 줄을 습관 파일로 옮긴다. 없는 습관은 파일을 만든다
+  importLog() {
+    if (!this.importing) {
+      this.importing = this.doImport().catch((e) => console.error("habit-grid import", e)).finally(() => { this.importing = null; });
+    }
+    return this.importing;
+  }
+
+  async doImport() {
+    const { vault, fileManager, metadataCache } = this.app;
+    if (typeof vault.create !== "function" || !fileManager) return;
+    const folder = vault.getAbstractFileByPath(normalizePath(this.settings.folder));
+    if (!(folder instanceof TFolder)) return;
+    const nfc = (x) => x.normalize("NFC");
+    const sub = (name) => folder.children.find((c) => c instanceof TFolder && nfc(c.name) === nfc(name));
+    const mdIn = (fd) => (fd ? fd.children.filter((f) => f instanceof TFile && f.extension === "md") : []);
+    const logFiles = mdIn(sub(this.settings.syncDir || "sync")).filter((f) => this.isLog(f));
+    if (!logFiles.length) return;
+    const cursors = Object.assign({}, this.settings.logCursor);
+    const todo = [];
+    for (const lf of logFiles) {
+      const entries = parseLog(await vault.read(lf));
+      const done = cursors[lf.path] || 0;
+      todo.push({ lf, entries, fresh: entries.slice(done > entries.length ? 0 : done) });
+    }
+    if (todo.every((t) => !t.fresh.length && cursors[t.lf.path] === t.entries.length)) return;
+
+    const files = new Map();
+    for (const f of [...mdIn(sub(this.settings.habitsDir || "list")), ...mdIn(sub(this.settings.archiveDir || "archive"))]) {
+      if (!this.isDashboard(f) && !this.isLog(f)) files.set(nfc(f.basename), f);
+    }
+    const prefixes = [...files].filter(([, f]) => fmGet(metadataCache.getFileCache(f)?.frontmatter, "items")).map(([n]) => n);
+    const plan = planImport(todo.flatMap((t) => t.fresh), prefixes);
+    const reserved = [nfc(this.settings.logName), nfc(this.settings.dashboardName)];
+    for (const h of plan.values()) {
+      const safe = safeFileName(h.name);
+      if (!safe || reserved.includes(nfc(safe))) continue;
+      let file = files.get(nfc(safe));
+      if (!file) {
+        await this.ensureHabitDir();
+        const path = this.habitFilePath(safe);
+        const existing = vault.getAbstractFileByPath(path);
+        file = existing instanceof TFile ? existing : await vault.create(path, "");
+        files.set(nfc(safe), file);
+      }
+      const fm = metadataCache.getFileCache(file)?.frontmatter;
+      let unit = normalizeUnit(fmGet(fm, "unit"));
+      if (unit === true) unit = undefined;
+      const isItems = prefixes.includes(nfc(safe));
+      if (h.unit && !unit && !isItems) {
+        unit = h.unit;
+        await fileManager.processFrontMatter(file, (f) => fmSetUnit(f, h.unit, this.keyStyle()));
+      }
+      await vault.process(file, (text) => upsertDays(text, h.days, { unit: isItems ? undefined : unit, isItems, amountUnit: h.unit }));
+    }
+    for (const t of todo) cursors[t.lf.path] = t.entries.length;
+    this.settings.logCursor = cursors;
+    await this.saveSettings();
   }
 
   // 습관 파일에서 그 날짜 줄을 바꾼다. 미리 알림으로 들어온 날을 지우면 '- [ ] 날짜'로 제외 표시

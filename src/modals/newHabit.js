@@ -39,7 +39,7 @@ export class NewHabitModal extends Modal {
     lab(nameBox, tr("이름"));
     const nameIn = nameBox.createEl("input", { type: "text", cls: "hg-nh-input", attr: { placeholder: tr("예: 공부") } });
     nameIn.addEventListener("input", () => { S.name = nameIn.value.trim(); sum(); });
-    setTimeout(() => nameIn.focus(), 50);
+    window.setTimeout(() => nameIn.focus(), 50);
 
     const body = contentEl.createDiv({ cls: "hg-nh-body" });
     const sumBox = contentEl.createDiv({ cls: "hg-nh-sum" });
@@ -102,7 +102,7 @@ export class NewHabitModal extends Modal {
             const ci = ex.createEl("input", { type: "text", cls: "hg-nh-input", attr: { placeholder: tr("예: 잔, 문제, 장") } });
             ci.value = S.customUnit;
             ci.addEventListener("input", () => { S.customUnit = ci.value; sum(); });
-            setTimeout(() => ci.focus(), 30);
+            window.setTimeout(() => ci.focus(), 30);
           }
           lab(ex, tr("하루 목표"), tr("비워도 돼요"));
           const g = ex.createDiv({ cls: "hg-nh-goal" });
@@ -144,7 +144,7 @@ export class NewHabitModal extends Modal {
         if (S.period) i.value = String(S.period);
         i.addEventListener("input", () => { S.period = parseInt(i.value, 10) || 0; sum(); });
         r.createSpan({ text: tr("일") });
-        setTimeout(() => i.focus(), 30);
+        window.setTimeout(() => i.focus(), 30);
       }
       if (!noPeriod && S.period > 0) ps.createDiv({ cls: "hg-nh-note", text: tr("시작 오늘({0}) · 끝 {1} · 챌린지 카드로 보여요", md(today), md(addDays(today, S.period - 1))) });
       sum();

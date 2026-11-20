@@ -117,7 +117,7 @@ export function renderChallenge(parent, name, set, opts) {
   }
   enableHorizontalScroll(scroll);
   stopEditorGrab(scroll);
-  requestAnimationFrame(() => {
+  window.requestAnimationFrame(() => {
     scroll.classList.toggle("is-overflow", scroll.scrollWidth > scroll.clientWidth + 1);
     const t = scroll.querySelector(".is-today");
     scroll.scrollLeft = t ? t.parentElement.offsetLeft - scroll.clientWidth + 40 : 0;

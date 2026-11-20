@@ -58,7 +58,7 @@ export class NumberModal extends Modal {
     const ok = btns.createEl("button", { cls: "mod-cta", text: tr("저장") });
     ok.addEventListener("click", submit);
     input.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
-    setTimeout(() => input.focus(), 50);
+    window.setTimeout(() => input.focus(), 50);
   }
   onClose() { this.contentEl.empty(); }
 }

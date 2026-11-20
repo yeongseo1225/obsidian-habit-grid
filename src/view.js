@@ -27,7 +27,7 @@ export class HabitView extends MarkdownRenderChild {
   get folderPath() { return normalizePath(this.opts.folder || this.plugin.settings.folder); }
 
   onload() {
-    this.render();
+    void this.render();
     const v = this.plugin.app.vault;
     const maybe = (f) => { if (f && f.path && f.path.startsWith(this.folderPath + "/")) this.schedule(); };
     this.registerEvent(v.on("modify", maybe));
@@ -36,12 +36,12 @@ export class HabitView extends MarkdownRenderChild {
     this.registerEvent(v.on("rename", (f, old) => { maybe(f); if (old && old.startsWith(this.folderPath + "/")) this.schedule(); }));
     this.registerEvent(this.plugin.app.metadataCache.on("changed", maybe));
     this.registerEvent(this.plugin.app.workspace.on("habit-grid:refresh", () => this.schedule()));
-    this.register(() => clearTimeout(this.timer));
+    this.register(() => window.clearTimeout(this.timer));
   }
 
   schedule() {
-    clearTimeout(this.timer);
-    this.timer = setTimeout(() => this.render(), 250);
+    window.clearTimeout(this.timer);
+    this.timer = window.setTimeout(() => this.render(), 250);
   }
 
   // 상세·읽기 전용 상세에서 쓰는 전체 카드 (예전 카드 그대로)
@@ -54,16 +54,16 @@ export class HabitView extends MarkdownRenderChild {
       weeks: this.opts.weeks || 20,
       range: this.opts.weeks ? "recent" : "year",
       year: this.years[key],
-      onYear: (y) => { this.years[key] = y; this.render(); },
+      onYear: (y) => { this.years[key] = y; void this.render(); },
       mode: ((settings.modes || {})[h.name] === "month") ? "month" : "year",
-      onMode: (m) => { settings.modes = Object.assign({}, settings.modes, { [h.name]: m }); this.plugin.saveSettings(); this.render(); },
+      onMode: (m) => { settings.modes = Object.assign({}, settings.modes, { [h.name]: m }); this.plugin.saveSettings(); void this.render(); },
       monthAnchor: this.months[key],
       weekAnchor: this.weekAnchors[key],
       onNav: (delta) => {
         const now = new Date();
         const cur = this.months[key] || new Date(now.getFullYear(), now.getMonth(), 1);
         this.months[key] = delta === 0 ? undefined : new Date(cur.getFullYear(), cur.getMonth() + delta, 1);
-        this.render();
+        void this.render();
       },
       weekStart: settings.weekStart,
       onMore: (evt) => this.plugin.openHabitMenu(evt, h),
@@ -77,13 +77,13 @@ export class HabitView extends MarkdownRenderChild {
       selDay: this.selDays[key],
       onGoals: (yr) => this.plugin.openGoals(h, yr),
       goalsFolded: !!(settings.goalsFolded || {})[h.name],
-      onFoldGoals: (v) => { settings.goalsFolded = Object.assign({}, settings.goalsFolded, { [h.name]: v }); this.plugin.saveSettings(); this.render(); },
+      onFoldGoals: (v) => { settings.goalsFolded = Object.assign({}, settings.goalsFolded, { [h.name]: v }); this.plugin.saveSettings(); void this.render(); },
       onWeekNav: (delta) => {
         const now = weekStartOf(new Date(), settings.weekStart);
         const cur = this.weekAnchors[key] || now;
         const next = delta === 0 ? undefined : addDays(cur, delta * 7);
         this.weekAnchors[key] = next && fmt(next) === fmt(now) ? undefined : next;
-        this.render();
+        void this.render();
       },
     };
     let o;
@@ -91,7 +91,7 @@ export class HabitView extends MarkdownRenderChild {
       o = {
         ...common,
         onToggle: settings.clickToToggle ? (ds, on) => this.plugin.recordCheck(h, ds, on) : null,
-        onSelect: h.items ? (ds) => { this.selDays[key] = ds; this.render(); } : null,
+        onSelect: h.items ? (ds) => { this.selDays[key] = ds; void this.render(); } : null,
       };
     } else {
       o = {
@@ -141,7 +141,7 @@ export class HabitView extends MarkdownRenderChild {
   go(view, key) {
     this.view = view;
     this.openKey = key || null;
-    this.render();
+    void this.render();
   }
 
   // 상세·보관함 맨 위 줄: [‹ 목록] 가운데 이름 [⋯]
@@ -209,13 +209,13 @@ export class HabitView extends MarkdownRenderChild {
       b.setAttr("aria-label", aria);
       stopEditorGrab(b);
       if (!enabled) b.addClass("is-disabled");
-      else b.addEventListener("click", () => { fn(); this.render(); });
+      else b.addEventListener("click", () => { fn(); void this.render(); });
     };
     btn("‹", mode === "year" ? tr("이전 해") : tr("이전 6개월"), canPrev, onPrev);
     nav.createSpan({ cls: "hg-year hg-year-wide", text: label });
     btn("›", mode === "year" ? tr("다음 해") : tr("다음 6개월"), !atNow, onNext);
     const now = nav.createSpan({ cls: "hg-yearbtn hg-thisyear" + (atNow ? " is-ghost" : ""), text: tr("올해") });
-    if (!atNow) now.addEventListener("click", () => { onNow(); this.render(); });
+    if (!atNow) now.addEventListener("click", () => { onNow(); void this.render(); });
     stopEditorGrab(now);
     const rbar = bar.createDiv({ cls: "hg-rbar" });
     const ab = rbar.createEl("button", { cls: "hg-archbtn" });

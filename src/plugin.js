@@ -29,7 +29,7 @@ export class HabitGridPlugin extends Plugin {
     this.addRibbonIcon("calendar-check", tr("습관 기록하기"), () => this.openRecorder());
 
     this.app.workspace.onLayoutReady(() => {
-      if (!this.settings.initialized) this.setup(false);
+      if (!this.settings.initialized) void this.setup(false);
       this.tidyTimer = window.setTimeout(() => this.tidyArchive(), 2000);
     });
   }
@@ -414,8 +414,8 @@ export class HabitGridPlugin extends Plugin {
     pop.createDiv({ cls: "hg-pop-sep" });
     row(tr("직접 고르기…"), "conic-gradient(#ef4444, #eab308, #2fb67c, #3b82f6, #7c5cff, #ef4444)", false, () => {
       const input = activeDocument.body.createEl("input", { type: "color", cls: "hg-hidden-color" });
-      input.addEventListener("change", () => { apply(input.value); input.remove(); });
-      input.addEventListener("blur", () => setTimeout(() => input.remove(), 500));
+      input.addEventListener("change", () => { void apply(input.value); input.remove(); });
+      input.addEventListener("blur", () => window.setTimeout(() => input.remove(), 500));
       input.click();
     });
     // 누른 자리 근처에, 화면 밖으로 안 나가게
@@ -423,7 +423,7 @@ export class HabitGridPlugin extends Plugin {
     const w = pop.offsetWidth || 190, h = pop.offsetHeight || 340;
     pop.style.left = `${Math.max(8, Math.min(x, activeWindow.innerWidth - w - 8))}px`;
     pop.style.top = `${Math.max(8, Math.min(y + 8, activeWindow.innerHeight - h - 8))}px`;
-    setTimeout(() => {
+    window.setTimeout(() => {
       activeDocument.addEventListener("mousedown", onDoc, true);
       activeDocument.addEventListener("keydown", onKey, true);
     }, 0);

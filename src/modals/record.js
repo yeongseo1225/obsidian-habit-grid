@@ -15,7 +15,7 @@ export class RecordModal extends Modal {
   onOpen() {
     this.titleEl.setText(tr("습관 기록하기"));
     this.modalEl.addClass("hg-record-modal");
-    this.draw();
+    void this.draw();
   }
   async draw() {
     const { contentEl } = this;
@@ -30,12 +30,12 @@ export class RecordModal extends Modal {
     for (const [label, off] of quick) {
       const d = addDays(today, off);
       const b = dates.createEl("button", { text: label, cls: fmt(d) === ds ? "mod-cta" : "" });
-      b.addEventListener("click", () => { this.date = d; this.draw(); });
+      b.addEventListener("click", () => { this.date = d; void this.draw(); });
     }
     const picker = dates.createEl("input", { type: "date" });
     picker.value = ds;
     picker.max = fmt(today);
-    picker.addEventListener("change", () => { if (picker.value) { this.date = toDate(picker.value); this.draw(); } });
+    picker.addEventListener("change", () => { if (picker.value) { this.date = toDate(picker.value); void this.draw(); } });
     contentEl.createDiv({ cls: "hg-rdate", text: tr("{0}년 {1}월 {2}일 ({3})", this.date.getFullYear(), this.date.getMonth() + 1, this.date.getDate(), DAY_NAMES[this.date.getDay()]) });
 
     if (!habits.length) { contentEl.createDiv({ cls: "hg-empty", text: tr("아직 습관이 없어요.") }); return; }
@@ -81,14 +81,15 @@ export class RecordModal extends Modal {
     const btns = contentEl.createDiv({ cls: "hg-modal-btns" });
     btns.createEl("button", { text: tr("닫기") }).addEventListener("click", () => this.close());
     const ok = btns.createEl("button", { cls: "mod-cta", text: tr("저장") });
-    ok.addEventListener("click", async () => {
+    const save = async () => {
       for (const [h, val] of changes) {
         if (h.kind === "check") { if (val !== h.set.has(ds)) await this.plugin.recordCheck(h, ds, val); }
         else if (Math.abs(val - (h.entries.get(ds) || 0)) > 0.001) await this.plugin.recordValue(h, ds, val);
       }
       new Notice(tr("{0}월 {1}일 기록을 저장했어요", this.date.getMonth() + 1, this.date.getDate()));
       this.close();
-    });
+    };
+    ok.addEventListener("click", () => { void save(); });
   }
   onClose() { this.contentEl.empty(); }
 }

@@ -78,5 +78,5 @@ export function renderTodayBar(parent, habits, today, opts) {
       }
     }
   }
-  setTimeout(() => { pager.scrollLeft = pager.scrollWidth; }, 0);
+  window.setTimeout(() => { pager.scrollLeft = pager.scrollWidth; }, 0);
 }

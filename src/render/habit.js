@@ -164,7 +164,7 @@ export function renderHabit(parent, name, set, opts) {
   enableHorizontalScroll(scroll);
   stopEditorGrab(scroll);
 
-  requestAnimationFrame(() => {
+  window.requestAnimationFrame(() => {
     scroll.toggleClass ? scroll.toggleClass("is-overflow", scroll.scrollWidth > scroll.clientWidth + 1)
       : scroll.classList.toggle("is-overflow", scroll.scrollWidth > scroll.clientWidth + 1);
     if (!year || year === today.getFullYear()) {

@@ -63,7 +63,7 @@ export function compactGrid(card, h, o) {
   }
   enableHorizontalScroll(scroll);
   stopEditorGrab(scroll);
-  requestAnimationFrame(() => {
+  window.requestAnimationFrame(() => {
     scroll.classList.toggle("is-overflow", scroll.scrollWidth > scroll.clientWidth + 1);
     if (o.mode === "half") scroll.scrollLeft = scroll.scrollWidth;
     else {
@@ -155,7 +155,7 @@ export function compactChallengeBody(card, h, o) {
     info.createDiv({ cls: "hg-cinfo-b", text: finished ? tr("{0} 끝", md(endD)) : tr("{0} 끝 · D-{1}", md(endD), Math.round((endD - toDate(todayStr)) / 86400000)) });
 
   }
-  requestAnimationFrame(() => {
+  window.requestAnimationFrame(() => {
     scroll.classList.toggle("is-overflow", scroll.scrollWidth > scroll.clientWidth + 1);
     const t = scroll.querySelector(".is-today");
     scroll.scrollLeft = t ? Math.max(0, t.parentElement.offsetLeft - scroll.clientWidth + 40) : 0;
@@ -183,7 +183,7 @@ export function renderCompact(parent, h, o) {
   }
   const refKey = monthKey(ref), refMonth = ref.getMonth() + 1;
   const fOf = (g) => { const f = goalForMonth(g, refKey); return f > 0 && f < 7 ? Math.round(f) : 0; };
-  let chip = "", chipDone = false, doneToday = false;
+  let chip = "", chipDone = false, doneToday;
   if (isM) {
     const goals = h.monthGoals || {};
     const hit = (ds, v) => v > 0 && v >= goalForMonth(goals, ds.slice(0, 7));
@@ -240,12 +240,11 @@ export function renderCompact(parent, h, o) {
   head.addEventListener("click", () => o.onOpen());
   stopEditorGrab(head);
 
-  let footer = "";
+  let footer;
   if (!isM && h.period) {
     const r = compactChallengeBody(card, h, o);
     chipEl.setText(r.finished ? tr("{0}일 완료", r.days) : r.notStarted ? tr("{0}일 · 시작 전", r.days) : tr("{0}일 챌린지 · D-{1}", r.days, r.left));
     if (r.finished) chipEl.addClass("is-done");
-    footer = "";
     if (r.finished) {
       const ban = card.createDiv({ cls: "hg-chal-banner" });
       ban.createDiv({ cls: "hg-chal-banner-t", text: tr("{0}일 끝! {1}일 했어요 ({2}%)", r.days, r.done, Math.round((r.done / r.days) * 100)) });

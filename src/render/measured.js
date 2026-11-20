@@ -236,7 +236,7 @@ export function renderMeasured(parent, name, entries, opts) {
   }
   if (!rows) table.createDiv({ cls: "hg-empty", text: tr("{0}년 기록이 없어요.", year) });
 
-  requestAnimationFrame(() => {
+  window.requestAnimationFrame(() => {
     scroll.classList.toggle("is-overflow", scroll.scrollWidth > scroll.clientWidth + 1);
     if (year === today.getFullYear()) {
       const t = scroll.querySelector(".is-today");

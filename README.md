@@ -196,16 +196,43 @@ The plugin recognizes the log file by name. The default is `Reminders log`; you 
 
 If you have a Mac, a small script can copy completed reminders into the log file instead of a Shortcut. Complete a reminder on any device; once it reaches your Mac through iCloud, the script appends it. If the Mac was off, it catches up the next time it runs (it reads the last 30 days).
 
-Set it up from the plugin settings (macOS only):
+Each reminder is logged under its **due date**, or under the day it was completed if it has none, the same as the Shortcut. A reminder for yesterday that you check after midnight still counts for yesterday.
 
-1. In Obsidian, open **Settings → Habit Grid → Mac sync** and click **Create install files**. The plugin writes two files into `habit-grid/mac-sync/` in your vault and shows a command.
-2. Click **Copy command**, paste it into Terminal, and press Return. It copies the script to `~/.habit-grid-sync/`, sets up a background job that wakes every 5 minutes, and runs one sync so macOS can ask for access to Reminders. Allow it.
-3. Back in the settings, turn **Use Mac sync** on (it is off by default, so nothing runs until you do) and set **Reminder lists to sync** (default `Habits`; separate several lists with commas, matching the names in Reminders exactly). **Days to read** and **Sync interval** control how far back and how often it runs, and **Sync now** imports what is in the log immediately and asks the script to run at its next wake-up (within 5 minutes).
-4. To remove it, run `bash "<vault>/habit-grid/mac-sync/install-mac-sync.sh" --uninstall`.
+This is an advanced option: you paste one command into Terminal, once. If you would rather not, tap cells to log habits, or use the Shortcut.
 
-The same files are in this repository's `scripts/` folder if you prefer to install without the plugin. Nothing is downloaded during installation.
+### Set up in 3 steps (macOS only)
+
+1. In Obsidian, open **Settings → Habit Grid → Mac sync**, click **Create install files**, then click **Copy command**.
+2. Open Terminal (press ⌘ Space, type `Terminal`, press Return), paste the command with ⌘ V, and press Return. Allow access to Reminders if macOS asks.
+3. Back in the settings, turn **Use Mac sync** on. It is off by default, so nothing runs until you do.
+
+That is all. The default list is `Habits`; a new completed reminder in it shows up within the interval you choose below.
+
+### Mac sync options
+
+| Setting | What it does |
+| --- | --- |
+| Reminder lists to sync | The lists to read. Default `Habits`; separate several with commas and match the names in Reminders exactly |
+| Days to read | How many past days to read each time (default 30). Use more if your Mac is often off |
+| Sync interval | How often it imports: 5 minutes to 2 hours (default 30 minutes) |
+| Sync now | Imports what is already in the log at once, and asks the script to run at its next wake-up (within 5 minutes) |
+
+### What the install does
+
+It copies the script to `~/.habit-grid-sync/` and sets up a background job that runs when you log in and wakes every 5 minutes; the script itself runs only when your chosen interval has passed. Nothing is downloaded. The files in your vault's `habit-grid/mac-sync/` folder are only used to install and to remove it (Obsidian's file list does not show `.sh` files, so use Finder or the **Show in Finder** button). The same files are in this repository's `scripts/` folder if you prefer to install without the plugin.
 
 The script only reads Reminders and appends lines to the log file. Lines already in the file are skipped.
+
+### Remove it
+
+Do this **before you uninstall the plugin**: in **Settings → Habit Grid → Mac sync**, click **Copy remove command**, paste it into Terminal, and press Return. (Uninstalling the plugin alone leaves the background job on your Mac; it does nothing without the plugin, but it keeps waking every 5 minutes.)
+
+If you already uninstalled the plugin, paste these two lines into Terminal instead:
+
+```bash
+launchctl bootout "gui/$(id -u)/md.habitgrid.sync"
+rm -rf ~/Library/LaunchAgents/md.habitgrid.sync.plist ~/.habit-grid-sync
+```
 
 ## Dashboard code block
 
@@ -410,16 +437,43 @@ Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에�
 
 Mac이 있다면 단축어 대신 작은 스크립트가 완료한 미리 알림을 로그 파일에 덧붙일 수 있어요. 어느 기기에서 완료하든 iCloud로 Mac에 도착하면 스크립트가 덧붙이고, Mac이 꺼져 있었다면 켜진 뒤 다음 실행 때 따라잡아요(최근 30일을 읽어요).
 
-플러그인 설정에서 설치해요(macOS 전용).
+각 미리 알림은 단축어와 똑같이 **마감일** 날짜로 기록하고, 마감일이 없으면 완료한 날로 기록해요. 어제 것을 자정 넘어 체크해도 어제로 세요.
 
-1. 옵시디언 **설정 → Habit Grid → Mac 동기화**에서 **설치 파일 만들기**를 눌러요. 볼트의 `habit-grid/mac-sync/`에 파일 두 개가 만들어지고 명령이 나와요.
-2. **명령 복사**를 누르고 터미널에 붙여 넣어 실행해요. 스크립트를 `~/.habit-grid-sync/`에 복사하고, 5분마다 깨어나는 백그라운드 작업을 등록하고, 한 번 실행해서 macOS가 미리 알림 접근을 물어보게 해요. 허용하세요.
-3. 설정으로 돌아와 **Mac 동기화 사용**을 켜요(기본은 꺼짐이라 켜기 전에는 아무것도 하지 않아요). **동기화할 미리 알림 목록**에 목록 이름을 적어요(기본 `Habits`, 여러 개는 쉼표로, 미리 알림 앱의 이름과 똑같이). **가져올 기간**과 **동기화 간격**으로 얼마나 거슬러 읽고 얼마나 자주 돌릴지 정하고, **지금 동기화**는 로그에 있는 내용을 바로 가져오면서 스크립트에 다음 확인 때(5분 이내) 실행하라고 요청해요.
-4. 지우려면 `bash "<보관함>/habit-grid/mac-sync/install-mac-sync.sh" --uninstall`을 실행해요.
+고급 방법이에요. 터미널에 명령을 한 번 붙여 넣어야 해요. 부담스러우면 칸을 눌러 기록하거나 단축어를 쓰세요.
 
-플러그인 없이 설치하고 싶으면 이 저장소의 `scripts/` 폴더에 같은 파일이 있어요. 설치 중에는 아무것도 내려받지 않아요.
+### 3단계로 설치 (macOS 전용)
+
+1. 옵시디언 **설정 → Habit Grid → Mac 동기화**에서 **설치 파일 만들기**를 누르고 **명령 복사**를 눌러요.
+2. 터미널을 열어요(`⌘ Space`를 누르고 `터미널`을 입력해 Return). `⌘ V`로 명령을 붙여 넣고 Return을 눌러요. macOS가 미리 알림 접근을 물어보면 허용하세요.
+3. 설정으로 돌아와 **Mac 동기화 사용**을 켜요. 기본은 꺼짐이라 켜기 전에는 아무것도 하지 않아요.
+
+이게 전부예요. 기본 목록은 `Habits`이고, 그 목록에서 새로 완료한 미리 알림은 아래에서 고른 간격 안에 들어와요.
+
+### Mac 동기화 옵션
+
+| 설정 | 하는 일 |
+| --- | --- |
+| 동기화할 미리 알림 목록 | 읽을 목록이에요. 기본 `Habits`, 여러 개는 쉼표로, 미리 알림 앱의 이름과 똑같이 적어요 |
+| 가져올 기간 (일) | 한 번에 최근 며칠 치를 읽을지(기본 30일). Mac을 자주 꺼 두면 늘리세요 |
+| 동기화 간격 | 얼마나 자주 가져올지: 5분~2시간(기본 30분) |
+| 지금 동기화 | 로그에 이미 있는 내용을 바로 가져오고, 스크립트에 다음 확인 때(5분 이내) 실행하라고 요청해요 |
+
+### 설치하면 일어나는 일
+
+스크립트를 `~/.habit-grid-sync/`에 복사하고, 로그인할 때 실행되고 5분마다 깨어나는 백그라운드 작업을 등록해요. 스크립트는 고른 간격이 지났을 때만 실제로 가져와요. 아무것도 내려받지 않아요. 볼트의 `habit-grid/mac-sync/` 폴더 파일은 설치와 제거에만 쓰여요(옵시디언 파일 목록에는 `.sh` 파일이 안 보이니 Finder나 **Finder에서 보기** 버튼을 쓰세요). 플러그인 없이 설치하고 싶으면 이 저장소의 `scripts/` 폴더에 같은 파일이 있어요.
 
 스크립트는 미리 알림을 읽기만 하고 로그 파일에 줄을 덧붙이기만 해요. 이미 있는 줄은 건너뛰어요.
+
+### 지우기
+
+**플러그인을 지우기 전에** 먼저 하세요. **설정 → Habit Grid → Mac 동기화**에서 **지우는 명령 복사**를 누르고 터미널에 붙여 넣어 Return을 눌러요. (플러그인만 지우면 Mac의 백그라운드 작업이 남아요. 플러그인이 없으면 아무것도 하지 않지만 5분마다 계속 깨어나요.)
+
+이미 플러그인을 지웠다면 아래 두 줄을 터미널에 붙여 넣으세요.
+
+```bash
+launchctl bootout "gui/$(id -u)/md.habitgrid.sync"
+rm -rf ~/Library/LaunchAgents/md.habitgrid.sync.plist ~/.habit-grid-sync
+```
 
 ## 노트에 일간·주간 기록 넣기
 

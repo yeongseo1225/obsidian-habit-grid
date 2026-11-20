@@ -68,11 +68,14 @@ cat > "$PLIST" <<PLISTEOF
 </plist>
 PLISTEOF
 
+# Run once here first (so macOS can ask for access to Reminders in this window), then start the
+# background job, which also runs once right away.
+echo "Running the sync once now; allow access to Reminders if macOS asks."
+bash "$DEST/habit-log-sync.sh" "$VAULT" || true
+
 launchd bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
 launchd bootstrap "gui/$(id -u)" "$PLIST"
-
-echo "Installed. Running the sync once now; allow access to Reminders if macOS asks."
-bash "$DEST/habit-log-sync.sh" "$VAULT" || true
+echo "Installed the background job."
 echo
 echo "Last step: in Obsidian, open Settings > Habit Grid and turn on \"Use Mac sync\"."
 echo "To remove everything later: bash \"$0\" --uninstall"

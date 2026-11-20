@@ -15,6 +15,7 @@
 #   syncDir    sync subfolder (default: sync)
 #   logName    log file name without extension (default: Reminders log)
 # Only reads Reminders. Appends one line per completed reminder: "- [x] 2026-11-19 Title".
+# The date is the reminder's due date if it has one, otherwise the day it was completed.
 # Lines already in the file are skipped, so running it again is safe.
 
 set -u
@@ -66,6 +67,20 @@ if [ ! -f "$LOG" ]; then
   exit 1
 fi
 
+# Only one sync at a time: two runs that start together would both see the same log and append the same lines
+LOCK="$HOME/Library/Caches/habit-grid-sync-$(md5 -q -s "$VAULT").lock"
+mkdir -p "$HOME/Library/Caches"
+if ! mkdir "$LOCK" 2>/dev/null; then
+  # a lock older than 10 minutes is left over from a run that was stopped
+  if [ -n "$(find "$LOCK" -maxdepth 0 -mmin +10 2>/dev/null)" ]; then
+    rmdir "$LOCK" 2>/dev/null; mkdir "$LOCK" 2>/dev/null || exit 0
+  else
+    echo "Another sync is already running. Skipping."
+    exit 0
+  fi
+fi
+trap 'rmdir "$LOCK" 2>/dev/null' EXIT
+
 # Prints "yyyy-MM-dd<TAB>title" for every reminder completed in the last N days.
 read_list() {
   osascript - "$1" "$DAYS" <<'APPLESCRIPT'
@@ -84,8 +99,17 @@ on run argv
     -- read names and dates in bulk: much faster than reading each reminder one by one
     set ns to name of (reminders of L whose completed is true and completion date is greater than cutoff)
     set dts to completion date of (reminders of L whose completed is true and completion date is greater than cutoff)
+    set dues to due date of (reminders of L whose completed is true and completion date is greater than cutoff)
+    set alls to allday due date of (reminders of L whose completed is true and completion date is greater than cutoff)
     repeat with i from 1 to count of ns
+      -- log under the due date when the reminder has one (so a reminder for yesterday that you check
+      -- after midnight counts for yesterday); otherwise under the day it was completed
       set d to item i of dts
+      if class of (item i of dues) is date then
+        set d to item i of dues
+      else if class of (item i of alls) is date then
+        set d to item i of alls
+      end if
       set ds to ((year of d) as string) & "-" & my pad((month of d) as integer) & "-" & my pad(day of d)
       set out to out & ds & tab & (item i of ns) & linefeed
     end repeat

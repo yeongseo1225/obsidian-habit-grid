@@ -1,5 +1,5 @@
 import { Notice, Platform, PluginSettingTab, Setting } from "obsidian";
-import { DEFAULT_SETTINGS } from "./constants";
+import { DEFAULT_SETTINGS, MAC_UNINSTALL_CMD } from "./constants";
 import { resolveLang, setLang, tr } from "./i18n";
 
 export class HabitGridSettingTab extends PluginSettingTab {
@@ -55,6 +55,12 @@ export class HabitGridSettingTab extends PluginSettingTab {
         const dir = `${this.plugin.settings.folder}/mac-sync`;
         box.createEl("p", { cls: "setting-item-description", text: tr("만든 파일: {0}", `${dir}/habit-log-sync.sh, ${dir}/install-mac-sync.sh`) });
         box.createEl("code", { text: this.installCmd });
+        explain(box, [
+          tr("스크립트를 ~/.habit-grid-sync/ 폴더에 복사해요."),
+          tr("로그인할 때와 5분마다 실행되는 백그라운드 작업을 등록해요 (~/Library/LaunchAgents/md.habitgrid.sync.plist)."),
+          tr("한 번 실행해서 macOS가 미리 알림 접근을 묻게 해요."),
+          tr("인터넷에서 내려받는 것은 없어요."),
+        ]);
         new Setting(box).addButton((b) => b.setButtonText(tr("Finder에서 보기")).onClick(() => {
           const app = this.plugin.app;
           if (typeof app.showInFolder === "function") app.showInFolder(`${dir}/install-mac-sync.sh`);
@@ -82,6 +88,25 @@ export class HabitGridSettingTab extends PluginSettingTab {
         new Notice(tr("로그의 내용을 가져왔어요. Mac의 새 완료 항목은 설치했다면 5분 안에 반영돼요."));
       }));
 
+    if (Platform.isMacOS) {
+      new Setting(containerEl).setName(tr("Mac 동기화 지우기")).setDesc(tr("플러그인을 지우기 전에 터미널에서 먼저 실행하세요. 플러그인만 지우면 Mac의 백그라운드 작업이 남아요."));
+      const rm = containerEl.createDiv({ cls: "hg-cmdbox" });
+      rm.createEl("code", { text: MAC_UNINSTALL_CMD });
+      explain(rm, [
+        tr("백그라운드 작업을 멈춰요 (launchctl bootout)."),
+        tr("자동 실행 설정(~/Library/LaunchAgents/md.habitgrid.sync.plist)과 복사한 스크립트 폴더(~/.habit-grid-sync)를 지워요."),
+        tr("볼트 안의 습관 기록과 설정은 지우지 않아요."),
+      ]);
+      new Setting(rm).addButton((b) => b.setButtonText(tr("지우는 명령 복사")).onClick(async () => { await navigator.clipboard.writeText(MAC_UNINSTALL_CMD); new Notice(tr("복사했어요")); }));
+    }
+
     containerEl.createEl("p", { cls: "setting-item-description", text: tr("설정을 바꾼 뒤에는 노트를 다시 열면 반영돼요.") });
   }
+}
+
+// 명령이 하는 일을 복사 버튼보다 먼저 보여 준다
+function explain(box, lines) {
+  box.createEl("p", { cls: "setting-item-description", text: tr("이 명령이 하는 일:") });
+  const ul = box.createEl("ul", { cls: "hg-cmdlist" });
+  for (const t of lines) ul.createEl("li", { text: t });
 }

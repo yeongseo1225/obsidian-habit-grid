@@ -58,3 +58,6 @@ export const PRESET_COLORS = [
 
 // ── v24: 메인 화면용 요약 카드 (윗줄을 누르면 상세로) ──
 export const WEEK_MS = 7 * 86400000;
+
+// Mac 동기화를 지우는 터미널 명령 (스크립트 파일 없이도 동작한다)
+export const MAC_UNINSTALL_CMD = 'launchctl bootout "gui/$(id -u)/md.habitgrid.sync"; rm -rf ~/Library/LaunchAgents/md.habitgrid.sync.plist ~/.habit-grid-sync';

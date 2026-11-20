@@ -97,11 +97,9 @@ test("parseBlock reads the view option", () => {
   assert.equal(parseBlock("view: nonsense").view, undefined);
 });
 
-test("amounts written with items: itemsLine and parseItemLines agree", () => {
-  assert.equal(itemsLine("2026-11-18", ["스쿼트", "플랭크"], ""), "- [x] 2026-11-18 스쿼트, 플랭크");
-  assert.equal(itemsLine("2026-11-18", ["스쿼트"], "1h30m"), "- [x] 2026-11-18 1h30m | 스쿼트");
-  assert.equal(itemsLine("2026-11-18", [], "1h30m"), "- [x] 2026-11-18 1h30m");
-  const text = ["- [x] 2026-11-18 1h30m | 스쿼트, 플랭크", "- [x] 2026-11-19 45m", "- [x] 2026-11-20 5"].join("\n");
-  assert.deepEqual([...parseItemLines(text)], [["2026-11-18", ["스쿼트", "플랭크"]]]);
-  assert.equal(parseEntries("- [x] 2026-11-18 1h30m | 스쿼트").get("2026-11-18"), 1.5);
+test("itemsLine writes the date and the items; amount-only lines are not items", () => {
+  assert.equal(itemsLine("2026-11-18", ["스쿼트 30회", "플랭크"]), "- [x] 2026-11-18 스쿼트 30회, 플랭크");
+  assert.equal(itemsLine("2026-11-18", []), "- [x] 2026-11-18");
+  const text = ["- [x] 2026-11-18 스쿼트 30회, 플랭크", "- [x] 2026-11-19 45m", "- [x] 2026-11-20 5"].join("\n");
+  assert.deepEqual([...parseItemLines(text)], [["2026-11-18", ["스쿼트 30회", "플랭크"]]]);
 });

@@ -111,7 +111,7 @@ That is a checked task, a date (`YYYY-MM-DD`), and the Reminders title. Rules:
 
 - Identical lines (same date and same title) are counted once.
 - Unchecked lines `- [ ] YYYY-MM-DD` in a habit file mark an imported day as removed.
-- In a habit file, a line may add an amount and/or items after the date: `- [x] 2026-11-20 1h30m | squats 30 reps, plank`. The amount comes first, items after a `|`; without an amount, just list the items.
+- In an amount habit's file, a line can carry the amount after the date: `- [x] 2026-11-18 1h30m`. In an item habit's file, it lists the items: `- [x] 2026-11-20 squats 30 reps, plank`.
 
 #### What a Reminders title becomes
 
@@ -122,19 +122,18 @@ That is a checked task, a date (`YYYY-MM-DD`), and the Reminders title. Rules:
 | `Read 20 pages` | 20 pages for *Read* (`pages`, `쪽`, `페이지`) |
 | `Run 5km` | 5 km for *Run* |
 | `Workout Squats 30 reps` | The item *Squats* with *30 reps*, under the item habit *Workout* |
-| `Workout 1h` | One hour for the item habit *Workout* (an amount right after the name is time, not an item) |
-| `운동 스쿼트 30회`, `운동 1h` | The same in Korean: the item *스쿼트* with *30회*, and one hour, for the item habit *운동* |
+| `Workout 1h` | Counts the day for the item habit *Workout*; an amount right after the name is not an item, and is not kept |
+| `운동 스쿼트 30회` | The same in Korean: the item *스쿼트* with *30회* under the item habit *운동* |
 
 Titles are matched with the habit name from the start of the title, and the match is case sensitive.
 
 ## Item habits
 
-An item habit is a habit with things you did under it, like Workout → squats, plank.
+An item habit is a habit with things you did under it, like Workout → squats, plank. A habit is either an item habit or an amount habit (hours, pages, km), not both: if a habit has a unit, item logging is not available for it.
 
 - **Turn it on** by creating a habit with the type *Log items*, by choosing **Turn on item logging** in a habit's `⋯` menu, or by adding `items: true` to the habit file. Reminder titles that start with that habit's name (`Workout Squats`) then become its items. Without this, `Workout Squats` is just another habit.
 - **Log it**: tap a day to check it. Tap a checked day to pick what you did or add new items. Picking nothing still counts. Each item can carry an amount such as `30 reps`, and the amount field suggests the last one you used.
 - **Suggestions** show items used in the last two months. The `×` next to a suggestion removes it from the list after you confirm; past records stay, and logging the item again brings it back.
-- **Time too**: choose **Log time too** in the `⋯` menu (or add a unit such as `unit: hours`) and the dialog also asks how long. A day with only items still counts.
 - **Delete a day**: *Delete this day's record* in the dialog.
 
 Items are stored on the day's line in the habit file, so you can also edit them by hand.
@@ -238,7 +237,7 @@ Habit Grid는 마크다운 파일에 적은 습관 기록을 GitHub 잔디 같�
 - 기간(30/66/100일 등)을 정하면 챌린지 카드, 없으면 일반 카드.
 - 반복 방식: 주 N회 또는 요일 지정. 달마다 따로 정할 수 있고 비워 둔 달은 앞 달 값을 이어 써요.
 - 하루 목표(월별), 달성 주 통계, 칸을 눌러 기록 고치기, 오늘 줄(일간: 최근 14일 · 주간: 습관별 요일 표, 선택은 기억해요), 보관함.
-- 항목 습관: 습관 파일에 `items: true`(한국어 `항목: true`)를 적거나 `⋯` 메뉴의 "항목 기록 켜기"를 누르면 돼요. 체크한 날을 다시 누르면 한 항목과 횟수를 적을 수 있고, 시간도 함께 적을 수 있어요.
+- 항목 습관: 습관 파일에 `items: true`(한국어 `항목: true`)를 적거나 `⋯` 메뉴의 "항목 기록 켜기"를 누르면 돼요. 체크한 날을 다시 누르면 한 항목과 횟수(예: 스쿼트 30회)를 적을 수 있어요. 항목 습관은 항목만, 시간·양 습관은 시간·양만 써요.
 - 노트 어디에나 `view: today`(또는 `day`, `week`)를 적은 `habit` 코드 블록으로 일간·주간 기록을 넣을 수 있어요.
 - 습관 파일에 `start`(`시작`)로 시작일을 적어요. 새 습관 창에서 정하고, `⋯` 메뉴의 "시작일 바꾸기"로 바꿀 수 있어요.
 

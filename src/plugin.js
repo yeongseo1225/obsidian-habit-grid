@@ -135,15 +135,10 @@ export class HabitGridPlugin extends Plugin {
         const gp = splitPrefix(title);
         if (gp) {
           const g = group(gp.prefix);
-          // "Workout 1h"처럼 이름 뒤에 양만 오면 항목이 아니라 그 습관의 시간·양 기록이다
-          const amt = gp.rest ? parseTitle(`${gp.prefix} ${gp.rest}`) : null;
-          if (amt && amt.base === gp.prefix) {
-            const prev = g.log.get(ds);
-            g.log.set(ds, { amount: Math.max(prev ? prev.amount : 0, amt.amount), unit: amt.unit });
-            continue;
-          }
           if (!g.log.has(ds)) g.log.set(ds, { amount: 0, unit: undefined });
-          if (gp.rest) {
+          // "Workout 1h"처럼 이름 뒤에 양만 오면 항목이 아니라서, 그 날을 한 날로만 센다
+          const amountOnly = gp.rest && (parseTitle(`${gp.prefix} ${gp.rest}`) || {}).base === gp.prefix;
+          if (gp.rest && !amountOnly) {
             g.items = g.items || new Map();
             g.items.set(ds, [...(g.items.get(ds) || []), gp.rest]);
           }
@@ -211,7 +206,8 @@ export class HabitGridPlugin extends Plugin {
       for (const ds of skips) entries.delete(ds);
       for (const [ds, v] of [...entries]) if (!v) entries.delete(ds);
       const explicit = fmGet(fm, "monthGoals") || {};
-      out.push({ ...base, kind: "measure", unit, entries, set: new Set(entries.keys()),
+      // 시간·양 습관은 항목 습관과 겹치지 않는다
+      out.push({ ...base, isItems: false, items: null, itemsLog: null, itemsFile: null, kind: "measure", unit, entries, set: new Set(entries.keys()),
         explicit, inferred, monthGoals: Object.assign({}, inferred, explicit) });
     }
     return out;
@@ -259,8 +255,7 @@ export class HabitGridPlugin extends Plugin {
       this.addPeriodItems(menu, h);
       menu.addSeparator();
     }
-    menu.addItem((i) => i.setTitle(h.isItems ? tr("항목 기록 끄기") : tr("항목 기록 켜기")).setIcon("list-checks").onClick(() => this.toggleItems(h)));
-    if (h.isItems && h.kind === "check") menu.addItem((i) => i.setTitle(tr("시간도 기록하기")).setIcon("clock").onClick(() => this.addTimeToItems(h)));
+    if (h.kind === "check") menu.addItem((i) => i.setTitle(h.isItems ? tr("항목 기록 끄기") : tr("항목 기록 켜기")).setIcon("list-checks").onClick(() => this.toggleItems(h)));
     menu.addItem((i) => i.setTitle(tr("위로 옮기기")).setIcon("arrow-up").onClick(() => this.moveHabit(h, -1)));
     menu.addItem((i) => i.setTitle(tr("아래로 옮기기")).setIcon("arrow-down").onClick(() => this.moveHabit(h, 1)));
     menu.addSeparator();
@@ -325,13 +320,6 @@ export class HabitGridPlugin extends Plugin {
     await this.saveSettings();
     this.app.workspace.trigger("habit-grid:refresh");
   }
-  // 항목 습관에 시간 기록도 붙인다 (습관 파일에 단위를 적는다)
-  async addTimeToItems(h) {
-    const file = await this.mainFileOf(h.target, null);
-    await this.app.fileManager.processFrontMatter(file, (fm) => { fmSetUnit(fm, UNIT_HOURS, this.keyStyle()); });
-    new Notice(tr("'{0}'에 시간 기록을 붙였어요. 칸을 누르면 시간과 항목을 함께 적어요", h.name));
-  }
-
   // 습관의 항목 기록을 켜거나 끈다. 켜면 같은 이름으로 시작하는 미리 알림도 항목으로 모인다
   async toggleItems(h) {
     const file = await this.mainFileOf(h.target, null);
@@ -355,9 +343,7 @@ export class HabitGridPlugin extends Plugin {
       locked: (h.itemsLog && h.itemsLog.get(ds)) || [],
       selected: ((h.itemsFile && h.itemsFile.get(ds)) || []).map(splitItem),
       hasRecord: h.set.has(ds),
-      unit: h.kind === "measure" ? h.unit : null,
-      amount: h.kind === "measure" ? h.entries.get(ds) || 0 : 0,
-      onSubmit: (items, amount) => this.recordItems(h, ds, items, amount),
+      onSubmit: (items) => this.recordItems(h, ds, items),
       onClear: () => this.recordCheck(h, ds, false),
       onHide: (name, done) => this.hideItem(h, name, done),
     }).open();
@@ -381,9 +367,8 @@ export class HabitGridPlugin extends Plugin {
     }).open();
   }
 
-  async recordItems(h, ds, items, amount) {
-    const amountText = h.kind === "measure" && amount > 0 ? writeQty(amount, h.unit) : "";
-    await this.writeDay(h, ds, itemsLine(ds, items, amountText));
+  async recordItems(h, ds, items) {
+    await this.writeDay(h, ds, itemsLine(ds, items));
     // 다시 기록한 항목은 추천 목록에 돌아온다
     const used = new Set(items.map((t) => splitItem(t).name));
     if ((h.hiddenItems || []).some((n) => used.has(n))) {

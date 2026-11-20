@@ -81,22 +81,19 @@ export function parseDates(text) {
 const AMOUNT_ONLY_RE = /^(?:\d+:\d{1,2}|\d+(?:\.\d+)?\s*(?:h|hr|hrs|hours?|시간)\s*(?:\d+\s*(?:m|mins?|minutes?|분))?|\d+(?:\.\d+)?\s*(?:m|mins?|minutes?|분)|\d+(?:\.\d+)?)$/i;
 export function isAmountOnly(text) { return AMOUNT_ONLY_RE.test(String(text).trim()); }
 
-// 날짜 줄 하나: 양이 있으면 먼저 쓰고 항목은 | 뒤에. 예) "- [x] 2026-11-18 1h30m | 스쿼트, 플랭크"
-export function itemsLine(ds, items, amountText) {
-  const list = items.join(", ");
-  return `- [x] ${ds}` + (amountText ? ` ${amountText}` : "") + (list ? `${amountText ? " |" : ""} ${list}` : "");
+// 항목 습관의 날짜 줄 하나. 예) "- [x] 2026-11-18 스쿼트 30회, 플랭크"
+export function itemsLine(ds, items) {
+  return `- [x] ${ds}` + (items.length ? ` ${items.join(", ")}` : "");
 }
 
-// 습관 파일의 "- [x] 2026-11-18 스쿼트, 플랭크" 줄에서 날짜별 항목을 읽는다. | 앞의 양은 건너뛴다
+// 습관 파일의 "- [x] 2026-11-18 스쿼트, 플랭크" 줄에서 날짜별 항목을 읽는다. 양만 적힌 줄은 항목이 아니다
 export function parseItemLines(text) {
   const map = new Map();
   for (const line of text.split("\n")) {
     const m = line.match(DONE_RE);
     if (!m) continue;
-    let rest = (m[2] || "").trim();
-    const bar = rest.indexOf("|");
-    if (bar >= 0) rest = rest.slice(bar + 1);
-    else if (isAmountOnly(rest)) continue;
+    const rest = (m[2] || "").trim();
+    if (isAmountOnly(rest)) continue;
     const items = rest.split(/[,，、]/).map((x) => x.trim()).filter(Boolean);
     if (!items.length) continue;
     const cur = map.get(m[1]) || [];

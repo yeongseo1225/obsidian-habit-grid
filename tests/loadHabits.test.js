@@ -161,27 +161,34 @@ test("English reminder titles work as habits, amounts and items", async () => {
   assert.deepEqual(by.Workout.items.get("2026-11-18"), ["Squats", "Pull-ups 3x8"]);
 });
 
-test("an items habit can also carry time: titles like Workout 1h are amounts, not items", async () => {
+test("an items habit stays items only: Workout 1h counts the day without an item or an amount", async () => {
   const p = plugin({
-    list: { "Workout.md": ["- [x] 2026-11-19 45m | Plank\n", { items: true, unit: "hours" }] },
-    sync: { "Reminders log.md": ["- [x] 2026-11-18 Workout Squats\n- [x] 2026-11-18 Workout 1h\n"] },
+    list: { "Workout.md": ["\n", { items: true }] },
+    sync: { "Reminders log.md": ["- [x] 2026-11-18 Workout Squats 30 reps\n- [x] 2026-11-19 Workout 1h\n"] },
   });
   const [h] = await p.loadHabits("Habits");
-  assert.equal(h.kind, "measure");
+  assert.equal(h.kind, "check");
   assert.equal(h.isItems, true);
-  assert.equal(h.entries.get("2026-11-18"), 1);
-  assert.equal(h.entries.get("2026-11-19"), 0.75);
-  assert.deepEqual(h.items.get("2026-11-18"), ["Squats"]);
-  assert.deepEqual(h.items.get("2026-11-19"), ["Plank"]);
+  assert.deepEqual(h.items.get("2026-11-18"), ["Squats 30 reps"]);
+  assert.equal(h.items.has("2026-11-19"), false);
+  assert.equal(h.set.has("2026-11-19"), true);
 });
 
-test("Korean workout examples: 운동 스쿼트 30회 is an item, 운동 1h is time", async () => {
+test("a habit with a unit is never an items habit", async () => {
+  const p = plugin({ list: { "Workout.md": ["- [x] 2026-11-18 1h\n", { items: true, unit: "hours" }] } });
+  const [h] = await p.loadHabits("Habits");
+  assert.equal(h.kind, "measure");
+  assert.equal(h.isItems, false);
+  assert.equal(h.items, null);
+});
+
+test("Korean workout examples: 운동 스쿼트 30회 is an item, 운동 1h only counts the day", async () => {
   const p = plugin({
     list: { "운동.md": ["\n", { 항목: true }] },
     sync: { "Reminders log.md": ["- [x] 2026-11-18 운동 스쿼트 30회\n- [x] 2026-11-18 운동 플랭크 1분\n- [x] 2026-11-19 운동 1h\n"] },
   });
   const [h] = await p.loadHabits("Habits");
+  assert.equal(h.kind, "check");
   assert.deepEqual(h.items.get("2026-11-18"), ["스쿼트 30회", "플랭크 1분"]);
-  assert.equal(h.kind, "measure");
-  assert.equal(h.entries.get("2026-11-19"), 1);
+  assert.equal(h.set.has("2026-11-19"), true);
 });

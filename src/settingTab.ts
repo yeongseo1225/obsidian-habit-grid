@@ -38,7 +38,7 @@ export class HabitGridSettingTab extends PluginSettingTab {
         render: (setting: Setting) => {
           r.build?.(setting);
           // the tab is not attached yet while this runs, so the extra block goes inside the row (under the description)
-          if (r.extra) { const host = setting.infoEl.createDiv(); r.extra(host); }
+          if (r.extra) { setting.infoEl.findAll(":scope > .hg-extra").forEach((el) => el.remove()); r.extra(setting.infoEl.createDiv({ cls: "hg-extra" })); }
         },
       };
       if (group) (group.items ??= []).push(def); else out.push(def);

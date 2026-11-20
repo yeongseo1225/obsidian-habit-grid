@@ -37,7 +37,8 @@ export class HabitGridSettingTab extends PluginSettingTab {
         searchable: !!r.name,
         render: (setting: Setting) => {
           r.build?.(setting);
-          if (r.extra) { const host = createDiv(); r.extra(host); setting.settingEl.insertAdjacentElement("afterend", host); }
+          // the tab is not attached yet while this runs, so the extra block goes inside the row (under the description)
+          if (r.extra) { const host = setting.infoEl.createDiv(); r.extra(host); }
         },
       };
       if (group) (group.items ??= []).push(def); else out.push(def);

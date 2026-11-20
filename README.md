@@ -1,8 +1,20 @@
 # Habit Grid
 
-Track habits in plain Markdown files and see them as a GitHub-style contribution grid inside your notes.
+Turn habit records into a GitHub-style contribution grid inside your notes, with a week view, streaks, goals, and challenges.
 
 > 한국어 설명은 [아래](#한국어)에 있어요.
+
+## Made for Apple Reminders, usable without it
+
+Habit Grid was built to **log habits with Apple Reminders and visualize them in your vault**. Complete a reminder on your iPhone, let an iOS Shortcut append it to a Markdown file, and the dashboard shows it. See [iPhone Shortcuts integration](#iphone-shortcuts-integration-reminders).
+
+You don't need Reminders, though. Everything is stored in plain Markdown files, so you can also:
+
+- create habits in the plugin and tap cells to log them,
+- write the record lines by hand, or
+- append lines with any other tool, such as another shortcut or a script.
+
+The plugin only reads and writes Markdown files in your vault. It makes no network requests and sends no data anywhere. It is not affiliated with Apple.
 
 <!-- SCREENSHOT: dashboard overview (several habit cards) -->
 <!-- SCREENSHOT: challenge card (30/66/100 days) -->
@@ -10,6 +22,7 @@ Track habits in plain Markdown files and see them as a GitHub-style contribution
 
 ## Features
 
+- **Apple Reminders logging (optional)** – completed reminders from an iOS Shortcut are read from a Markdown log file.
 - **Dashboard** – a `habit` code block (and a ready-made "Habits Dashboard" note) renders one card per habit with a year or half-year grid.
 - **Three habit types**
   - *Simple check* – done or not done.
@@ -228,22 +241,77 @@ npm test        # node tests for the pure logic
 
 # 한국어
 
-Habit Grid는 마크다운 파일에 적은 습관 기록을 GitHub 잔디 같은 격자로 보여주는 플러그인이에요. 데이터는 전부 보관함의 마크다운 파일이고 별도 DB나 네트워크 사용은 없어요.
+Habit Grid는 습관 기록을 GitHub 잔디 같은 격자로 보여주는 플러그인이에요. 주간 보기, 연속 기록, 목표, 챌린지를 지원해요.
+
+## 애플 미리 알림을 위해 만들었지만, 없이도 쓸 수 있어요
+
+Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에서 시각화**하려고 만들었어요. iPhone에서 미리 알림을 완료하면 iOS 단축어가 그 기록을 마크다운 파일에 덧붙이고, 대시보드에 바로 보여요. [단축어 연동](#단축어-연동)을 보세요.
+
+미리 알림이 없어도 괜찮아요. 모든 기록이 평범한 마크다운 파일이라서 이렇게도 쓸 수 있어요.
+
+- 플러그인에서 습관을 만들고 칸을 눌러 기록해요.
+- 기록 줄을 직접 적어요.
+- 다른 단축어나 스크립트 같은 도구로 줄을 덧붙여요.
+
+플러그인은 보관함의 마크다운 파일만 읽고 쓰고, 네트워크를 쓰거나 데이터를 밖으로 보내지 않아요. 애플과는 관련이 없어요.
 
 ## 기능
 
-- `habit` 코드 블록과 "Habits Dashboard" 노트로 습관 카드와 격자를 보여줘요.
-- 습관 종류: 기본(체크), 양 기록(시간·쪽·km 등), 항목 기록(운동 → 스쿼트, 플랭크).
-- 기간(30/66/100일 등)을 정하면 챌린지 카드, 없으면 일반 카드.
-- 반복 방식: 주 N회 또는 요일 지정. 달마다 따로 정할 수 있고 비워 둔 달은 앞 달 값을 이어 써요.
-- 하루 목표(월별), 달성 주 통계, 칸을 눌러 기록 고치기, 오늘 줄(일간: 최근 14일 · 주간: 습관별 요일 표, 선택은 기억해요), 보관함.
-- 항목 습관: 습관 파일에 `items: true`(한국어 `항목: true`)를 적거나 `⋯` 메뉴의 "항목 기록 켜기"를 누르면 돼요. 체크한 날을 다시 누르면 한 항목과 횟수(예: 스쿼트 30회)를 적을 수 있어요. 항목 습관은 항목만, 시간·양 습관은 시간·양만 써요.
-- 노트 어디에나 `view: today`(또는 `day`, `week`)를 적은 `habit` 코드 블록으로 일간·주간 기록을 넣을 수 있어요.
-- 습관 파일에 `start`(`시작`)로 시작일을 적어요. 새 습관 창에서 정하고, `⋯` 메뉴의 "시작일 바꾸기"로 바꿀 수 있어요.
+- **대시보드**: `habit` 코드 블록과 "Habits Dashboard" 노트로 습관 카드와 연간 격자를 보여줘요.
+- **습관 종류**: 기본(체크), 양 기록(시간·쪽·km 등), 항목 기록(운동 → 스쿼트, 플랭크). 양 기록과 항목 기록은 한 습관에서 함께 쓰지 않아요.
+- **챌린지**: 기간(30/66/100일 등)을 정하면 챌린지 카드, 없으면 일반 카드예요.
+- **반복 규칙**: 주 N회 또는 요일 지정. 달마다 따로 정할 수 있고 비워 둔 달은 앞 달 값을 이어 써요.
+- **목표**: 양 기록의 월별 하루 목표와 달성 주 통계.
+- **오늘 줄**: 일간(최근 14일)과 주간(습관별 요일 표) 중에 골라요. 주간 표는 줄마다 `달성/목표`가 보이고, 목표를 채우면 남은 칸이 습관 색의 연한 톤으로 바뀌어요. 선택은 기억해요.
+- **칸을 눌러 기록**하고, 지난 기록은 "지난 기록 채우기"로 채워요.
+- **보관함**: 끝낸 습관은 보관함으로 옮겨요. 기록은 남아요.
+- **한국어·영어·자동**을 지원해요.
+
+## 설치
+
+공식 목록에서 "Habit Grid"를 검색해 설치하거나(승인 후), GitHub 릴리스의 `main.js`, `manifest.json`, `styles.css`를 `<보관함>/.obsidian/plugins/habit-grid/`에 복사하고 플러그인을 켜요. 처음 켜면 `habit-grid` 폴더와 `Habits Dashboard` 노트를 만들어요.
 
 ## 폴더와 파일
 
-`habit-grid/` 아래에 `Habits Dashboard.md`, `list/`(습관 파일), `sync/`(`Reminders log.md` 미리 알림 기록), `archive/`(보관한 습관)가 있어요. 습관 파일의 frontmatter 키는 `단위`, `월별목표`, `월별횟수`, `월별요일`(0=일 … 6=토), `기간`, `시작`, `보관`, `색`이에요(일부는 `unit`, `goal`, `color`, `archived` 별칭도 읽어요). 기록은 `- [x] 2026-11-19 목 스트레칭` 한 줄 형식이고, 같은 날짜·같은 제목의 중복 줄은 한 번만 세요.
+`habit-grid/` 아래에 `Habits Dashboard.md`, `list/`(습관 파일), `sync/`(`Reminders log.md` 미리 알림 기록), `archive/`(보관한 습관)가 있어요. 이 세 하위 폴더만 읽어요.
+
+습관 파일의 속성은 한국어 이름과 영어 이름을 둘 다 읽어요.
+
+| 한국어 | 영어 | 뜻 |
+| --- | --- | --- |
+| `단위` | `unit` | 양 습관의 단위 (`시간`, `분`, `쪽`, `km` 또는 아무 글자) |
+| `월별목표` | `monthGoals` | 달마다 하루 목표 |
+| `월별횟수` | `weeklyTimes` | 달마다 주 몇 회 |
+| `월별요일` | `weekdays` | 달마다 요일 (0=일 … 6=토) |
+| `기간` | `duration` | 챌린지 일수 |
+| `시작` | `start` | 시작일 (`YYYY-MM-DD`) |
+| `보관` | `archived` | 보관했으면 `true` |
+| `항목` | `items` | `true`면 항목 습관 |
+| `숨긴항목` | `hiddenItems` | 추천에서 뺀 항목 |
+| `색` | `color` | 카드 색 |
+
+기록은 한 줄에 하나예요: `- [x] 2026-11-19 스트레칭`. 같은 날짜·같은 제목의 중복 줄은 한 번만 세요. 습관 파일에서는 양 습관이면 `- [x] 2026-11-18 1h30m`, 항목 습관이면 `- [x] 2026-11-20 스쿼트 30회, 플랭크`처럼 적어요.
+
+### 미리 알림 제목은 이렇게 읽어요
+
+| 미리 알림 제목 | 결과 |
+| --- | --- |
+| `스트레칭` | 체크 습관 "스트레칭" |
+| `공부 2시간`, `공부 1h 30m` | 습관 "공부"의 시간 |
+| `독서 20쪽`, `달리기 5km` | 쪽, km 양 |
+| `운동 스쿼트 30회` | 항목 습관 "운동"의 항목 "스쿼트 30회" |
+| `운동 1h` | 항목 습관에서는 그 날만 한 날로 세요(시간은 안 남아요) |
+
+제목 앞부분이 습관 이름과 같아야 하고, 대소문자를 구분해요.
+
+## 항목 습관
+
+운동 → 스쿼트, 플랭크처럼 습관 아래에 한 것을 남기는 습관이에요.
+
+- **켜는 법**: 새 습관에서 "항목 기록"을 고르거나, 카드 `⋯` 메뉴의 "항목 기록 켜기"를 누르거나, 습관 파일에 `항목: true`를 적어요. 켜면 그 습관 이름으로 시작하는 미리 알림(`운동 스쿼트`)이 항목이 돼요. 습관을 먼저 만들어야 해요.
+- **기록**: 빈 칸을 누르면 체크돼요. 체크한 칸을 다시 누르면 한 항목을 고르거나 새로 적어요. 하나도 안 골라도 그 날은 기록돼요. 항목마다 `30회` 같은 양을 적을 수 있어요.
+- **추천**은 최근 두 달 안에 쓴 항목이에요. `×`로 빼면 확인을 한 번 더 묻고, 지난 기록은 그대로예요.
+- **`이날 기록 지우기`**로 그날 기록을 지워요.
 
 ## 단축어 연동
 
@@ -256,6 +324,19 @@ Habit Grid는 마크다운 파일에 적은 습관 기록을 GitHub 잔디 같�
 5. 반복이 끝난 뒤 **텍스트 결합** – 구분자는 새 줄
 6. **파일에 추가** – `habit-grid/sync/Reminders log.md`
 
-7일치를 다시 읽기 때문에 같은 줄이 여러 번 붙을 수 있지만, 중복은 한 번만 세요.
+7일치를 다시 읽기 때문에 같은 줄이 여러 번 붙을 수 있지만, 중복은 한 번만 세요. 처음 설정할 때 `sync/` 폴더와 빈 `Reminders log.md`를 자동으로 만들어요.
 
-처음 설정할 때 `sync/` 폴더와 빈 `Reminders log.md`를 자동으로 만들어요.
+## 노트에 일간·주간 기록 넣기
+
+노트 어디에나 아래 코드 블록을 적으면 일간·주간 기록을 넣을 수 있어요.
+
+````
+```habit
+view: today
+```
+````
+ `view: day` 또는 `view: week`는 한쪽만 보여주고, `habit: 공부, 운동`을 더하면 일부 습관만 보여줘요. 명령 "일간·주간 기록 코드 넣기"가 커서 위치에 넣어 줘요.
+
+## 설정
+
+언어, 속성 이름(한국어/영어), 미리 알림 기록 파일 이름, 습관 폴더, 대시보드 노트 이름, 메인 격자(1년/6개월), 한 주의 시작, 칸 색깔, 칸을 눌러 기록 고치기가 있어요.

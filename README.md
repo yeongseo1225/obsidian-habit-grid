@@ -54,12 +54,6 @@ The plugin only reads and writes Markdown files in your vault. It makes no netwo
 1. Open **Settings → Community plugins → Browse**.
 2. Search for "Habit Grid", then install and enable it.
 
-### Manual
-
-1. Download `main.js`, `manifest.json` and `styles.css` from the [latest release](../../releases/latest).
-2. Copy them into `<your vault>/.obsidian/plugins/habit-grid/`.
-3. Reload the app and enable **Habit Grid** under **Settings → Community plugins**.
-
 On first start the plugin creates the `habit-grid` folder, a `Habits Dashboard` note, and `sync/Reminders log.md`. The `list/` and `archive/` folders appear when you create or archive your first habit. You can also run **Create habits folder and dashboard** from the command palette.
 
 ![New habit dialog](./images/new-habit.png)

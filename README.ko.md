@@ -54,12 +54,6 @@ Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에�
 1. **설정 → 커뮤니티 플러그인 → 둘러보기**를 열어요.
 2. "Habit Grid"를 검색해 설치하고 켜요.
 
-### 직접 설치
-
-1. [최신 릴리스](../../releases/latest)에서 `main.js`, `manifest.json`, `styles.css`를 받아요.
-2. `<보관함>/.obsidian/plugins/habit-grid/`에 복사해요.
-3. 앱을 다시 불러오고 **설정 → 커뮤니티 플러그인**에서 **Habit Grid**를 켜요.
-
 처음 켜면 `habit-grid` 폴더, `Habits Dashboard` 노트, `sync/Reminders log.md`를 만들어요. `list/`와 `archive/` 폴더는 첫 습관을 만들거나 보관할 때 생겨요. 명령 팔레트에서 **습관 폴더와 대시보드 만들기**를 실행해도 돼요.
 
 ![새 습관 만들기 창](./images/new-habit.png)

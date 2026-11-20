@@ -34,12 +34,11 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--hg-on) 30%, transparent);
-  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--hg-on) 60%, transparent);
+  background: var(--hg-on);
 }
 
+/* 오늘 기록했으면 점 둘레에 옅은 테두리가 더 생긴다 */
 .hg-dot.is-done {
-  background: var(--hg-on);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--hg-on) 22%, transparent);
 }
 

@@ -1515,3 +1515,11 @@
 .hg-items-amt { width: 130px; }
 .hg-items-x { all: unset; box-sizing: border-box; cursor: pointer; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--text-faint); font-size: 14px; }
 .hg-items-x:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+
+/* 오늘 줄 접기 */
+.hg-todayfold { padding: 0 8px; }
+.hg-todaybar.is-collapsed .hg-todaylist,
+.hg-todaybar.is-collapsed .hg-wkgrid,
+.hg-todaybar.is-collapsed .hg-todayempty { display: none; }
+.hg-todaybar.is-collapsed .hg-todayhead { margin-bottom: 0; }
+.hg-todaybar.is-collapsed { padding-top: 10px; padding-bottom: 10px; }

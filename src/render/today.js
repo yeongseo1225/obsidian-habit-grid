@@ -84,6 +84,14 @@ export function nameIsShort(name) {
   return w <= 8;
 }
 
+// 오늘 줄 접기·펼치기 버튼
+function addFold(parent, opts) {
+  const b = parent.createEl("button", { cls: "hg-yearbtn hg-todayfold", text: opts.collapsed ? "▸" : "▾" });
+  b.setAttr("aria-label", opts.collapsed ? tr("펼치기") : tr("접기"));
+  b.addEventListener("click", () => opts.onCollapse());
+  stopEditorGrab(b);
+}
+
 // 일간 | 주간 전환
 function todayTabs(parent, mode, onMode) {
   const tabs = parent.createDiv({ cls: "hg-tabs" });
@@ -125,6 +133,7 @@ function renderWeekBar(box, habits, today, opts) {
     if (offset > 0) next.addEventListener("click", () => { offset--; draw(); });
     stopEditorGrab(prev); stopEditorGrab(next);
     const side = head.createSpan({ cls: "hg-todayright" });
+    if (opts.onCollapse) addFold(side, opts);
     if (opts.onMode) todayTabs(side, "week", opts.onMode);
     let due = 0, done = 0;
     for (const r of rows) { due += r.target; done += Math.min(r.achieved, r.target); }
@@ -172,7 +181,7 @@ function renderWeekBar(box, habits, today, opts) {
 export function renderTodayBar(parent, habits, today, opts) {
   const weekStart = opts.weekStart == null ? 1 : opts.weekStart;
   const todayStr = fmt(today);
-  const box = parent.createDiv({ cls: "hg-todaybar" });
+  const box = parent.createDiv({ cls: "hg-todaybar" + (opts.collapsed ? " is-collapsed" : "") });
   if (opts.mode === "week") { renderWeekBar(box, habits, today, opts); return; }
   const pager = box.createDiv({ cls: "hg-todaypager" });
   const pages = [];
@@ -197,7 +206,8 @@ export function renderTodayBar(parent, habits, today, opts) {
     if (n === DAYS - 1) prev.addClass("is-ghost"); else prev.addEventListener("click", () => goPage(-1));
     if (!isToday) next.addEventListener("click", () => goPage(1));
     stopEditorGrab(prev); stopEditorGrab(next);
-    const side = opts.onMode ? head.createSpan({ cls: "hg-todayright" }) : head;
+    const side = opts.onMode || opts.onCollapse ? head.createSpan({ cls: "hg-todayright" }) : head;
+    if (opts.onCollapse) addFold(side, opts);
     if (opts.onMode) todayTabs(side, "day", opts.onMode);
     side.createSpan({ cls: "hg-todaycount", text: `${list.filter((h) => doneOf(h, ds)).length}/${list.length}` });
 

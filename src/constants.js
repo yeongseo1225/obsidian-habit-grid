@@ -13,6 +13,7 @@ export const DEFAULT_SETTINGS = {
   keyStyle: "auto",   // 습관 파일에 적는 속성 이름: "auto"(화면 언어 따라감) | "ko" | "en"
   color: "",
   weekStart: 1, // 0 = 일요일, 1 = 월요일
+  todayCollapsed: false, // 맨 위 줄을 접어 둘지
   todayMode: "day",  // 맨 위 줄 보기: "day"(일간) | "week"(주간)
   gridMode: "year", // 메인 화면 격자: "year" = 1년씩, "half" = 6개월씩
   clickToToggle: true,

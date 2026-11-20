@@ -113,6 +113,8 @@ export class HabitView extends MarkdownRenderChild {
       colorOf,
       weekStart: settings.weekStart,
       mode,
+      collapsed: !!settings.todayCollapsed,
+      onCollapse: () => { settings.todayCollapsed = !settings.todayCollapsed; void this.plugin.saveSettings().then(() => this.plugin.app.workspace.trigger("habit-grid:refresh")); },
       onMode: toggle ? (m) => { settings.todayMode = m; void this.plugin.saveSettings().then(() => this.plugin.app.workspace.trigger("habit-grid:refresh")); } : null,
       onCheck: (h, ds) => this.plugin.recordCheck(h, ds, !h.set.has(ds)),
       onItems: (h, ds) => this.plugin.openItems(h, ds),

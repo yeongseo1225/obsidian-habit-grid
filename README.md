@@ -165,11 +165,11 @@ Items are stored on the day's line in the habit file, so you can also edit them 
 
 ## iPhone Shortcuts integration (Reminders)
 
-Habit logs can be collected from the Reminders app by an iOS Shortcut. It appends completed reminders from a list named **Habit** to `sync/Reminders log.md`.
+Habit logs can be collected from the Reminders app by an iOS Shortcut. It appends completed reminders from a list named **Habits** to `sync/Reminders log.md`.
 
 Build the shortcut with these actions, in order:
 
-1. **Find Reminders** – List is `Habit`, Is Completed is `Yes`, Completion Date is in the last 7 days.
+1. **Find Reminders** – List is `Habits`, Is Completed is `Yes`, Completion Date is in the last 7 days.
 2. **Repeat with Each** item from step 1.
 3. Inside the loop: **Format Date** – the item's Completion Date, custom format `yyyy-MM-dd`.
 4. Inside the loop: **Text** – `- [x] ` + the formatted date + a space + the reminder's Title.
@@ -179,6 +179,17 @@ Build the shortcut with these actions, in order:
 Run it by hand or with a personal automation. Because the shortcut looks back seven days, the same line can be appended more than once; duplicates are counted once. See *What a Reminders title becomes* above for how titles are read.
 
 The plugin recognizes the log file by name. The default is `Reminders log`; you can set another name in settings. On first setup the plugin creates `habit-grid/sync/` and an empty `Reminders log.md` for the shortcut to append to.
+
+### Optional: sync from a Mac
+
+If you have a Mac, a small script can copy completed reminders into the log file instead of a Shortcut. Complete a reminder on any device; once it reaches your Mac through iCloud, the script appends it. If the Mac was off, it catches up the next time it runs (it reads the last 30 days).
+
+1. Download `scripts/habit-log-sync.sh` and `scripts/md.habitgrid.sync.plist` from this repository into a folder such as `~/habit-grid-sync/`.
+2. In Obsidian, open **Settings → Habit Grid** and set **Reminder lists to sync** (default `Habits`; separate several lists with commas, matching the names in Reminders exactly).
+3. Run it once in Terminal and allow access to Reminders when macOS asks: `bash ~/habit-grid-sync/habit-log-sync.sh "/path/to/your/vault"`.
+4. To run it automatically, edit the two paths in the `.plist`, copy it to `~/Library/LaunchAgents/`, and run `launchctl load ~/Library/LaunchAgents/md.habitgrid.sync.plist`. It runs at login and every 30 minutes. Stop it with `launchctl unload` and the same path.
+
+The script only reads Reminders and appends lines to the log file. Lines already in the file are skipped.
 
 ## Dashboard code block
 
@@ -350,9 +361,9 @@ Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에�
 
 ## 단축어 연동
 
-미리 알림의 `Habit` 목록에서 완료한 항목을 `sync/Reminders log.md` 끝에 덧붙이는 iOS 단축어를 만들어요.
+미리 알림의 `Habits` 목록에서 완료한 항목을 `sync/Reminders log.md` 끝에 덧붙이는 iOS 단축어를 만들어요.
 
-1. **미리 알림 찾기** – 목록 = Habit, 완료됨 = 예, 완료일이 최근 7일 이내
+1. **미리 알림 찾기** – 목록 = Habits, 완료됨 = 예, 완료일이 최근 7일 이내
 2. **각 항목 반복**
 3. 반복 안에서 **날짜 서식** – 완료일, 사용자 지정 `yyyy-MM-dd`
 4. 반복 안에서 **텍스트** – `- [x] 날짜 제목`
@@ -360,6 +371,17 @@ Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에�
 6. **파일에 추가** – `habit-grid/sync/Reminders log.md`
 
 7일치를 다시 읽기 때문에 같은 줄이 여러 번 붙을 수 있지만, 중복은 한 번만 세요. 처음 설정할 때 `sync/` 폴더와 빈 `Reminders log.md`를 자동으로 만들어요.
+
+### 선택: Mac에서 자동으로 가져오기
+
+Mac이 있다면 단축어 대신 작은 스크립트가 완료한 미리 알림을 로그 파일에 덧붙일 수 있어요. 어느 기기에서 완료하든 iCloud로 Mac에 도착하면 스크립트가 덧붙이고, Mac이 꺼져 있었다면 켜진 뒤 다음 실행 때 따라잡아요(최근 30일을 읽어요).
+
+1. 이 저장소의 `scripts/habit-log-sync.sh`와 `scripts/md.habitgrid.sync.plist`를 `~/habit-grid-sync/` 같은 폴더에 받아요.
+2. 옵시디언 **설정 → Habit Grid**의 **동기화할 미리 알림 목록**에 목록 이름을 적어요(기본 `Habits`, 여러 개는 쉼표로, 미리 알림 앱의 이름과 똑같이).
+3. 터미널에서 한 번 실행하고, macOS가 물으면 미리 알림 접근을 허용해요: `bash ~/habit-grid-sync/habit-log-sync.sh "/보관함/경로"`
+4. 자동으로 돌리려면 `.plist`의 경로 두 곳을 고치고 `~/Library/LaunchAgents/`에 복사한 뒤 `launchctl load ~/Library/LaunchAgents/md.habitgrid.sync.plist`를 실행해요. 로그인할 때와 30분마다 돌아요. 멈추려면 같은 경로로 `launchctl unload`를 실행해요.
+
+스크립트는 미리 알림을 읽기만 하고 로그 파일에 줄을 덧붙이기만 해요. 이미 있는 줄은 건너뛰어요.
 
 ## 노트에 일간·주간 기록 넣기
 

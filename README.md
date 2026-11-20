@@ -150,7 +150,7 @@ That is a checked task, a date (`YYYY-MM-DD`), and the Reminders title. Rules:
 
 Titles are matched with the habit name from the start of the title, and the match is case sensitive.
 
-**Naming reminders that belong together.** Write the habit name first and the part after it: `Stretch Neck`, `Stretch Back`, `Workout Legs`. If *Stretch* and *Workout* are item habits (see below), these become items of those habits. To keep a part as a habit of its own, write it the other way round: `Neck Stretch`.
+**Naming reminders that belong together.** For an item habit (a habit with item logging turned on, such as *Stretch* or *Workout*), a title that starts with its name becomes one of its items: write the habit name first and the part after it, like `Stretch Neck` or `Workout Legs`. For any other habit, or to keep a part as a habit of its own, write it the other way round, like `Neck Stretch`.
 
 ## Item habits
 
@@ -356,7 +356,7 @@ Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에�
 
 제목 앞부분이 습관 이름과 같아야 하고, 대소문자를 구분해요.
 
-**함께 묶일 미리 알림 이름 짓기.** 습관 이름을 앞에, 부위나 종류를 뒤에 써요: `스트레칭 목`, `스트레칭 허리`, `운동 하체`. *스트레칭*과 *운동*이 항목 습관이면 이 제목들은 그 습관의 항목이 돼요. 따로 하나의 습관으로 두고 싶으면 순서를 바꿔 `목 스트레칭`처럼 써요.
+**함께 묶일 미리 알림 이름 짓기.** 항목 기록을 켠 습관(예: *스트레칭*, *운동*)은 그 이름으로 시작하는 제목이 그 습관의 항목이 돼요. 습관 이름을 앞에, 부위를 뒤에 써요: `스트레칭 목`, `운동 하체`. 항목 기록을 켜지 않은 습관이거나 따로 하나의 습관으로 두고 싶으면 순서를 바꿔 `목 스트레칭`처럼 써요.
 
 ## 항목 습관
 

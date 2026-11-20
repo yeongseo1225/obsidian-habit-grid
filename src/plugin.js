@@ -524,7 +524,7 @@ export class HabitGridPlugin extends Plugin {
 
   openGoals(h, year) {
     new GoalsModal(this.app, {
-      name: h.name, unit: h.unit, year, measure: h.kind === "measure",
+      name: h.name, unit: h.unit, year, measure: h.kind === "measure", color: h.color || this.settings.color || "",
       explicit: h.kind === "measure" ? h.explicit : {}, inferred: h.kind === "measure" ? h.inferred : {}, freqs: h.freqsRaw, days: h.days,
       onSave: async (work, fwork, dwork) => {
         const file = await this.mainFileOf(h.target, h.kind === "measure" ? h.unit : null);

@@ -474,59 +474,6 @@
   margin-bottom: 12px;
 }
 
-.hg-goals-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.hg-goals-cell {
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 10px;
-  padding: 8px 10px;
-}
-
-.hg-goals-cell.is-current {
-  border-color: var(--interactive-accent);
-}
-
-.hg-goals-month {
-  font-size: 0.8em;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.hg-goals-inputrow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.hg-goals-inputrow .hg-modal-unit {
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.hg-goals-inputrow input {
-  width: 100%;
-  min-width: 0;
-  flex: 1;
-}
-
-.hg-goals-hint {
-  font-size: 0.7em;
-  color: var(--text-faint);
-  margin-top: 3px;
-  min-height: 1em;
-}
-
-@media (max-width: 480px) {
-  .hg-goals-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 .hg-dot.is-clickable {
   cursor: pointer;
   width: 10px;
@@ -1154,13 +1101,7 @@
 .hg-weektop .hg-yearnav { display: flex; align-items: center; gap: 4px; min-width: 0; }
 .hg-weektitle { font-size: 0.95em; font-weight: 600; white-space: nowrap; }
 .hg-weektop .hg-yearsum { white-space: nowrap; color: var(--text-muted); font-size: 0.85em; }
-.hg-goals-inputrow { white-space: nowrap; }
-.hg-goals-lab { font-size: 0.8em; color: var(--text-muted); margin-right: 4px; min-width: 2em; display: inline-block; }
-.hg-goals-select { font-size: 0.85em; max-width: 100%; }
-.hg-goals-select.is-inherited { color: var(--text-faint); }
 .hg-mgoal.is-inherited { color: var(--text-muted); }
-.hg-goals-inputrow.is-hidden { display: none; }
-.hg-goals-inputrow input { width: 3.4em; min-width: 0; padding: 2px 4px; text-align: center; }
 
 /* v23: 화살표 고정, 연·월·주 제목 크기 통일 */
 .hg-year, .hg-weektitle { font-size: 1em; font-weight: 650; }
@@ -1421,13 +1362,6 @@
 .hg-cbody .hg-scroll.hg-cg.hg-cg-half .hg-daylabel { height: var(--cc, 22px); min-height: var(--cc, 22px); line-height: var(--cc, 22px); }
 .hg-cbody .hg-scroll.hg-cg.hg-cg-half .hg-grid, .hg-cbody .hg-scroll.hg-cg.hg-cg-half .hg-col { gap: var(--cgap, 5px); }
 
-/* v24.8 달별 목표 창: 칸 폭이 좁아도 드롭다운이 밖으로 나가지 않게 */
-.hg-goals-grid { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
-.hg-goals-cell { min-width: 0; overflow: hidden; }
-.hg-goals-inputrow { min-width: 0; }
-.hg-goals-lab { flex: none; min-width: 2.4em; margin-right: 0; }
-.hg-goals-inputrow .hg-goals-select { flex: 1 1 0; width: auto; min-width: 0; max-width: 100%; text-overflow: ellipsis; padding-left: 8px; }
-.hg-goals-hint { white-space: normal; overflow-wrap: anywhere; }
 .hg-rbar { display: flex; align-items: center; gap: 6px; }
 
 /* v24.9 요일 지정 */
@@ -1529,3 +1463,25 @@
 .hg-wkcell.is-dim:not(.is-on):not(.is-partial) { background: color-mix(in srgb, var(--hg-on) 7%, var(--background-primary)); box-shadow: none; }
 .hg-tbtn.is-on { background: color-mix(in srgb, var(--hg-on) 15%, var(--background-primary)); color: var(--hg-on); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hg-on) 38%, transparent); }
 .hg-tbtn.is-on .hg-tcheck { background: var(--hg-on); color: #fff; box-shadow: none; }
+
+/* 달별 목표 창: 12개 달 타일 + 누른 달 편집 */
+.hg-goals-modal { --hg-on: var(--interactive-accent); }
+.hg-gt-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+@media (max-width: 480px) { .hg-gt-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.hg-gt { all: unset; box-sizing: border-box; cursor: pointer; min-width: 0; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--background-modifier-border); background: var(--background-primary); }
+.hg-gt:hover { background: var(--background-secondary); }
+.hg-gt-m { font-size: 0.75em; color: var(--text-muted); }
+.hg-gt.is-now .hg-gt-m { color: var(--text-normal); font-weight: 600; }
+.hg-gt-v { font-size: 1.02em; font-weight: 600; margin-top: 1px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hg-gt-g { font-size: 0.75em; color: var(--text-muted); }
+.hg-gt-s { font-size: 0.65em; color: var(--text-faint); margin-top: 2px; }
+.hg-gt.is-set { border-color: color-mix(in srgb, var(--hg-on) 55%, transparent); background: color-mix(in srgb, var(--hg-on) 10%, var(--background-primary)); }
+.hg-gt.is-set .hg-gt-v { color: var(--hg-on); }
+.hg-gt.is-sel { box-shadow: 0 0 0 2px var(--hg-on); }
+.hg-gt-panel { border: 1px solid var(--background-modifier-border); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; }
+.hg-gt-ptitle { font-weight: 600; margin-bottom: 4px; }
+.hg-gt-lab { font-size: 0.75em; color: var(--text-muted); margin: 10px 0 5px; }
+.hg-gt-inputs { display: flex; align-items: center; gap: 6px; }
+.hg-gt-inputs input { width: 4.2em; text-align: center; }
+.hg-gt-reset { margin-top: 12px; font-size: 0.8em; }
+.hg-goals-modal .hg-nh-chip.is-on { background: var(--hg-on); border-color: var(--hg-on); color: #fff; }

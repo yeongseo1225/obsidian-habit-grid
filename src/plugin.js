@@ -505,7 +505,7 @@ export class HabitGridPlugin extends Plugin {
     pop.createDiv({ cls: "hg-pop-sep" });
     for (const [name, hex] of PRESET_COLORS) row(tr(name), hex, cur === hex.toLowerCase(), () => apply(hex));
     pop.createDiv({ cls: "hg-pop-sep" });
-    row(tr("직접 고르기…"), "conic-gradient(#ef4444, #eab308, #2fb67c, #3b82f6, #7c5cff, #ef4444)", false, () => {
+    row(tr("직접 고르기…"), "conic-gradient(#cf5f66, #c98a2b, #4f9d5d, #3f7fd1, #7567d9, #cf5f66)", false, () => {
       const input = activeDocument.body.createEl("input", { type: "color", cls: "hg-hidden-color" });
       input.addEventListener("change", () => { void apply(input.value); input.remove(); });
       input.addEventListener("blur", () => window.setTimeout(() => input.remove(), 500));

@@ -36,7 +36,7 @@ export class HabitGridSettingTab extends PluginSettingTab {
       .setValue(String(s.weekStart)).onChange(async (v) => { s.weekStart = Number(v); await save(); }));
 
     new Setting(containerEl).setName(tr("칸 색깔")).setDesc(tr("비워 두면 테마 강조색을 써요"))
-      .addColorPicker((c) => c.setValue(s.color || "#7c5cff").onChange(async (v) => { s.color = v; await save(); }))
+      .addColorPicker((c) => c.setValue(s.color || "#7567d9").onChange(async (v) => { s.color = v; await save(); }))
       .addExtraButton((b) => b.setIcon("rotate-ccw").setTooltip(tr("테마 색으로 되돌리기")).onClick(async () => { s.color = ""; await save(); this.display(); }));
 
     new Setting(containerEl).setName(tr("칸을 눌러 기록 고치기")).setDesc(tr("빠뜨린 날을 직접 채우거나 지울 수 있어요"))

@@ -36,7 +36,7 @@ The plugin only reads and writes Markdown files in your vault. It makes no netwo
 - **Repeat rules** – "N times a week" or "specific days" (Mon, Wed, Fri…). Rules can differ per month; a month you leave empty keeps the previous month's rule.
 
   ![Repeat rules: times per week or specific days, set per month](./images/repeat-rules.png)
-- **Goals** – a daily goal per month for amount habits, plus goal-week statistics.
+- **Goals** – a daily amount goal per month for amount habits (e.g. 20 pages a day), plus how many weeks you hit your goal.
 
   ![Amount habit with a daily goal](./images/amount-habit.png)
 
@@ -170,6 +170,8 @@ Items are stored on the day's line in the habit file, so you can also edit them 
 
 ![Item habit detail](./images/item-habit.png)
 
+![Item habit month calendar](./images/item-habit-calendar.png)
+
 ![Item dialog](./images/item-dialog.png)
 
 ## iPhone Shortcuts integration (Reminders)
@@ -266,7 +268,13 @@ view: day
 
 Replace `day` with `week` or `today` for the other views. Add `habit: Study, Workout` to show only some habits. The command **Insert day and week view** puts the `view: today` block at the cursor. Tapping works as on the dashboard, so you can log from the note. Each view has a **Today** / **This week** button that jumps back after you page through earlier days or weeks.
 
-![Day and week view embedded in a note](./images/note-embed.png)
+`view: day`:
+
+![Day view embedded in a note](./images/note-embed-day.png)
+
+`view: week`:
+
+![Week view embedded in a note](./images/note-embed-week.png)
 
 ### One habit's year in your own notes
 
@@ -379,7 +387,7 @@ Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에�
 - **반복 규칙** – "주 N회" 또는 "요일 지정"(월, 수, 금…). 달마다 규칙을 다르게 정할 수 있고, 비워 둔 달은 앞 달의 규칙을 이어 써요.
 
   ![반복 규칙: 주 횟수 또는 요일을 달마다 정하기](./images/repeat-rules.png)
-- **목표** – 양 습관의 월별 하루 목표와 목표 달성 주 통계.
+- **목표** – 양 습관의 월별 하루 목표량(예: 하루 20페이지)과, 목표를 채운 주가 몇 번인지 보여주는 통계.
 
   ![하루 목표가 있는 양 습관](./images/amount-habit.png)
 
@@ -513,6 +521,8 @@ habit-grid/
 
 ![항목 습관 상세](./images/item-habit.png)
 
+![항목 습관 월 달력](./images/item-habit-calendar.png)
+
 ![항목 창](./images/item-dialog.png)
 
 ## iPhone 단축어 연동 (미리 알림)
@@ -609,7 +619,13 @@ view: day
 
 `day`를 `week`나 `today`로 바꾸면 다른 보기가 돼요. `habit: 공부, 운동`을 더하면 일부 습관만 보여줘요. 명령 **일간·주간 기록 코드 넣기**가 커서 위치에 `view: today` 블록을 넣어 줘요. 칸을 누르는 방법은 대시보드와 같아서 노트에서 바로 기록할 수 있어요. 각 보기에는 이전 날이나 주로 넘겨 본 뒤 돌아오는 **오늘** / **이번 주** 버튼이 있어요.
 
-![노트에 넣은 일간·주간 보기](./images/note-embed.png)
+`view: day`:
+
+![노트에 넣은 일간 보기](./images/note-embed-day.png)
+
+`view: week`:
+
+![노트에 넣은 주간 보기](./images/note-embed-week.png)
 
 ### 노트에 습관 하나의 한 해 넣기
 

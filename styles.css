@@ -1523,3 +1523,10 @@
 .hg-todaybar.is-collapsed .hg-todayempty { display: none; }
 .hg-todaybar.is-collapsed .hg-todayhead { margin-bottom: 0; }
 .hg-todaybar.is-collapsed { padding-top: 10px; padding-bottom: 10px; }
+
+/* 일간·주간 줄: 옅은 색 배경 + 색 테두리 + 색 체크 */
+.hg-wkcell.is-on { background: color-mix(in srgb, var(--hg-on) 20%, var(--background-primary)); color: var(--hg-on); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hg-on) 42%, transparent); }
+.hg-wkcell.is-partial { background: color-mix(in srgb, var(--hg-on) 9%, var(--background-primary)); color: var(--hg-on); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hg-on) 24%, transparent); }
+.hg-wkcell.is-dim:not(.is-on):not(.is-partial) { background: color-mix(in srgb, var(--hg-on) 7%, var(--background-primary)); box-shadow: none; }
+.hg-tbtn.is-on { background: color-mix(in srgb, var(--hg-on) 15%, var(--background-primary)); color: var(--hg-on); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hg-on) 38%, transparent); }
+.hg-tbtn.is-on .hg-tcheck { background: var(--hg-on); color: #fff; box-shadow: none; }

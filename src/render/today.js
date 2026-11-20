@@ -2,7 +2,8 @@ import { DAY_NAMES, tr, unitLabel } from "../i18n";
 import { addDays, fmt, toDate, weekMonthKey, weekStartOf } from "../dates";
 import { fmtDurShort, fmtNum } from "../format";
 import { goalForMonth, habitStart, scheduleAt } from "../stats";
-import { stopEditorGrab } from "../ui";
+import { iconifyNav, stopEditorGrab } from "../ui";
+import { setIcon } from "obsidian";
 import { UNIT_HOURS } from "../constants";
 
 // 대시보드 맨 위 '오늘' 줄
@@ -86,7 +87,8 @@ export function nameIsShort(name) {
 
 // 오늘 줄 접기·펼치기 버튼
 function addFold(parent, opts) {
-  const b = parent.createEl("button", { cls: "hg-yearbtn hg-todayfold", text: opts.collapsed ? "▸" : "▾" });
+  const b = parent.createEl("button", { cls: "hg-yearbtn hg-todayfold" });
+  setIcon(b, opts.collapsed ? "chevron-right" : "chevron-down");
   b.setAttr("aria-label", opts.collapsed ? tr("펼치기") : tr("접기"));
   b.addEventListener("click", () => opts.onCollapse());
   stopEditorGrab(b);
@@ -129,8 +131,8 @@ function renderWeekBar(box, habits, today, opts) {
     nav.createSpan({ cls: "hg-todaytitle", text: offset === 0 ? `${tr("이번 주")} · ${range}` : range });
     const next = nav.createEl("button", { cls: "hg-yearbtn" + (offset === 0 ? " is-ghost" : ""), text: "›" });
     next.setAttr("aria-label", tr("다음 주"));
-    if (offset < WEEKS_BACK) prev.addEventListener("click", () => { offset++; draw(); });
-    if (offset > 0) next.addEventListener("click", () => { offset--; draw(); });
+    if (offset < WEEKS_BACK) prev.addEventListener("click", () => { offset++; draw(); iconifyNav(body); });
+    if (offset > 0) next.addEventListener("click", () => { offset--; draw(); iconifyNav(body); });
     stopEditorGrab(prev); stopEditorGrab(next);
     const side = head.createSpan({ cls: "hg-todayright" });
     if (opts.onCollapse) addFold(side, opts);

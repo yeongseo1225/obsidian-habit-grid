@@ -4,6 +4,7 @@ import { DAY_NAMES, tr, unitLabel } from "../i18n";
 import { monthKey, pad } from "../dates";
 import { daysLabel, fmtNum, fmtQty, splitHM } from "../format";
 import { goalForMonth, scheduleAt } from "../stats";
+import { iconifyNav } from "../ui";
 
 // 달별 목표를 정하는 창: 12개 달을 타일로 보여 주고, 누른 달의 목표를 아래에서 고친다
 export class GoalsModal extends Modal {
@@ -65,6 +66,7 @@ export class GoalsModal extends Modal {
       tile.addEventListener("click", () => { this.sel = key === this.sel ? null : key; this.draw(); });
     }
     if (this.sel) this.drawPanel(contentEl, this.sel, merged);
+    iconifyNav(contentEl);
 
     const btns = contentEl.createDiv({ cls: "hg-modal-btns" });
     btns.createEl("button", { text: tr("취소") }).addEventListener("click", () => this.close());

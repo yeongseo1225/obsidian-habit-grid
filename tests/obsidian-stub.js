@@ -4,3 +4,4 @@ export const Plugin = Empty, PluginSettingTab = Empty, Setting = Empty, Markdown
 export const TFile = Empty, TFolder = Empty, Notice = Empty, Menu = Empty, Modal = Empty;
 export const normalizePath = (p) => p;
 export const moment = { locale: () => globalThis.__locale || "en" };
+export const setIcon = () => {};

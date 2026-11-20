@@ -1,4 +1,15 @@
+import { setIcon } from "obsidian";
 import { tr } from "./i18n";
+
+// 이전·다음 버튼의 글자 화살표(‹ ›)를 같은 굵기의 아이콘 화살표로 바꾼다
+export function iconifyNav(root) {
+  for (const b of root.querySelectorAll(".hg-yearbtn")) {
+    const t = b.textContent.trim();
+    if (t !== "‹" && t !== "›") continue;
+    b.empty();
+    setIcon(b, t === "‹" ? "chevron-left" : "chevron-right");
+  }
+}
 
 // 카드 오른쪽 위 '⋯' 메뉴 버튼
 export function addMoreButton(head, opts) {

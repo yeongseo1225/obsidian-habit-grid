@@ -3,7 +3,7 @@ import { tr } from "./i18n";
 import { addDays, fmt, toDate, weekStartOf } from "./dates";
 import { goalForMonth } from "./stats";
 import { parseBlock } from "./parse";
-import { stopEditorGrab } from "./ui";
+import { iconifyNav, stopEditorGrab } from "./ui";
 import { renderHabit } from "./render/habit";
 import { renderArchiveRow, renderCompact } from "./render/compact";
 import { renderTodayBar } from "./render/today";
@@ -162,6 +162,7 @@ export class HabitView extends MarkdownRenderChild {
 
     el.empty();
     el.appendChild(wrap);
+    iconifyNav(wrap);
   }
 
   go(view, key) {

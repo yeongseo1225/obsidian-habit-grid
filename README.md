@@ -190,10 +190,14 @@ The plugin recognizes the log file by name. The default is `Reminders log`; you 
 
 If you have a Mac, a small script can copy completed reminders into the log file instead of a Shortcut. Complete a reminder on any device; once it reaches your Mac through iCloud, the script appends it. If the Mac was off, it catches up the next time it runs (it reads the last 30 days).
 
-1. Download `scripts/habit-log-sync.sh` and `scripts/md.habitgrid.sync.plist` from this repository into a folder such as `~/habit-grid-sync/`.
-2. In Obsidian, open **Settings → Habit Grid** and set **Reminder lists to sync** (default `Habits`; separate several lists with commas, matching the names in Reminders exactly).
-3. Run it once in Terminal and allow access to Reminders when macOS asks: `bash ~/habit-grid-sync/habit-log-sync.sh "/path/to/your/vault"`.
-4. To run it automatically, edit the two paths in the `.plist`, copy it to `~/Library/LaunchAgents/`, and run `launchctl load ~/Library/LaunchAgents/md.habitgrid.sync.plist`. It runs at login and every 30 minutes. Stop it with `launchctl unload` and the same path.
+Set it up from the plugin settings (macOS only):
+
+1. In Obsidian, open **Settings → Habit Grid → Mac sync** and click **Create install files**. The plugin writes two files into `habit-grid/mac-sync/` in your vault and shows a command.
+2. Click **Copy command**, paste it into Terminal, and press Return. It copies the script to `~/.habit-grid-sync/`, sets up a background job that wakes every 5 minutes, and runs one sync so macOS can ask for access to Reminders. Allow it.
+3. Back in the settings, turn **Use Mac sync** on (it is off by default, so nothing runs until you do) and set **Reminder lists to sync** (default `Habits`; separate several lists with commas, matching the names in Reminders exactly). **Days to read** and **Sync interval** control how far back and how often it runs, and **Sync now** imports what is in the log immediately and asks the script to run at its next wake-up (within 5 minutes).
+4. To remove it, run `bash "<vault>/habit-grid/mac-sync/install-mac-sync.sh" --uninstall`.
+
+The same files are in this repository's `scripts/` folder if you prefer to install without the plugin. Nothing is downloaded during installation.
 
 The script only reads Reminders and appends lines to the log file. Lines already in the file are skipped.
 
@@ -244,6 +248,12 @@ year: this
 | *(left out)* | The current year, with buttons to page between years |
 
 With `year:` set, the year buttons are hidden.
+
+## Disclosures
+
+- **No network use.** The plugin makes no network requests and has no telemetry or ads.
+- **Files stay in your vault.** The plugin reads and writes only Markdown files (and, when you click *Create install files*, two script files) inside your vault.
+- **Optional Mac script.** If you choose to install it, it runs on your Mac outside Obsidian, reads your Apple Reminders lists, and appends lines to a log file inside your vault. The plugin never runs it; you start it yourself.
 
 ## Settings
 
@@ -388,10 +398,14 @@ Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에�
 
 Mac이 있다면 단축어 대신 작은 스크립트가 완료한 미리 알림을 로그 파일에 덧붙일 수 있어요. 어느 기기에서 완료하든 iCloud로 Mac에 도착하면 스크립트가 덧붙이고, Mac이 꺼져 있었다면 켜진 뒤 다음 실행 때 따라잡아요(최근 30일을 읽어요).
 
-1. 이 저장소의 `scripts/habit-log-sync.sh`와 `scripts/md.habitgrid.sync.plist`를 `~/habit-grid-sync/` 같은 폴더에 받아요.
-2. 옵시디언 **설정 → Habit Grid**의 **동기화할 미리 알림 목록**에 목록 이름을 적어요(기본 `Habits`, 여러 개는 쉼표로, 미리 알림 앱의 이름과 똑같이).
-3. 터미널에서 한 번 실행하고, macOS가 물으면 미리 알림 접근을 허용해요: `bash ~/habit-grid-sync/habit-log-sync.sh "/보관함/경로"`
-4. 자동으로 돌리려면 `.plist`의 경로 두 곳을 고치고 `~/Library/LaunchAgents/`에 복사한 뒤 `launchctl load ~/Library/LaunchAgents/md.habitgrid.sync.plist`를 실행해요. 로그인할 때와 30분마다 돌아요. 멈추려면 같은 경로로 `launchctl unload`를 실행해요.
+플러그인 설정에서 설치해요(macOS 전용).
+
+1. 옵시디언 **설정 → Habit Grid → Mac 동기화**에서 **설치 파일 만들기**를 눌러요. 볼트의 `habit-grid/mac-sync/`에 파일 두 개가 만들어지고 명령이 나와요.
+2. **명령 복사**를 누르고 터미널에 붙여 넣어 실행해요. 스크립트를 `~/.habit-grid-sync/`에 복사하고, 5분마다 깨어나는 백그라운드 작업을 등록하고, 한 번 실행해서 macOS가 미리 알림 접근을 물어보게 해요. 허용하세요.
+3. 설정으로 돌아와 **Mac 동기화 사용**을 켜요(기본은 꺼짐이라 켜기 전에는 아무것도 하지 않아요). **동기화할 미리 알림 목록**에 목록 이름을 적어요(기본 `Habits`, 여러 개는 쉼표로, 미리 알림 앱의 이름과 똑같이). **가져올 기간**과 **동기화 간격**으로 얼마나 거슬러 읽고 얼마나 자주 돌릴지 정하고, **지금 동기화**는 로그에 있는 내용을 바로 가져오면서 스크립트에 다음 확인 때(5분 이내) 실행하라고 요청해요.
+4. 지우려면 `bash "<보관함>/habit-grid/mac-sync/install-mac-sync.sh" --uninstall`을 실행해요.
+
+플러그인 없이 설치하고 싶으면 이 저장소의 `scripts/` 폴더에 같은 파일이 있어요. 설치 중에는 아무것도 내려받지 않아요.
 
 스크립트는 미리 알림을 읽기만 하고 로그 파일에 줄을 덧붙이기만 해요. 이미 있는 줄은 건너뛰어요.
 
@@ -431,6 +445,12 @@ view: day
 | (생략) | 올해, 그리고 해를 넘기는 버튼 |
 
 `연도`를 적으면 해 넘기기 버튼은 숨겨요.
+
+## 공개 사항
+
+- **네트워크를 쓰지 않아요.** 네트워크 요청, 텔레메트리, 광고가 없어요.
+- **파일은 볼트 안에서만** 읽고 써요. 마크다운 파일만 다루고, *설치 파일 만들기*를 눌렀을 때만 스크립트 파일 두 개를 볼트에 만들어요.
+- **선택 사항인 Mac 스크립트**: 설치하기로 하면 옵시디언 밖에서 Mac에서 돌며 미리 알림 목록을 읽고 볼트 안의 로그 파일에 줄을 덧붙여요. 플러그인은 이 스크립트를 실행하지 않아요. 사용자가 직접 시작해요.
 
 ## 설정
 

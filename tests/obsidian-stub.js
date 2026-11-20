@@ -5,3 +5,4 @@ export const TFile = Empty, TFolder = Empty, Notice = Empty, Menu = Empty, Modal
 export const normalizePath = (p) => p;
 export const moment = { locale: () => globalThis.__locale || "en" };
 export const setIcon = () => {};
+export const Platform = { isMacOS: false };

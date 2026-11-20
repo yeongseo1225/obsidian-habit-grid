@@ -19,6 +19,10 @@ export const DEFAULT_SETTINGS = {
   clickToToggle: true,
   dashboardName: "Habits Dashboard",
   logName: DEFAULT_LOG_NAME,
+  macSync: false,     // Mac 동기화 스크립트를 쓸지. 기본은 꺼짐이고, 스크립트를 설치한 사람이 켠다 (스크립트가 실행될 때마다 이 값을 확인한다)
+  syncDays: 30,       // Mac 스크립트가 최근 며칠 치 완료 항목을 읽을지
+  syncMinutes: 30,    // Mac 스크립트가 몇 분마다 가져올지
+  syncRequest: 0,     // 설정의 "지금 동기화"를 누른 시각(ms). Mac 스크립트가 이 값을 보고 간격과 상관없이 한 번 실행한다
   syncLists: "Habits", // Mac 동기화 스크립트가 읽을 미리 알림 목록 이름 (쉼표로 여러 개)
   habitsDir: "list",   // 습관 파일(공부.md 등)이 들어가는 하위 폴더
   archiveDir: "archive", // 보관한 습관 파일이 옮겨지는 하위 폴더

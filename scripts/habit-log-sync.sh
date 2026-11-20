@@ -1,10 +1,16 @@
 #!/bin/bash
 # Habit Grid: copy completed Apple Reminders into the plugin's log file (macOS only).
 #
-# Usage: habit-log-sync.sh "/path/to/your/vault" [days]
+# Usage: habit-log-sync.sh "/path/to/your/vault" [--days N] [--timer]
+#   --days N  read the last N days instead of the "Days to read" setting
+#   --timer   used by the launchd job: runs only when the "Sync interval" has passed
 #
 # Reads these settings from <vault>/.obsidian/plugins/habit-grid/data.json:
+#   macSync    turn on "Use Mac sync" in the plugin settings, or the script does nothing (default: off)
 #   syncLists  Reminders lists to read, separated by commas (default: Habits)
+#   syncDays   how many past days to read (default: 30)
+#   syncMinutes  minutes between runs when started with --timer (default: 30)
+#   syncRequest  time (ms) of the last "Sync now" press; a newer request runs the script once regardless of the interval
 #   folder     habits folder (default: habit-grid)
 #   syncDir    sync subfolder (default: sync)
 #   logName    log file name without extension (default: Reminders log)
@@ -13,12 +19,20 @@
 
 set -u
 VAULT="${1:-}"
-DAYS="${2:-30}"
+[ $# -gt 0 ] && shift
+DAYS=""
+TIMER=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --days) DAYS="${2:-}"; shift 2 || shift;;
+    --timer) TIMER=1; shift;;
+    *) echo "Unknown option: $1" >&2; exit 1;;
+  esac
+done
 if [ -z "$VAULT" ] || [ ! -d "$VAULT" ]; then
-  echo "Usage: $0 \"/path/to/your/vault\" [days]" >&2
+  echo "Usage: $0 \"/path/to/your/vault\" [--days N] [--timer]" >&2
   exit 1
 fi
-case "$DAYS" in ''|*[!0-9]*) echo "days must be a number" >&2; exit 1;; esac
 
 DATA="$VAULT/.obsidian/plugins/habit-grid/data.json"
 setting() { # setting <key> <default>
@@ -26,6 +40,22 @@ setting() { # setting <key> <default>
   [ -f "$DATA" ] && v=$(plutil -extract "$1" raw -o - "$DATA" 2>/dev/null)
   [ -n "$v" ] && echo "$v" || echo "$2"
 }
+if [ "$(setting macSync false)" != "true" ]; then
+  echo "Mac sync is off. Turn on \"Use Mac sync\" in the Habit Grid settings to use this script."
+  exit 0
+fi
+[ -z "$DAYS" ] && DAYS=$(setting syncDays 30)
+case "$DAYS" in ''|*[!0-9]*) DAYS=30;; esac
+MINUTES=$(setting syncMinutes 30)
+case "$MINUTES" in ''|*[!0-9]*) MINUTES=30;; esac
+# With --timer the job wakes often; run only when the chosen interval has passed since the last run
+STAMP="$HOME/Library/Caches/habit-grid-sync-$(md5 -q -s "$VAULT").last"
+if [ "$TIMER" = 1 ]; then
+  now=$(date +%s); last=$(cat "$STAMP" 2>/dev/null || echo 0)
+  req=$(setting syncRequest 0); req=${req%%.*}
+  case "$req" in ''|*[!0-9]*) req=0;; esac
+  if [ $((now - last)) -lt $((MINUTES * 60 - 30)) ] && [ $((req / 1000)) -le "$last" ]; then exit 0; fi
+fi
 LISTS=$(setting syncLists "Habits")
 FOLDER=$(setting folder "habit-grid")
 SYNCDIR=$(setting syncDir "sync")
@@ -91,3 +121,4 @@ for raw in "${NAMES[@]}"; do
   done <<< "$rows"
 done
 echo "Added $added line(s) to $LOG"
+mkdir -p "$HOME/Library/Caches" && date +%s > "$STAMP"

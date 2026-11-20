@@ -7,6 +7,7 @@ import { habitStart } from "./stats";
 import { writeQty } from "./format";
 import { convertAmount, itemsLine, knownItems, mergeItems, parseDates, parseEntries, parseItemLines, splitItem, parseLog, parseSkips, parseTitle } from "./parse";
 import { planImport, rewriteDay, safeFileName, upsertDays } from "./importLog";
+import { MAC_SYNC_FILES } from "./macSyncFiles";
 import { HabitView } from "./view";
 import { ConfirmModal, DateModal, NumberModal, PeriodModal } from "./modals/simple";
 import { GoalsModal } from "./modals/goals";
@@ -222,6 +223,23 @@ export class HabitGridPlugin extends Plugin {
         explicit, inferred, monthGoals: Object.assign({}, inferred, explicit) });
     }
     return out;
+  }
+
+  // Mac 동기화 설치에 필요한 파일을 볼트 안(<습관 폴더>/mac-sync/)에 만들고, 터미널에 붙여 넣을 명령을 돌려준다.
+  // 파일을 만들기만 하고 실행은 사용자가 한다
+  async createMacSyncFiles() {
+    const { vault } = this.app;
+    const dir = normalizePath(`${this.settings.folder}/mac-sync`);
+    if (!vault.getAbstractFileByPath(normalizePath(this.settings.folder))) await vault.createFolder(normalizePath(this.settings.folder));
+    if (!vault.getAbstractFileByPath(dir)) await vault.createFolder(dir);
+    for (const [name, text] of Object.entries(MAC_SYNC_FILES)) {
+      const path = normalizePath(`${dir}/${name}`);
+      const existing = vault.getAbstractFileByPath(path);
+      if (existing instanceof TFile) await vault.modify(existing, text); else await vault.create(path, text);
+    }
+    const ad = vault.adapter;
+    const base = typeof ad.getBasePath === "function" ? ad.getBasePath() : "/path/to/your/vault";
+    return `bash "${base}/${dir}/install-mac-sync.sh" "${base}"`;
   }
 
   // 로그(받은편지함)에 새로 덧붙은 줄을 습관 파일로 옮긴다. 없는 습관은 파일을 만든다

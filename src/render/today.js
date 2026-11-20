@@ -133,7 +133,9 @@ function renderWeekBar(box, habits, today, opts) {
     next.setAttr("aria-label", tr("다음 주"));
     if (offset < WEEKS_BACK) prev.addEventListener("click", () => { offset++; draw(); iconifyNav(body); });
     if (offset > 0) next.addEventListener("click", () => { offset--; draw(); iconifyNav(body); });
-    stopEditorGrab(prev); stopEditorGrab(next);
+    const back = nav.createSpan({ cls: "hg-yearbtn hg-thisyear" + (offset === 0 ? " is-ghost" : ""), text: tr("이번 주") });
+    if (offset > 0) back.addEventListener("click", () => { offset = 0; draw(); iconifyNav(body); });
+    stopEditorGrab(prev); stopEditorGrab(next); stopEditorGrab(back);
     const side = head.createSpan({ cls: "hg-todayright" });
     if (opts.onCollapse) addFold(side, opts);
     if (opts.onMode) todayTabs(side, "week", opts.onMode);
@@ -207,7 +209,9 @@ export function renderTodayBar(parent, habits, today, opts) {
     const goPage = (d) => { const t = pages[pages.indexOf(page) + d]; if (t) pager.scrollTo({ left: t.offsetLeft - pager.offsetLeft, behavior: "smooth" }); };
     if (n === DAYS - 1) prev.addClass("is-ghost"); else prev.addEventListener("click", () => goPage(-1));
     if (!isToday) next.addEventListener("click", () => goPage(1));
-    stopEditorGrab(prev); stopEditorGrab(next);
+    const back = nav.createSpan({ cls: "hg-yearbtn hg-thisyear" + (isToday ? " is-ghost" : ""), text: tr("오늘") });
+    if (!isToday) back.addEventListener("click", () => { const t = pages[pages.length - 1]; pager.scrollTo({ left: t.offsetLeft - pager.offsetLeft, behavior: "smooth" }); });
+    stopEditorGrab(prev); stopEditorGrab(next); stopEditorGrab(back);
     const side = opts.onMode || opts.onCollapse ? head.createSpan({ cls: "hg-todayright" }) : head;
     if (opts.onCollapse) addFold(side, opts);
     if (opts.onMode) todayTabs(side, "day", opts.onMode);

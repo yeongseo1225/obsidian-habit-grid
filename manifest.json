@@ -1,9 +1,9 @@
 {
   "id": "habit-grid",
   "name": "Habit Grid",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "minAppVersion": "1.4.4",
-  "description": "Visualize habits from Apple Reminders or plain Markdown files as a GitHub-style grid, with week view, goals, item and amount logs, and challenges.",
+  "description": "Track habits with a GitHub-style heatmap grid, week view, streaks, goals, and challenges. Log from Apple Reminders or plain Markdown files.",
   "author": "habit-grid",
   "authorUrl": "https://github.com/yeongseo1225",
   "isDesktopOnly": false

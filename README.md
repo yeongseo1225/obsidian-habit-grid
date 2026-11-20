@@ -49,7 +49,7 @@ The plugin only reads and writes Markdown files in your vault. It makes no netwo
 
 ## Installation
 
-### From Community plugins (after approval)
+### From Community plugins
 
 1. Open **Settings → Community plugins → Browse**.
 2. Search for "Habit Grid", then install and enable it.
@@ -426,7 +426,7 @@ Habit Grid는 **애플 미리 알림으로 습관을 기록하고 보관함에�
 
 ## 설치
 
-### 커뮤니티 플러그인에서 (승인 후)
+### 커뮤니티 플러그인에서
 
 1. **설정 → 커뮤니티 플러그인 → 둘러보기**를 열어요.
 2. "Habit Grid"를 검색해 설치하고 켜요.

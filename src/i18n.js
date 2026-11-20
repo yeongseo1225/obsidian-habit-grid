@@ -157,7 +157,6 @@ export const EN = {
   "끝낸 습관 {0}개 · 눌러서 지난 기록을 볼 수 있어요": "{0} finished habits · tap one to see its history",
   "보관함이 비었어요. 습관 카드의 ⋯ 메뉴에서 '보관함으로 옮기기'를 고르면 여기로 와요.": "Nothing in the archive yet. Use ⋯ → 'Move to archive' on a habit card to put one here.",
   "보관해도 기록은 지워지지 않아요 · 다시 시작하면 같은 기록을 이어서 써요": "Archiving doesn't delete records · restoring a habit picks up the same history",
-  "오늘 · {0}월 {1}일 ({2})": "Today · {0}/{1} ({2})",
   "취소": "Cancel",
   "확인": "OK",
   "시간": "hr",

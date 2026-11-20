@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { convertAmount, parseAmount, parseBlock, parseDates, parseEntries, parseLog, parseSkips, parseTitle } from "../src/parse";
+import { convertAmount, mergeItems, parseAmount, parseBlock, parseItemLines, parseDates, parseEntries, parseLog, parseSkips, parseTitle } from "../src/parse";
 
 test("parseTitle reads name, amount and unit from a reminder title", () => {
   assert.deepEqual(parseTitle("공부 2시간"), { base: "공부", amount: 2, unit: "시간" });
@@ -50,4 +50,15 @@ test("convertAmount aligns hours and minutes", () => {
   assert.equal(convertAmount(2, "시간", "분"), 120);
   assert.equal(convertAmount(3, undefined, "시간"), 3);
   assert.equal(convertAmount(5, "km", "시간"), 5);
+});
+
+test("parseItemLines reads items after the date and merges duplicates", () => {
+  const text = ["- [x] 2026-11-18 스쿼트, 플랭크", "- [x] 2026-11-18 스쿼트", "- [x] 2026-11-19", "- [x] 2026-11-20 푸시업，런지"].join("\n");
+  assert.deepEqual([...parseItemLines(text)], [["2026-11-18", ["스쿼트", "플랭크"]], ["2026-11-20", ["푸시업", "런지"]]]);
+});
+
+test("mergeItems unions items per day without duplicates", () => {
+  const a = new Map([["2026-11-18", ["스쿼트"]]]);
+  const b = new Map([["2026-11-18", ["스쿼트", "플랭크"]], ["2026-11-19", ["런지"]]]);
+  assert.deepEqual([...mergeItems(a, b)], [["2026-11-18", ["스쿼트", "플랭크"]], ["2026-11-19", ["런지"]]]);
 });

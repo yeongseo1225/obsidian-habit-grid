@@ -77,6 +77,34 @@ export function parseDates(text) {
   return set;
 }
 
+// 습관 파일의 "- [x] 2026-11-18 스쿼트, 플랭크" 줄에서 날짜별 항목을 읽는다
+export function parseItemLines(text) {
+  const map = new Map();
+  for (const line of text.split("\n")) {
+    const m = line.match(DONE_RE);
+    if (!m) continue;
+    const items = (m[2] || "").split(/[,，、]/).map((x) => x.trim()).filter(Boolean);
+    if (!items.length) continue;
+    const cur = map.get(m[1]) || [];
+    for (const it of items) if (!cur.includes(it)) cur.push(it);
+    map.set(m[1], cur);
+  }
+  return map;
+}
+
+// 항목 표 두 개를 합친다 (같은 날의 같은 항목은 한 번만)
+export function mergeItems(a, b) {
+  const out = new Map();
+  for (const src of [a, b]) {
+    for (const [ds, list] of src || []) {
+      const cur = out.get(ds) || [];
+      for (const it of list) if (!cur.includes(it)) cur.push(it);
+      out.set(ds, cur);
+    }
+  }
+  return out;
+}
+
 export function parseBlock(source) {
   const opts = {};
   for (const raw of source.split("\n")) {

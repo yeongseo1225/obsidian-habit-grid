@@ -62,9 +62,10 @@ export function weekCellsOf(h, days, todayStr, weekStart) {
     if (ds > todayStr) return { ds, state: "future" };
     if (!startedBy(h, ds, todayStr)) return { ds, state: "off" };
     const due = dueOn(h, date, weekStart, recOf(h, ds));
-    let state = "none", text = "";
+    let state = "none", text = "", n = 0;
     if (h.kind === "check") {
       if (h.set.has(ds)) state = "on";
+      if (h.isItems && h.items) n = (h.items.get(ds) || []).length;
     } else {
       const v = h.entries.get(ds) || 0;
       if (v > 0) {
@@ -72,7 +73,7 @@ export function weekCellsOf(h, days, todayStr, weekStart) {
         text = cellAmount(h, v);
       }
     }
-    return { ds, state, text, due };
+    return { ds, state, text, due, n };
   });
 }
 
@@ -149,10 +150,14 @@ function renderWeekBar(box, habits, today, opts) {
         const cell = row.createDiv({
           cls: `hg-wkcell is-${c.state}` + (open && !c.due ? " is-rest" : "") + (c.ds === todayStr ? " is-todaycell" : "") + (complete && c.state === "none" ? " is-dim" : ""),
         });
-        if (c.text) cell.setText(c.text); else if (c.state === "on") cell.setText("✓");
+        if (c.text) cell.setText(c.text); else if (c.state === "on") cell.setText(c.n ? `✓ ${c.n}` : "✓");
         cell.setAttr("aria-label", `${h.name} · ${c.ds}`);
         if (open) {
-          cell.addEventListener("click", () => (h.kind === "check" ? opts.onCheck(h, c.ds) : opts.onValue(h, c.ds)));
+          cell.addEventListener("click", () => {
+            if (h.kind !== "check") opts.onValue(h, c.ds);
+            else if (h.isItems && c.state === "on" && opts.onItems) opts.onItems(h, c.ds);
+            else opts.onCheck(h, c.ds);
+          });
           stopEditorGrab(cell);
         }
       }
@@ -207,7 +212,9 @@ export function renderTodayBar(parent, habits, today, opts) {
         const b = item.createDiv({ cls: "hg-tbtn" + (on ? " is-on" : "") });
         b.createSpan({ cls: "hg-tcheck", text: on ? "✓" : "" });
         b.createSpan({ text: h.name });
-        b.addEventListener("click", () => opts.onCheck(h, ds));
+        const n = h.isItems && h.items ? (h.items.get(ds) || []).length : 0;
+        if (n) b.createSpan({ cls: "hg-tval", text: String(n) });
+        b.addEventListener("click", () => (h.isItems && on && opts.onItems ? opts.onItems(h, ds) : opts.onCheck(h, ds)));
         stopEditorGrab(b);
       } else {
         const v = h.entries.get(ds) || 0;

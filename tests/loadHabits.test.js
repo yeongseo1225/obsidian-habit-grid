@@ -90,3 +90,25 @@ test("loadHabits merges English hour and minute titles into one habit", async ()
   assert.equal(out[0].unit, "시간");
   assert.deepEqual([...out[0].entries], [["2026-11-17", 2], ["2026-11-18", 1.5], ["2026-11-19", 0.75]]);
 });
+
+test("loadHabits merges items from reminders and from the habit file", async () => {
+  const p = plugin({
+    list: { "운동.md": ["- [x] 2026-11-18 플랭크, 런지\n- [x] 2026-11-19\n- [ ] 2026-11-17\n"] },
+    sync: { "Reminders log.md": ["- [x] 2026-11-18 운동 스쿼트\n- [x] 2026-11-17 운동 푸시업\n"] },
+  });
+  const [h] = await p.loadHabits("Habits");
+  assert.equal(h.name, "운동");
+  assert.equal(h.isItems, true);
+  assert.deepEqual(h.items.get("2026-11-18"), ["스쿼트", "플랭크", "런지"]);
+  assert.deepEqual(h.itemsLog.get("2026-11-18"), ["스쿼트"]);
+  assert.deepEqual(h.itemsFile.get("2026-11-18"), ["플랭크", "런지"]);
+  assert.equal(h.items.has("2026-11-17"), false);
+  assert.equal(h.set.has("2026-11-19"), true);
+});
+
+test("an items habit with no records still has an empty items list", async () => {
+  const p = plugin({ list: { "운동.md": ["\n"] } });
+  const [h] = await p.loadHabits("Habits");
+  assert.equal(h.isItems, true);
+  assert.equal(h.items.size, 0);
+});

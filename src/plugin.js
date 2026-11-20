@@ -5,11 +5,12 @@ import { fmDel, fmGet, fmKey, fmSet, fmSetUnit, normalizeUnit, resolveKeyStyle, 
 import { fmt, monthKey } from "./dates";
 import { habitStart } from "./stats";
 import { writeQty } from "./format";
-import { convertAmount, parseDates, parseEntries, parseLog, parseSkips, parseTitle } from "./parse";
+import { convertAmount, mergeItems, parseDates, parseEntries, parseItemLines, parseLog, parseSkips, parseTitle } from "./parse";
 import { HabitView } from "./view";
 import { ConfirmModal, DateModal, NumberModal } from "./modals/simple";
 import { GoalsModal } from "./modals/goals";
 import { RecordModal } from "./modals/record";
+import { ItemsModal } from "./modals/items";
 import { NewHabitModal } from "./modals/newHabit";
 import { HabitGridSettingTab } from "./settingTab";
 
@@ -111,8 +112,8 @@ export class HabitGridPlugin extends Plugin {
       return groups.get(name);
     };
     for (const f of files) group(nfc(f.basename)).main = f;
+    const prefixes = (this.settings.groupPrefixes || [DEFAULT_GROUP_PREFIX]).map(nfc);
     if (logFile) {
-      const prefixes = (this.settings.groupPrefixes || [DEFAULT_GROUP_PREFIX]).map(nfc);
       const splitPrefix = (title) => {
         for (const p of prefixes) {
           if (title === p) return { prefix: p, rest: "" };
@@ -164,9 +165,14 @@ export class HabitGridPlugin extends Plugin {
       for (const [k, v] of Object.entries(fmGet(fm, "weekdays") || {})) { const a = (Array.isArray(v) ? v : []).map(Number).filter((n) => n >= 0 && n <= 6); if (a.length) daysRaw[String(k)] = [...new Set(a)]; }
       const freqs = Object.assign({}, freqsRaw);
       for (const [k, v] of Object.entries(daysRaw)) freqs[k] = v.length;
+      const isItems = prefixes.includes(nfc(g.name));
+      const logItems = new Map(g.items || []);
+      const fileItems = isItems ? parseItemLines(mainText) : new Map();
+      for (const ds of skips) { logItems.delete(ds); fileItems.delete(ds); }
+      const items = mergeItems(logItems, fileItems);
       const base = {
         name: g.name, key: `${folderPath}/${g.name}`, fm, color: fmGet(fm, "color") || "", freqs, freqsRaw, days: daysRaw,
-        target: g, file: g.main, logDates, items: g.items || null,
+        target: g, file: g.main, logDates, items: isItems || items.size ? items : null, itemsLog: logItems, itemsFile: fileItems, isItems,
         archived: !!fmGet(fm, "archived"), startDate: ps,
       };
 
@@ -303,6 +309,29 @@ export class HabitGridPlugin extends Plugin {
     await this.saveSettings();
     this.app.workspace.trigger("habit-grid:refresh");
   }
+  // 항목이 있는 습관: 그 날 한 항목을 고른다. 하나도 안 골라도 그 날은 기록돼요
+  openItems(h, ds) {
+    const count = new Map();
+    for (const list of (h.items || new Map()).values()) for (const it of list) count.set(it, (count.get(it) || 0) + 1);
+    const known = [...count.keys()].sort((a, b) => count.get(b) - count.get(a));
+    const [, m, d] = ds.split("-").map(Number);
+    new ItemsModal(this.app, {
+      title: tr("{0} · {1}월 {2}일", h.name, m, d),
+      known,
+      locked: (h.itemsLog && h.itemsLog.get(ds)) || [],
+      selected: (h.itemsFile && h.itemsFile.get(ds)) || [],
+      hasRecord: h.set.has(ds),
+      onSubmit: (items) => this.recordItems(h, ds, items),
+      onClear: () => this.recordCheck(h, ds, false),
+    }).open();
+  }
+
+  async recordItems(h, ds, items) {
+    await this.writeDay(h, ds, items.length ? `- [x] ${ds} ${items.join(", ")}` : `- [x] ${ds}`);
+    const [, m, d] = ds.split("-").map(Number);
+    new Notice(tr("{0}월 {1}일 기록을 저장했어요", m, d));
+  }
+
   askStart(h) {
     new DateModal(this.app, {
       title: tr("시작일"), desc: tr("이 날부터 기록해요"),

@@ -85,3 +85,10 @@ test("hour amounts are shown as hours and minutes, not decimals", () => {
   const cells = weekCellsOf(measure([["2026-11-16", 2 + 40 / 60], ["2026-11-17", 0.75]]), days, todayStr, 1);
   assert.deepEqual(cells.slice(0, 2).map((c) => c.text), ["2h40m", "45m"]);
 });
+
+test("week cells count the items of an items habit", () => {
+  const h = check(["2026-11-18"], { isItems: true, items: new Map([["2026-11-18", ["스쿼트", "플랭크"]]]) });
+  const cells = weekCellsOf(h, days, todayStr, 1);
+  assert.equal(cells[2].n, 2);
+  assert.equal(cells[3].n, 0);
+});

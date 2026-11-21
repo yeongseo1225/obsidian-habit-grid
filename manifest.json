@@ -1,10 +1,10 @@
 {
   "id": "habit-grid",
   "name": "Habit Grid",
-  "version": "0.4.10",
+  "version": "0.4.11",
   "minAppVersion": "1.4.4",
   "description": "Track habits with a GitHub-style heatmap grid, week view, streaks, goals, and challenges. Log from Apple Reminders or plain Markdown files.",
-  "author": "habit-grid",
+  "author": "Yeongseo Seo",
   "authorUrl": "https://github.com/yeongseo1225",
   "isDesktopOnly": false
 }

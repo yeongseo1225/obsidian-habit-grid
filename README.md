@@ -232,6 +232,7 @@ This is an advanced option: you paste one command into Terminal, once. If you wo
 1. In Obsidian, open **Settings → Habit Grid → Mac sync**, click **Create install files**, then click the command shown below it to select it all and copy it with Cmd+C.
 2. Open Terminal (press ⌘ Space, type `Terminal`, press Return), paste the command with ⌘ V, and press Return. Allow access to Reminders if macOS asks.
 3. Back in the settings, turn **Use Mac sync** on. It is off by default, so nothing runs until you do.
+4. **If your vault is in iCloud Drive** (the path contains `Mobile Documents`), do this once more: open **System Settings → Privacy & Security → Full Disk Access**, click **+**, press ⌘ ⇧ G, type `/bin/bash`, and add it with the switch on. Without it, the background job cannot read the vault and the log only shows `Cannot read the Habit Grid settings`. Then run `launchctl kickstart -k gui/$(id -u)/md.habitgrid.sync` in Terminal to try it right away. (Terminal asks for iCloud access the first time, but a background job cannot ask, so the permission has to be given by hand.)
 
 That is all. The default list is `Habits`; a new completed reminder in it shows up within the interval you choose below.
 
@@ -260,6 +261,8 @@ If you already uninstalled the plugin, paste these two lines into Terminal inste
 launchctl bootout "gui/$(id -u)/md.habitgrid.sync"
 rm -rf ~/Library/LaunchAgents/md.habitgrid.sync.plist ~/.habit-grid-sync
 ```
+
+If you gave `/bin/bash` Full Disk Access for an iCloud vault, also remove it: **System Settings → Privacy & Security → Full Disk Access**, select `bash`, and click **−**. The remove command does not touch this list, and leaving it on lets every shell script on your Mac read your whole disk.
 
 ## Dashboard code block
 

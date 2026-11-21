@@ -78,4 +78,12 @@ launchd bootstrap "gui/$(id -u)" "$PLIST"
 echo "Installed the background job."
 echo
 echo "Last step: in Obsidian, open Settings > Habit Grid and turn on \"Use Mac sync\"."
+case "$VAULT" in
+  *"Mobile Documents"*)
+    echo
+    echo "Your vault is in iCloud Drive, so one more step is needed. The background job cannot ask for access, so give it by hand:"
+    echo "  System Settings > Privacy & Security > Full Disk Access > + (press Cmd+Shift+G, type /bin/bash) > turn it on."
+    echo "Then run: launchctl kickstart -k gui/$(id -u)/$LABEL"
+    ;;
+esac
 echo "To remove everything later: bash \"$0\" --uninstall"

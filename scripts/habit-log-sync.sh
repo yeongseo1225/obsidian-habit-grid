@@ -41,6 +41,11 @@ setting() { # setting <key> <default>
   [ -f "$DATA" ] && v=$(plutil -extract "$1" raw -o - "$DATA" 2>/dev/null)
   [ -n "$v" ] && echo "$v" || echo "$2"
 }
+if ! cat "$DATA" >/dev/null 2>&1; then
+  echo "Cannot read the Habit Grid settings: $DATA" >&2
+  echo "If the vault is in iCloud Drive, give /bin/bash Full Disk Access: System Settings > Privacy & Security > Full Disk Access > + > /bin/bash." >&2
+  exit 1
+fi
 if [ "$(setting macSync false)" != "true" ]; then
   echo "Mac sync is off. Turn on \"Use Mac sync\" in the Habit Grid settings to use this script."
   exit 0

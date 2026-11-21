@@ -145,6 +145,9 @@ export class HabitGridSettingTab extends PluginSettingTab {
           }));
         } },
 
+      { name: tr("iCloud 보관함이라면"), visible: mac,
+        desc: tr("보관함이 iCloud Drive에 있으면(경로에 Mobile Documents가 들어 있어요) 한 번 더 해 주세요. 시스템 설정 → 개인정보 보호 및 보안 → 전체 디스크 접근 권한에서 + 를 누르고 ⌘ ⇧ G로 /bin/bash를 추가한 뒤 켜요. 백그라운드 작업은 접근 허용을 물어볼 수 없어서 직접 줘야 해요. 안 하면 동기화가 안 되고 /tmp/habit-grid-sync.log에 읽을 수 없다는 메시지만 남아요.") },
+
       { name: tr("Mac 동기화 사용"), desc: tr("스크립트를 설치했다면 켜 주세요. 꺼져 있으면 Mac 동기화 스크립트가 아무것도 가져오지 않아요. 스크립트는 실행될 때마다 이 설정을 확인해요."),
         build: (st: Setting) => st.addToggle((t: ToggleComponent) => t.setValue(s.macSync === true).onChange(async (v: boolean) => { s.macSync = v; await save(); })) },
 
@@ -179,6 +182,7 @@ export class HabitGridSettingTab extends PluginSettingTab {
             tr("자동 실행 설정(~/Library/LaunchAgents/md.habitgrid.sync.plist)과 복사한 스크립트 폴더(~/.habit-grid-sync)를 지워요."),
             tr("볼트 안의 습관 기록과 설정은 지우지 않아요."),
           ]);
+          rm.createEl("p", { cls: "setting-item-description", text: tr("iCloud 보관함이라서 /bin/bash에 전체 디스크 접근 권한을 줬다면, 그것도 직접 빼 주세요. 시스템 설정 → 개인정보 보호 및 보안 → 전체 디스크 접근 권한에서 bash를 선택하고 − 를 눌러요. 이 명령은 그 목록을 건드리지 않아요.") });
         } },
 
       { name: tr("설정 적용 안내"), desc: tr("설정을 바꾼 뒤에는 노트를 다시 열면 반영돼요.") },
